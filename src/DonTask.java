@@ -46,54 +46,52 @@ public class DonTask implements IDonTask {
 
 	@Override
 	public String getTitle() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskTitle;
 	}
 
 	@Override
 	public Calendar getStartDate() {
-		// TODO Auto-generated method stub
-		return null;
+		return startDate;
 	}
 
 	@Override
 	public Calendar getEndDate() {
-		// TODO Auto-generated method stub
-		return null;
+		return endDate;
 	}
 
 	@Override
 	public boolean getStatus() {
-		// TODO Auto-generated method stub
-		return false;
+		return status;
 	}
 
 	@Override
 	public void setTitle(String newTitle) {
-		// TODO Auto-generated method stub
-		
+		taskTitle = newTitle;
 	}
 
 	@Override
-	public void setStartDate(Date newDate) {
-		// TODO Auto-generated method stub
-		
+	public void setStartDate(Calendar newDate) {
+		startDate = newDate;
 	}
 
 	@Override
-	public void setEndDate(Date newDate) {
-		// TODO Auto-generated method stub
-		
+	public void setEndDate(Calendar newDate) {
+		endDate = newDate;
 	}
 
 	@Override
 	public void setStatus(boolean newStatus) {
-		// TODO Auto-generated method stub
+		status = newStatus;
 	}
 
 	@Override
 	public TaskType getType() {
-		// TODO Auto-generated method stub
-		return null;
+		if (startDate==null) {
+			return TaskType.TASK_FLOATING;
+		} else if (endDate==null) {
+			return TaskType.TASK_DEADLINE;
+		} else {
+			return TaskType.TASK_DURATION;
+		}
 	}
 }

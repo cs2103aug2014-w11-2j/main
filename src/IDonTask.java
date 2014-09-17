@@ -1,5 +1,4 @@
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Interface defining the basic requirements of a Task
