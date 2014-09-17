@@ -1,3 +1,4 @@
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -8,13 +9,39 @@ import java.util.Date;
  */
 public class DonTask implements IDonTask {
 	
- 
+	private String taskTitle;
+	private Calendar startDate, endDate;
+	private boolean status;
 
 	/**
 	 * Creates an empty task
 	 */
 	public DonTask() {
-		
+		taskTitle = null;
+		startDate = null;
+		endDate = null;
+		status = false;
+	}
+	
+	public DonTask(String title) {
+		taskTitle = title;
+		startDate = null;
+		endDate = null;
+		status = false;
+	}
+	
+	public DonTask(String title, Calendar deadline) {
+		taskTitle = title;	
+		startDate = deadline;
+		endDate = null;
+		status = false;
+	}
+	
+	public DonTask(String title, Calendar startDate, Calendar endDate) {
+		taskTitle = title;	
+		this.startDate = startDate;
+		this.endDate = endDate;
+		status = false;
 	}
 
 	@Override
@@ -24,13 +51,13 @@ public class DonTask implements IDonTask {
 	}
 
 	@Override
-	public Date getStartDate() {
+	public Calendar getStartDate() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Date getEndDate() {
+	public Calendar getEndDate() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -62,5 +89,11 @@ public class DonTask implements IDonTask {
 	@Override
 	public void setStatus(boolean newStatus) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public TaskType getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
