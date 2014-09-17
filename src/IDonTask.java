@@ -63,7 +63,7 @@ public interface IDonTask {
 	 * Set to null to denote a floating task.
 	 * @param	newDate the new date
 	 */
-	public void setStartDate(Date newDate);
+	public void setStartDate(Calendar newDate);
 	
 	/**
 	 * Sets the end date of a task that contains a duration.
@@ -71,7 +71,7 @@ public interface IDonTask {
 	 * 
 	 * @param	newDate the new date
 	 */
-	public void setEndDate(Date newDate);
+	public void setEndDate(Calendar newDate);
 	
 	/**
 	 * Sets the completion status of the task.
