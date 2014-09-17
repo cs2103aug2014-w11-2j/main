@@ -1,14 +1,13 @@
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Class containing the properties of a task
  * 
  * @author cs2103aug2014-w11-2j
- *
+ * 
  */
 public class DonTask implements IDonTask {
-	
+
 	private String taskTitle;
 	private Calendar startDate, endDate;
 	private boolean status;
@@ -22,23 +21,23 @@ public class DonTask implements IDonTask {
 		endDate = null;
 		status = false;
 	}
-	
+
 	public DonTask(String title) {
 		taskTitle = title;
 		startDate = null;
 		endDate = null;
 		status = false;
 	}
-	
+
 	public DonTask(String title, Calendar deadline) {
-		taskTitle = title;	
+		taskTitle = title;
 		startDate = deadline;
 		endDate = null;
 		status = false;
 	}
-	
+
 	public DonTask(String title, Calendar startDate, Calendar endDate) {
-		taskTitle = title;	
+		taskTitle = title;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		status = false;
@@ -86,12 +85,52 @@ public class DonTask implements IDonTask {
 
 	@Override
 	public TaskType getType() {
-		if (startDate==null) {
+		if (startDate == null) {
 			return TaskType.TASK_FLOATING;
-		} else if (endDate==null) {
+		} else if (endDate == null) {
 			return TaskType.TASK_DEADLINE;
 		} else {
 			return TaskType.TASK_DURATION;
 		}
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (!(other instanceof IDonTask)) {
+			return false;
+		}
+
+		IDonTask otherTask = (IDonTask) other;
+		if (this.getTitle() == null || otherTask.getTitle() == null) {
+			// We treat tasks with null titles as incomparable
+			return false;
+		}
+
+		if (this.getType() != otherTask.getType()) {
+			return false;
+		}
+
+		if (this.getType() == TaskType.TASK_FLOATING) {
+			// A floating task only needs to have its title compared
+			if (this.getTitle() == otherTask.getTitle()) {
+				return true;
+			}
+		} else if (this.getType() == TaskType.TASK_DEADLINE) {
+			if (this.getTitle() == otherTask.getTitle()
+					&& this.getStartDate().equals(otherTask.getStartDate())) {
+				return true;
+			}
+		} else if(this.getType() == TaskType.TASK_DURATION) {
+			if (this.getTitle() == otherTask.getTitle()
+					&& this.getStartDate().equals(otherTask.getStartDate())
+					&& this.getEndDate().equals(otherTask.getEndDate())) {
+				return true;
+			}
+		}
+		return false;
+
 	}
 }

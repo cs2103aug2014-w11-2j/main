@@ -7,7 +7,9 @@
  */
 public class DonLogic {
 	
-	public DonLogic() {
-		
+	private IDonStorage donStorage;
+	
+	public DonLogic(IDonStorage storage) {
+		donStorage = storage;
 	}
 }
