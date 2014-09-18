@@ -9,6 +9,12 @@ import java.util.List;
  */
 public interface IDonResponse {
 
+	public enum ResponseType {
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE 
+	}
+	
+	public ResponseType getResponseType();
+	
 	/**
 	 * Returns the response messages as a list. The list will be empty if there
 	 * are no messages
@@ -38,6 +44,12 @@ public interface IDonResponse {
 	 * @return	true if the addition was successful
 	 */
 	public boolean addTask(IDonTask task);
+	
+	/**
+	 * Sets the response type of the IDonResponse object
+	 * @param	type the new type of response
+	 */
+	public void setResponseType(ResponseType type);
 	
 	/**
 	 * Returns whether the response has any messages.

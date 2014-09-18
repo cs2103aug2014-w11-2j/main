@@ -7,10 +7,10 @@ import java.util.Calendar;
  * @author cs2103aug2014-w11-2j
  *
  */
-public interface IDonTask {
+public interface IDonTask extends Comparable<IDonTask> {
 	
 	public enum TaskType {
-		TASK_FLOATING, TASK_DEADLINE, TASK_DURATION
+		FLOATING, DEADLINE, DURATION
 	}
 	
 	/**

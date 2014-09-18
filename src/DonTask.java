@@ -86,11 +86,11 @@ public class DonTask implements IDonTask {
 	@Override
 	public TaskType getType() {
 		if (startDate == null) {
-			return TaskType.TASK_FLOATING;
+			return TaskType.FLOATING;
 		} else if (endDate == null) {
-			return TaskType.TASK_DEADLINE;
+			return TaskType.DEADLINE;
 		} else {
-			return TaskType.TASK_DURATION;
+			return TaskType.DURATION;
 		}
 	}
 
@@ -113,17 +113,17 @@ public class DonTask implements IDonTask {
 			return false;
 		}
 
-		if (this.getType() == TaskType.TASK_FLOATING) {
+		if (this.getType() == TaskType.FLOATING) {
 			// A floating task only needs to have its title compared
 			if (this.getTitle() == otherTask.getTitle()) {
 				return true;
 			}
-		} else if (this.getType() == TaskType.TASK_DEADLINE) {
+		} else if (this.getType() == TaskType.DEADLINE) {
 			if (this.getTitle() == otherTask.getTitle()
 					&& this.getStartDate().equals(otherTask.getStartDate())) {
 				return true;
 			}
-		} else if (this.getType() == TaskType.TASK_DURATION) {
+		} else if (this.getType() == TaskType.DURATION) {
 			if (this.getTitle() == otherTask.getTitle()
 					&& this.getStartDate().equals(otherTask.getStartDate())
 					&& this.getEndDate().equals(otherTask.getEndDate())) {
@@ -136,11 +136,11 @@ public class DonTask implements IDonTask {
 
 	@Override
 	public int compareTo(IDonTask otherTask) {
-		if (this.getType() == TaskType.TASK_FLOATING) {
+		if (this.getType() == TaskType.FLOATING) {
 			// For floating tasks the title will be compared based on
 			// lexicographic ordering
 			return this.getTitle().compareTo(otherTask.getTitle());
-		} else if (this.getType() == TaskType.TASK_DEADLINE) {
+		} else if (this.getType() == TaskType.DEADLINE) {
 			// For deadline tasks the deadline will be compared first
 			// with an earlier deadline being "less than" a later deadline
 			int startDateComp = this.getStartDate().compareTo(
@@ -150,7 +150,7 @@ public class DonTask implements IDonTask {
 			}
 
 			return startDateComp;
-		} else if (this.getType() == TaskType.TASK_DURATION) {
+		} else if (this.getType() == TaskType.DURATION) {
 			// For tasks with a duration the start date will be compared first
 			// with an earlier start date being "less than" the later one.
 			// If they are equal the end date will be compared with the earlier
