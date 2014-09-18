@@ -38,6 +38,12 @@ public class DonTask implements IDonTask {
 	}
 
 	@Override
+	public int getID() {
+
+		return taskID;
+	}
+
+	@Override
 	public String getTitle() {
 		return taskTitle;
 	}
@@ -117,7 +123,7 @@ public class DonTask implements IDonTask {
 					&& this.getStartDate().equals(otherTask.getStartDate())) {
 				return true;
 			}
-		} else if(this.getType() == TaskType.TASK_DURATION) {
+		} else if (this.getType() == TaskType.TASK_DURATION) {
 			if (this.getTitle() == otherTask.getTitle()
 					&& this.getStartDate().equals(otherTask.getStartDate())
 					&& this.getEndDate().equals(otherTask.getEndDate())) {
@@ -129,8 +135,40 @@ public class DonTask implements IDonTask {
 	}
 
 	@Override
-	public int getID() {
-		
-		return taskID;
+	public int compareTo(IDonTask otherTask) {
+		if (this.getType() == TaskType.TASK_FLOATING) {
+			// For floating tasks the title will be compared based on
+			// lexicographic ordering
+			return this.getTitle().compareTo(otherTask.getTitle());
+		} else if (this.getType() == TaskType.TASK_DEADLINE) {
+			// For deadline tasks the deadline will be compared first
+			// with an earlier deadline being "less than" a later deadline
+			int startDateComp = this.getStartDate().compareTo(
+					otherTask.getStartDate());
+			if (startDateComp == 0) {
+				return this.getTitle().compareTo(otherTask.getTitle());
+			}
+
+			return startDateComp;
+		} else if (this.getType() == TaskType.TASK_DURATION) {
+			// For tasks with a duration the start date will be compared first
+			// with an earlier start date being "less than" the later one.
+			// If they are equal the end date will be compared with the earlier
+			// one being "less than" the later one.
+			// If both start and end dates are equivalent the title will be
+			// compared.
+			int startDateComp = this.getStartDate().compareTo(
+					otherTask.getStartDate());
+			int endDateComp = this.getEndDate().compareTo(
+					otherTask.getEndDate());
+			if (startDateComp == 0 && endDateComp != 0) {
+				return endDateComp;
+			} else if (startDateComp == 0 && endDateComp == 0) {
+				return this.getTitle().compareTo(otherTask.getTitle());
+			}
+			
+			return startDateComp;
+		}
+		return 0;
 	}
 }
