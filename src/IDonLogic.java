@@ -9,26 +9,17 @@ import java.util.Calendar;
 public interface IDonLogic {
 	
 	/**
-	 * Creates a floating task
-	 * @param	title	the title of the task
-	 * @return	the created IDonTask object
+	 * Runs the given command and returns the result in an IDonResponse object
+	 * @param	command	the command given by the user
+	 * @return	the response
 	 */
-	public IDonTask createTask(String title);
+	public IDonResponse runCommand(String command);
 	
 	/**
-	 * Creates a deadline task
-	 * @param	title		the title of the task
-	 * @param	deadline	the deadline of the task
-	 * @return	the created IDonTask object
+	 * Perform a save of the data in DoOrNot to drive.
+	 * This is expected to be called from the GUI on a repeating interval.
+	 * 
+	 * @return	whether the save was successful
 	 */
-	public IDonTask createTask(String title, Calendar deadline);
-	
-	/**
-	 * Creates a task with a duration
-	 * @param	title 		the title of the task
-	 * @param	startDate	the start date of the task
-	 * @param	endDate		the end date of the task
-	 * @return	the created IDonTask object
-	 */
-	public IDonTask createTask(String title, Calendar startDate, Calendar endDate);
+	public IDonResponse saveToDrive();
 }
