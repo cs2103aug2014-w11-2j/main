@@ -26,6 +26,8 @@ public class DonLogic implements IDonLogic {
 		DonResponse response = null;
 		if (dCommand.getType() == DonCommand.Command.ADD) {
 
+		} else if(dCommand.getType() == DonCommand.Command.SEARCH) {
+			
 		}
 
 		return response;
@@ -116,6 +118,17 @@ public class DonLogic implements IDonLogic {
 					title));
 			response.addTask(task);
 		}
+		return response;
+	}
+	
+	/**
+	 * Find tasks with the given name
+	 * @param	name the name to search for
+	 * @return	the response containing the tasks
+	 */
+	private IDonResponse findTask(String name) {
+		DonResponse response = new DonResponse();
+		
 		return response;
 	}
 

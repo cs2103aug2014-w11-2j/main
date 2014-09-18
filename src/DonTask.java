@@ -1,4 +1,5 @@
 import java.util.Calendar;
+import java.util.Comparator;
 
 /**
  * Class containing the properties of a task
@@ -170,5 +171,16 @@ public class DonTask implements IDonTask {
 			return startDateComp;
 		}
 		return 0;
+	}
+	
+	/**
+	 * Comparator to help sort DonTasks by ID instead of name/date
+	 */
+	public static class IDComparator implements Comparator<IDonTask> {
+		@Override
+		public int compare(IDonTask task1, IDonTask task2) {
+			return (task1.getID()-task2.getID());
+		}
+		
 	}
 }
