@@ -14,6 +14,13 @@ public interface IDonTask {
 	}
 	
 	/**
+	 * Returns the unique ID of the task
+	 * 
+	 * @return	the ID of the task
+	 */
+	public int getID();
+	
+	/**
 	 * Returns the title of the task
 	 * 
 	 * @return	the title of the task

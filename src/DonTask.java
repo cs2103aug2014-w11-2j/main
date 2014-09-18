@@ -11,36 +11,30 @@ public class DonTask implements IDonTask {
 	private String taskTitle;
 	private Calendar startDate, endDate;
 	private boolean status;
+	private int taskID;
 
-	/**
-	 * Creates an empty task
-	 */
-	public DonTask() {
-		taskTitle = null;
-		startDate = null;
-		endDate = null;
-		status = false;
-	}
-
-	public DonTask(String title) {
+	public DonTask(String title, int ID) {
 		taskTitle = title;
 		startDate = null;
 		endDate = null;
 		status = false;
+		taskID = ID;
 	}
 
-	public DonTask(String title, Calendar deadline) {
+	public DonTask(String title, Calendar deadline, int ID) {
 		taskTitle = title;
 		startDate = deadline;
 		endDate = null;
 		status = false;
+		taskID = ID;
 	}
 
-	public DonTask(String title, Calendar startDate, Calendar endDate) {
+	public DonTask(String title, Calendar startDate, Calendar endDate, int ID) {
 		taskTitle = title;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		status = false;
+		taskID = ID;
 	}
 
 	@Override
@@ -132,5 +126,11 @@ public class DonTask implements IDonTask {
 		}
 		return false;
 
+	}
+
+	@Override
+	public int getID() {
+		
+		return taskID;
 	}
 }
