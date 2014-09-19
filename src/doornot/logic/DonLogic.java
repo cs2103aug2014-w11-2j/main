@@ -1,4 +1,11 @@
+package doornot.logic;
+
 import java.util.Calendar;
+
+import doornot.DonCommand;
+import doornot.DonParser;
+import doornot.DonStorageTMP;
+import doornot.storage.IDonStorage;
 
 /**
  * DonLogic - Class for handling the logic of the program (creation/deletion of

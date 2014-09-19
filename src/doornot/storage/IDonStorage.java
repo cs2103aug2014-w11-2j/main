@@ -1,3 +1,8 @@
+package doornot.storage;
+
+import doornot.logic.DonTask;
+import doornot.logic.IDonTask;
+
 /**
  * Interface defining the functionalities of the storage component
  * 
