@@ -1,6 +1,5 @@
 package doornot.storage;
 
-import doornot.logic.DonTask;
 import doornot.logic.IDonTask;
 
 /**
@@ -11,10 +10,12 @@ import doornot.logic.IDonTask;
  */
 public interface IDonStorage {
 
-	public int addTask(DonTask task, IDonTask.TaskType type);
+	public int addTask(IDonTask task, IDonTask.TaskType type);
 
-	public boolean removeTask(DonTask task);
+	public boolean removeTask(int taskID);
 	
 	public int getNextID(IDonTask.TaskType type);
+	
+	public IDonTask getTask(int ID);
 
 }

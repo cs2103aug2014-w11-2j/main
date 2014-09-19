@@ -12,7 +12,7 @@ import java.util.List;
 public interface IDonResponse {
 
 	public enum ResponseType {
-		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE 
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS
 	}
 	
 	public ResponseType getResponseType();

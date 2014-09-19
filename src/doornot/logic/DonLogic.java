@@ -17,8 +17,11 @@ import doornot.storage.IDonStorage;
 public class DonLogic implements IDonLogic {
 
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
-	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added!";
-
+	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
+	private static final String MSG_SEARCH_ID_FAILED = "No task with ID of %1$d was found.";
+	private static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
+	private static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
+	
 	private static final int FAILURE = -1;
 
 	private IDonStorage donStorage;
@@ -136,6 +139,52 @@ public class DonLogic implements IDonLogic {
 	private IDonResponse findTask(String name) {
 		DonResponse response = new DonResponse();
 		
+		return response;
+	}
+	
+	/**
+	 * Find tasks given the ID
+	 * @param	id	the id to search for
+	 * @return	the response containing the tasks
+	 */
+	private IDonResponse findTask(int id) {
+		DonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if(task==null) {
+			//No task with given ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addTask(task);
+		}
+		return response;
+	}
+	
+	/**
+	 * Deletes the task with the given ID
+	 * @param	id	the id of the task to delete
+	 * @return	the response containing the deletion status
+	 */
+	private IDonResponse deleteTask(int id) {
+		DonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if(task==null) {
+			//No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			boolean deleteStatus = donStorage.removeTask(id);
+			if(deleteStatus) {
+				//Deleted
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+				response.addTask(task);
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
+				response.addMessage(MSG_DELETE_FAILED);
+			}
+		}
 		return response;
 	}
 
