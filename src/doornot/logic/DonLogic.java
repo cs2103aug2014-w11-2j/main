@@ -5,13 +5,13 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Stack;
 
-import doornot.DonCommand;
-import doornot.DonParser;
+import doornot.parser.IDonCommand;
+import doornot.parser.IDonParser;
 import doornot.DonStorageTMP;
 import doornot.storage.IDonStorage;
 
 /**
- * DonLogic - Class for handling the logic of the program (creation/deletion of
+ * DonLogic - Class for handling the logic of the program (creation/deletion/modification of
  * tasks)
  * 
  * @author cs2103aug2014-w11-2j
@@ -32,6 +32,7 @@ public class DonLogic implements IDonLogic {
 	private static final int FAILURE = -1;
 
 	private IDonStorage donStorage;
+	private IDonParser donParser;
 
 	private Stack<DonAction> actionHistory;
 
@@ -42,11 +43,11 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public IDonResponse runCommand(String command) {
-		DonCommand dCommand = DonParser.parseCommand(command);
+		IDonCommand dCommand = donParser.parseCommand(command);
 		DonResponse response = null;
-		if (dCommand.getType() == DonCommand.Command.ADD) {
+		if (dCommand.getType() == IDonCommand.CommandType.ADD) {
 
-		} else if (dCommand.getType() == DonCommand.Command.SEARCH) {
+		} else if (dCommand.getType() == IDonCommand.CommandType.SEARCH) {
 
 		}
 
@@ -89,7 +90,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(DonCommand.Command.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
 					affectedTasks));
 		}
 		return response;
@@ -121,7 +122,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(DonCommand.Command.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
 					affectedTasks));
 		}
 		return response;
@@ -157,7 +158,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(DonCommand.Command.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
 					affectedTasks));
 		}
 		return response;
@@ -222,8 +223,8 @@ public class DonLogic implements IDonLogic {
 				// Add delete action to history
 				ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 				affectedTasks.add(task.clone());
-				actionHistory.push(new DonAction(DonCommand.Command.DELETE,
-						affectedTasks));
+				actionHistory.push(new DonAction(
+						IDonCommand.CommandType.DELETE, affectedTasks));
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
 				response.addMessage(MSG_DELETE_FAILED);
@@ -260,14 +261,15 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(DonCommand.Command.EDIT,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
 					affectedTasks));
 		}
 		return response;
 	}
 
 	/**
-	 * Change the deadline of the task with ID id to the new deadline (or start date/end date)
+	 * Change the deadline of the task with ID id to the new deadline (or start
+	 * date/end date)
 	 * 
 	 * @param id
 	 *            the id of the task to change
@@ -276,7 +278,7 @@ public class DonLogic implements IDonLogic {
 	 *            This will be ignored for deadline tasks.
 	 * @param newDate
 	 *            the new date to be applied to the task
-	 * @return	the success response
+	 * @return the success response
 	 */
 	private IDonResponse editTask(int id, boolean isStartDate, Calendar newDate) {
 		DonResponse response = new DonResponse();
@@ -289,14 +291,15 @@ public class DonLogic implements IDonLogic {
 			IDonTask unchangedTask = task.clone();
 			Calendar oldDate = null;
 			String dateType = "";
-			if(task.getType()==IDonTask.TaskType.FLOATING) {
-				//TODO: What should we do with floating tasks when the user wants to edit the date?
-			} else if (task.getType()==IDonTask.TaskType.DEADLINE) {
+			if (task.getType() == IDonTask.TaskType.FLOATING) {
+				// TODO: What should we do with floating tasks when the user
+				// wants to edit the date?
+			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
 				dateType = "Deadline";
 				oldDate = task.getStartDate();
 				task.setStartDate(newDate);
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
-				if(isStartDate) {
+				if (isStartDate) {
 					dateType = "Start date";
 					oldDate = task.getStartDate();
 					task.setStartDate(newDate);
@@ -309,18 +312,19 @@ public class DonLogic implements IDonLogic {
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, dateType, oldDate.getTime().toString(),
-					newDate.getTime().toString()));
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+					dateType, oldDate.getTime().toString(), newDate.getTime()
+							.toString()));
 
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(DonCommand.Command.EDIT,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
 					affectedTasks));
 		}
 		return response;
 	}
-	
+
 	/**
 	 * Change the start and end date of the task with ID id to the new dates
 	 * 
@@ -330,9 +334,10 @@ public class DonLogic implements IDonLogic {
 	 *            the new start date to be applied to the task
 	 * @param newEndDate
 	 *            the new end date to be applied to the task
-	 * @return	the success response
+	 * @return the success response
 	 */
-	private IDonResponse editTask(int id, Calendar newStartDate, Calendar newEndDate) {
+	private IDonResponse editTask(int id, Calendar newStartDate,
+			Calendar newEndDate) {
 		DonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
 		if (task == null) {
@@ -343,10 +348,12 @@ public class DonLogic implements IDonLogic {
 			IDonTask unchangedTask = task.clone();
 			Calendar oldStartDate = null, oldEndDate = null;
 			String dateType = "";
-			if(task.getType()==IDonTask.TaskType.FLOATING) {
-				//TODO: What should we do with floating tasks when the user wants to edit the date?
-			} else if (task.getType()==IDonTask.TaskType.DEADLINE) {
-				//TODO: What should we do with deadline tasks when the user wants to edit the end date?
+			if (task.getType() == IDonTask.TaskType.FLOATING) {
+				// TODO: What should we do with floating tasks when the user
+				// wants to edit the date?
+			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
+				// TODO: What should we do with deadline tasks when the user
+				// wants to edit the end date?
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				oldStartDate = task.getStartDate();
 				task.setStartDate(newStartDate);
@@ -358,15 +365,17 @@ public class DonLogic implements IDonLogic {
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, "Start date", oldStartDate.getTime().toString(),
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+					"Start date", oldStartDate.getTime().toString(),
 					newStartDate.getTime().toString()));
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, "End date", oldEndDate.getTime().toString(),
-					newEndDate.getTime().toString()));
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+					"End date", oldEndDate.getTime().toString(), newEndDate
+							.getTime().toString()));
 
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(DonCommand.Command.EDIT,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
 					affectedTasks));
 		}
 		return response;
@@ -385,7 +394,7 @@ public class DonLogic implements IDonLogic {
 		} else {
 			DonAction lastAction = actionHistory.pop();
 			int changesReversed = 0;
-			if (lastAction.getActionType() == DonCommand.Command.ADD) {
+			if (lastAction.getActionType() == IDonCommand.CommandType.ADD) {
 				// Perform a delete (reverse of Add)
 				for (IDonTask addedTask : lastAction.getAffectedTasks()) {
 					int id = addedTask.getID();
@@ -395,7 +404,7 @@ public class DonLogic implements IDonLogic {
 					}
 				}
 
-			} else if (lastAction.getActionType() == DonCommand.Command.DELETE) {
+			} else if (lastAction.getActionType() == IDonCommand.CommandType.DELETE) {
 				// Perform an add (reverse of Delete)
 				for (IDonTask removedTask : lastAction.getAffectedTasks()) {
 					int id = donStorage.addTask(removedTask);
@@ -403,7 +412,7 @@ public class DonLogic implements IDonLogic {
 						changesReversed++;
 					}
 				}
-			} else if (lastAction.getActionType() == DonCommand.Command.EDIT) {
+			} else if (lastAction.getActionType() == IDonCommand.CommandType.EDIT) {
 				// Replace the edited tasks with their previous properties
 				for (IDonTask editedTask : lastAction.getAffectedTasks()) {
 					int id = editedTask.getID();
@@ -425,15 +434,15 @@ public class DonLogic implements IDonLogic {
 	 * Keeps track of an action performed the user for use with the undo command
 	 */
 	private class DonAction {
-		private DonCommand.Command actionType;
+		private IDonCommand.CommandType actionType;
 		private List<IDonTask> affectedTasks;
 
-		public DonAction(DonCommand.Command type, List<IDonTask> tasks) {
+		public DonAction(IDonCommand.CommandType type, List<IDonTask> tasks) {
 			actionType = type;
 			tasks = affectedTasks;
 		}
 
-		public DonCommand.Command getActionType() {
+		public IDonCommand.CommandType getActionType() {
 			return actionType;
 		}
 
