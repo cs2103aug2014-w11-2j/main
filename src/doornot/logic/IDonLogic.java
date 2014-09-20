@@ -26,4 +26,12 @@ public interface IDonLogic {
 	 * @return whether the save was successful
 	 */
 	public IDonResponse saveToDrive();
+
+	/**
+	 * Method to get called by DoOrNot at startup of the program to bring up a
+	 * list of latest tasks. Gets information required by a welcome "page"
+	 * 
+	 * @return	the response containing relevant tasks and messages
+	 */
+	public IDonResponse initialize();
 }

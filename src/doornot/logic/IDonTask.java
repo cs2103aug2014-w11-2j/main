@@ -9,7 +9,7 @@ import java.util.Calendar;
  * @author cs2103aug2014-w11-2j
  *
  */
-public interface IDonTask extends Comparable<IDonTask> {
+public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	
 	public enum TaskType {
 		FLOATING, DEADLINE, DURATION
@@ -87,4 +87,12 @@ public interface IDonTask extends Comparable<IDonTask> {
 	 * @param	newStatus the completion status of the task
 	 */
 	public void setStatus(boolean newStatus);
+	
+	/**
+	 * Copies all fields of the given IDonTask into the current IDonTask
+	 * @param	sourceTask	the task to copy details from
+	 */
+	public void copyTaskDetails(IDonTask sourceTask);
+
+	public IDonTask clone();
 }
