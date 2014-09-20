@@ -12,16 +12,17 @@ import java.util.List;
 public interface IDonResponse {
 
 	public enum ResponseType {
-		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE 
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS,
+		EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE
 	}
-	
+
 	public ResponseType getResponseType();
-	
+
 	/**
 	 * Returns the response messages as a list. The list will be empty if there
 	 * are no messages
 	 * 
-	 * @return	the list of messages
+	 * @return the list of messages
 	 */
 	public List<String> getMessages();
 
@@ -29,41 +30,49 @@ public interface IDonResponse {
 	 * Returns the list of tasks enclosed within the response. The list will be
 	 * empty if there are no tasks.
 	 * 
-	 * @return	the list of tasks
+	 * @return the list of tasks
 	 */
 	public List<IDonTask> getTasks();
-	
+
 	/**
 	 * Adds a message to the response
-	 * @param	message	the message to add
-	 * @return	true if the addition was successful
+	 * 
+	 * @param message
+	 *            the message to add
+	 * @return true if the addition was successful
 	 */
 	public boolean addMessage(String message);
-	
+
 	/**
 	 * Adds a task to the response
-	 * @param	task	the task to add
-	 * @return	true if the addition was successful
+	 * 
+	 * @param task
+	 *            the task to add
+	 * @return true if the addition was successful
 	 */
 	public boolean addTask(IDonTask task);
-	
+
 	/**
 	 * Sets the response type of the IDonResponse object
-	 * @param	type the new type of response
+	 * 
+	 * @param type
+	 *            the new type of response
 	 */
 	public void setResponseType(ResponseType type);
-	
+
 	/**
-	 * Returns whether the response has any messages.
-	 * This is identical to checking getMessages().size()>0
-	 * @return	true if the response contains one or more messages
+	 * Returns whether the response has any messages. This is identical to
+	 * checking getMessages().size()>0
+	 * 
+	 * @return true if the response contains one or more messages
 	 */
 	public boolean hasMessages();
-	
+
 	/**
-	 * Returns whether the response has any tasks.
-	 * This is identical to checking getTasks().size()>0
-	 * @return	true if the response contains one or more tasks
+	 * Returns whether the response has any tasks. This is identical to checking
+	 * getTasks().size()>0
+	 * 
+	 * @return true if the response contains one or more tasks
 	 */
 	public boolean hasTasks();
 }

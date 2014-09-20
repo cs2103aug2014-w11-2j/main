@@ -169,20 +169,37 @@ public class DonTask implements IDonTask {
 			} else if (startDateComp == 0 && endDateComp == 0) {
 				return this.getTitle().compareTo(otherTask.getTitle());
 			}
-			
+
 			return startDateComp;
 		}
 		return 0;
 	}
+
+	@Override
+	public DonTask clone() {
+		DonTask newTask = new DonTask(taskTitle, taskID);
+		newTask.setStartDate((Calendar) this.getStartDate().clone());
+		newTask.setEndDate((Calendar) this.getEndDate().clone());
+		newTask.setStatus(this.getStatus());
+		return newTask;
+
+	}
 	
+	public void copyTaskDetails(IDonTask sourceTask) {
+		this.setTitle(sourceTask.getTitle());
+		this.setStartDate((Calendar) sourceTask.getStartDate().clone());
+		this.setEndDate((Calendar) sourceTask.getEndDate().clone());
+		this.setStatus(sourceTask.getStatus());
+	}
+
 	/**
 	 * Comparator to help sort DonTasks by ID instead of name/date
 	 */
 	public static class IDComparator implements Comparator<IDonTask> {
 		@Override
 		public int compare(IDonTask task1, IDonTask task2) {
-			return (task1.getID()-task2.getID());
+			return (task1.getID() - task2.getID());
 		}
-		
+
 	}
 }
