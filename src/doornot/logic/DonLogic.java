@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Stack;
 
+import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
 import doornot.parser.IDonParser;
 import doornot.DonStorageTMP;
@@ -38,6 +39,7 @@ public class DonLogic implements IDonLogic {
 
 	public DonLogic() {
 		donStorage = new DonStorageTMP();
+		donParser = new DonParser();
 		actionHistory = new Stack<DonAction>();
 	}
 
