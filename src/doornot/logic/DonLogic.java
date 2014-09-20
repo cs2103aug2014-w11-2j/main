@@ -25,6 +25,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
 	private static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
 	private static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
+	private static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
 
@@ -84,7 +85,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
 			response.addTask(task);
-			
+
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
@@ -116,7 +117,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
 			response.addTask(task);
-			
+
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
@@ -152,7 +153,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
 			response.addTask(task);
-			
+
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
@@ -171,7 +172,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse findTask(String name) {
 		DonResponse response = new DonResponse();
-		//TODO: Undone
+		// TODO: Undone
 		return response;
 	}
 
@@ -217,7 +218,7 @@ public class DonLogic implements IDonLogic {
 				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
 				response.addMessage(MSG_DELETE_SUCCESS);
 				response.addTask(task);
-				
+
 				// Add delete action to history
 				ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 				affectedTasks.add(task.clone());
@@ -255,7 +256,113 @@ public class DonLogic implements IDonLogic {
 			response.addTask(task);
 			response.addMessage(String.format(MSG_EDIT_TITLE_SUCCESS, oldTitle,
 					newTitle));
-			
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			actionHistory.push(new DonAction(DonCommand.Command.EDIT,
+					affectedTasks));
+		}
+		return response;
+	}
+
+	/**
+	 * Change the deadline of the task with ID id to the new deadline (or start date/end date)
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @param isStartDate
+	 *            true if the date to change is the start date, false otherwise.
+	 *            This will be ignored for deadline tasks.
+	 * @param newDate
+	 *            the new date to be applied to the task
+	 * @return	the success response
+	 */
+	private IDonResponse editTask(int id, boolean isStartDate, Calendar newDate) {
+		DonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			Calendar oldDate = null;
+			String dateType = "";
+			if(task.getType()==IDonTask.TaskType.FLOATING) {
+				//TODO: What should we do with floating tasks when the user wants to edit the date?
+			} else if (task.getType()==IDonTask.TaskType.DEADLINE) {
+				dateType = "Deadline";
+				oldDate = task.getStartDate();
+				task.setStartDate(newDate);
+			} else if (task.getType() == IDonTask.TaskType.DURATION) {
+				if(isStartDate) {
+					dateType = "Start date";
+					oldDate = task.getStartDate();
+					task.setStartDate(newDate);
+				} else {
+					dateType = "End date";
+					oldDate = task.getEndDate();
+					task.setEndDate(newDate);
+				}
+			}
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, dateType, oldDate.getTime().toString(),
+					newDate.getTime().toString()));
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			actionHistory.push(new DonAction(DonCommand.Command.EDIT,
+					affectedTasks));
+		}
+		return response;
+	}
+	
+	/**
+	 * Change the start and end date of the task with ID id to the new dates
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @param newStartDate
+	 *            the new start date to be applied to the task
+	 * @param newEndDate
+	 *            the new end date to be applied to the task
+	 * @return	the success response
+	 */
+	private IDonResponse editTask(int id, Calendar newStartDate, Calendar newEndDate) {
+		DonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			Calendar oldStartDate = null, oldEndDate = null;
+			String dateType = "";
+			if(task.getType()==IDonTask.TaskType.FLOATING) {
+				//TODO: What should we do with floating tasks when the user wants to edit the date?
+			} else if (task.getType()==IDonTask.TaskType.DEADLINE) {
+				//TODO: What should we do with deadline tasks when the user wants to edit the end date?
+			} else if (task.getType() == IDonTask.TaskType.DURATION) {
+				oldStartDate = task.getStartDate();
+				task.setStartDate(newStartDate);
+
+				oldEndDate = task.getEndDate();
+				task.setEndDate(newEndDate);
+
+			}
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, "Start date", oldStartDate.getTime().toString(),
+					newStartDate.getTime().toString()));
+			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, "End date", oldEndDate.getTime().toString(),
+					newEndDate.getTime().toString()));
+
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
