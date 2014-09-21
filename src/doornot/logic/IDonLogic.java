@@ -1,7 +1,5 @@
 package doornot.logic;
 
-import java.util.Calendar;
-
 /**
  * Interface defining the methods required of the logic component
  * 
