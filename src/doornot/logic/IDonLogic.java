@@ -1,11 +1,9 @@
 package doornot.logic;
 
 /**
- * Interface defining the methods required of the logic component
- * 
- * @author cs2103aug2014-w11-2j
- * 
+ * Interface defining the methods required of the logic component 
  */
+//@author A0111995Y
 public interface IDonLogic {
 
 	/**

@@ -6,9 +6,8 @@ import java.util.Calendar;
  * Interface defining the basic requirements of a Task
  * All references to "date" in the class refer to date and time (if present)
  * 
- * @author cs2103aug2014-w11-2j
- *
  */
+//@author A0111995Y
 public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	
 	public enum TaskType {

@@ -15,11 +15,12 @@ import doornot.storage.IDonStorage;
  * DonLogic - Class for handling the logic of the program
  * (creation/deletion/modification of tasks)
  * 
- * @author cs2103aug2014-w11-2j
- * 
  */
+// @author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
+	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
 	private static final String MSG_SEARCH_ID_FAILED = "No task with ID of %1$d was found.";
@@ -29,6 +30,12 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
+	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
+
+	private static final String PHRASE_COMPLETE = "complete";
+	private static final String PHRASE_INCOMPLETE = "incomplete";
+	private static final String PHRASE_END_DATE = "End date";
+	private static final String PHRASE_START_DATE = "Start date";
 
 	private static final int FAILURE = -1;
 
@@ -49,10 +56,29 @@ public class DonLogic implements IDonLogic {
 		IDonCommand.CommandType commandType = dCommand.getType();
 		IDonResponse response = null;
 		if (commandType == IDonCommand.CommandType.ADD_FLOAT) {
-
+			response = createTask(dCommand.getNewName());
+		} else if (commandType == IDonCommand.CommandType.ADD_TASK) {
+			response = createTask(dCommand.getNewName(),
+					dCommand.getNewDeadline());
+		} else if (commandType == IDonCommand.CommandType.ADD_EVENT) {
+			response = createTask(dCommand.getNewName(),
+					dCommand.getNewStartDate(), dCommand.getNewEndDate());
 		} else if (commandType == IDonCommand.CommandType.SEARCH_ID) {
-
-		} else if(commandType == IDonCommand.CommandType.UNDO) {
+			response = findTask(dCommand.getID());
+		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
+			response = deleteTask(dCommand.getID());
+		} else if (commandType == IDonCommand.CommandType.EDIT_ID_NAME) {
+			response = editTask(dCommand.getID(), dCommand.getNewName());
+		} else if (commandType == IDonCommand.CommandType.EDIT_ID_DATE) {
+			// TODO: recognize different single date edit type
+			response = editTask(dCommand.getID(), true,
+					dCommand.getNewDeadline());
+		} else if (commandType == IDonCommand.CommandType.EDIT_ID_EVENT) {
+			response = editTask(dCommand.getID(), dCommand.getNewStartDate(),
+					dCommand.getNewEndDate());
+		} else if (commandType == IDonCommand.CommandType.MARK_ID) {
+			response = toggleStatus(dCommand.getID());
+		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
 		}
 
@@ -61,8 +87,16 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public IDonResponse saveToDrive() {
-		// TODO Auto-generated method stub
-		return null;
+		boolean saveSuccess = donStorage.saveToDisk();
+		IDonResponse response = new DonResponse();
+		if (saveSuccess) {
+			response.setResponseType(IDonResponse.ResponseType.SAVE_SUCCESS);
+			response.addMessage(MSG_SAVE_SUCCESSFUL);
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SAVE_FAILURE);
+			response.addMessage(MSG_SAVE_FAILED);
+		}
+		return response;
 	}
 
 	@Override
@@ -305,11 +339,11 @@ public class DonLogic implements IDonLogic {
 				task.setStartDate(newDate);
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				if (isStartDate) {
-					dateType = "Start date";
+					dateType = PHRASE_START_DATE;
 					oldDate = task.getStartDate();
 					task.setStartDate(newDate);
 				} else {
-					dateType = "End date";
+					dateType = PHRASE_END_DATE;
 					oldDate = task.getEndDate();
 					task.setEndDate(newDate);
 				}
@@ -371,11 +405,11 @@ public class DonLogic implements IDonLogic {
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
 			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
-					"Start date", oldStartDate.getTime().toString(),
+					PHRASE_START_DATE, oldStartDate.getTime().toString(),
 					newStartDate.getTime().toString()));
 			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
-					"End date", oldEndDate.getTime().toString(), newEndDate
-							.getTime().toString()));
+					PHRASE_END_DATE, oldEndDate.getTime().toString(),
+					newEndDate.getTime().toString()));
 
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
@@ -425,7 +459,9 @@ public class DonLogic implements IDonLogic {
 					|| lastActionType == IDonCommand.CommandType.EDIT_ID_DATE
 					|| lastActionType == IDonCommand.CommandType.EDIT_ID_EVENT
 					|| lastActionType == IDonCommand.CommandType.EDIT_ID_NAME
-					|| lastActionType == IDonCommand.CommandType.EDIT_NAME) {
+					|| lastActionType == IDonCommand.CommandType.EDIT_NAME
+					|| lastActionType == IDonCommand.CommandType.MARK
+					|| lastActionType == IDonCommand.CommandType.MARK_ID) {
 				// Replace the edited tasks with their previous properties
 				for (IDonTask editedTask : lastAction.getAffectedTasks()) {
 					int id = editedTask.getID();
@@ -439,6 +475,39 @@ public class DonLogic implements IDonLogic {
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
 			response.addMessage(String.format(MSG_UNDO_ADD_SUCCESS,
 					changesReversed));
+		}
+		return response;
+	}
+
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatus(int id) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			boolean taskCompleted = !task.getStatus();
+			task.setStatus(taskCompleted);
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, id,
+					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			actionHistory.push(new DonAction(IDonCommand.CommandType.MARK_ID,
+					affectedTasks));
 		}
 		return response;
 	}

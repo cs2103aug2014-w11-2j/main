@@ -5,11 +5,8 @@ import java.util.List;
 
 /**
  * Class defining a response object
- * 
- * @author cs2103aug2014-w11-2j
- *
  */
-
+//@author A0111995Y
 public class DonResponse implements IDonResponse {
 	
 	private List<String> messages;

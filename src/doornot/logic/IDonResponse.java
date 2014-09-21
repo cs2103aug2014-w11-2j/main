@@ -5,15 +5,13 @@ import java.util.List;
 /**
  * Interface defining the methods that the GUI needs from a IDonResponse object
  * Each command call by the user should result in 1 IDonResponse object
- * 
- * @author cs2103aug2014-w11-2j
- * 
  */
+//@author A0111995Y
 public interface IDonResponse {
 
 	public enum ResponseType {
 		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS,
-		EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE
+		EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE
 	}
 
 	public ResponseType getResponseType();

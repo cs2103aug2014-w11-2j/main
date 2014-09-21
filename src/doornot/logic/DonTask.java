@@ -5,10 +5,8 @@ import java.util.Comparator;
 
 /**
  * Class containing the properties of a task
- * 
- * @author cs2103aug2014-w11-2j
- * 
  */
+//@author A0111995Y
 public class DonTask implements IDonTask {
 
 	private String taskTitle;
