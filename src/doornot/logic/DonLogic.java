@@ -12,8 +12,8 @@ import doornot.DonStorageTMP;
 import doornot.storage.IDonStorage;
 
 /**
- * DonLogic - Class for handling the logic of the program (creation/deletion/modification of
- * tasks)
+ * DonLogic - Class for handling the logic of the program
+ * (creation/deletion/modification of tasks)
  * 
  * @author cs2103aug2014-w11-2j
  * 
@@ -46,11 +46,14 @@ public class DonLogic implements IDonLogic {
 	@Override
 	public IDonResponse runCommand(String command) {
 		IDonCommand dCommand = donParser.parseCommand(command);
-		DonResponse response = null;
-		if (dCommand.getType() == IDonCommand.CommandType.ADD) {
+		IDonCommand.CommandType commandType = dCommand.getType();
+		IDonResponse response = null;
+		if (commandType == IDonCommand.CommandType.ADD_FLOAT) {
 
-		} else if (dCommand.getType() == IDonCommand.CommandType.SEARCH) {
+		} else if (commandType == IDonCommand.CommandType.SEARCH_ID) {
 
+		} else if(commandType == IDonCommand.CommandType.UNDO) {
+			response = undoLastAction();
 		}
 
 		return response;
@@ -92,7 +95,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_FLOAT,
 					affectedTasks));
 		}
 		return response;
@@ -124,7 +127,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_TASK,
 					affectedTasks));
 		}
 		return response;
@@ -160,7 +163,7 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD,
+			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_EVENT,
 					affectedTasks));
 		}
 		return response;
@@ -263,8 +266,8 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
-					affectedTasks));
+			actionHistory.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, affectedTasks));
 		}
 		return response;
 	}
@@ -321,8 +324,8 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
-					affectedTasks));
+			actionHistory.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_DATE, affectedTasks));
 		}
 		return response;
 	}
@@ -377,8 +380,8 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(IDonCommand.CommandType.EDIT,
-					affectedTasks));
+			actionHistory.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_EVENT, affectedTasks));
 		}
 		return response;
 	}
@@ -396,7 +399,10 @@ public class DonLogic implements IDonLogic {
 		} else {
 			DonAction lastAction = actionHistory.pop();
 			int changesReversed = 0;
-			if (lastAction.getActionType() == IDonCommand.CommandType.ADD) {
+			IDonCommand.CommandType lastActionType = lastAction.getActionType();
+			if (lastActionType == IDonCommand.CommandType.ADD_TASK
+					|| lastActionType == IDonCommand.CommandType.ADD_EVENT
+					|| lastActionType == IDonCommand.CommandType.ADD_FLOAT) {
 				// Perform a delete (reverse of Add)
 				for (IDonTask addedTask : lastAction.getAffectedTasks()) {
 					int id = addedTask.getID();
@@ -406,7 +412,7 @@ public class DonLogic implements IDonLogic {
 					}
 				}
 
-			} else if (lastAction.getActionType() == IDonCommand.CommandType.DELETE) {
+			} else if (lastActionType == IDonCommand.CommandType.DELETE) {
 				// Perform an add (reverse of Delete)
 				for (IDonTask removedTask : lastAction.getAffectedTasks()) {
 					int id = donStorage.addTask(removedTask);
@@ -414,7 +420,12 @@ public class DonLogic implements IDonLogic {
 						changesReversed++;
 					}
 				}
-			} else if (lastAction.getActionType() == IDonCommand.CommandType.EDIT) {
+			} else if (lastActionType == IDonCommand.CommandType.EDIT_DATE
+					|| lastActionType == IDonCommand.CommandType.EDIT_EVENT
+					|| lastActionType == IDonCommand.CommandType.EDIT_ID_DATE
+					|| lastActionType == IDonCommand.CommandType.EDIT_ID_EVENT
+					|| lastActionType == IDonCommand.CommandType.EDIT_ID_NAME
+					|| lastActionType == IDonCommand.CommandType.EDIT_NAME) {
 				// Replace the edited tasks with their previous properties
 				for (IDonTask editedTask : lastAction.getAffectedTasks()) {
 					int id = editedTask.getID();
