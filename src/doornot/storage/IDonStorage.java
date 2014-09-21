@@ -17,5 +17,11 @@ public interface IDonStorage {
 	public int getNextID();
 	
 	public IDonTask getTask(int ID);
+	
+	public boolean saveToDisk();
+	
+	public boolean loadFromDisk();
+	
+	
 
 }
