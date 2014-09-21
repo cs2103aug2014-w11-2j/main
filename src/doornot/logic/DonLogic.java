@@ -57,27 +57,36 @@ public class DonLogic implements IDonLogic {
 		IDonResponse response = null;
 		if (commandType == IDonCommand.CommandType.ADD_FLOAT) {
 			response = createTask(dCommand.getNewName());
+
 		} else if (commandType == IDonCommand.CommandType.ADD_TASK) {
 			response = createTask(dCommand.getNewName(),
 					dCommand.getNewDeadline());
+
 		} else if (commandType == IDonCommand.CommandType.ADD_EVENT) {
 			response = createTask(dCommand.getNewName(),
 					dCommand.getNewStartDate(), dCommand.getNewEndDate());
+
 		} else if (commandType == IDonCommand.CommandType.SEARCH_ID) {
 			response = findTask(dCommand.getID());
+
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
+
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_NAME) {
 			response = editTask(dCommand.getID(), dCommand.getNewName());
+
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_DATE) {
 			// TODO: recognize different single date edit type
 			response = editTask(dCommand.getID(), true,
 					dCommand.getNewDeadline());
+
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_EVENT) {
 			response = editTask(dCommand.getID(), dCommand.getNewStartDate(),
 					dCommand.getNewEndDate());
+
 		} else if (commandType == IDonCommand.CommandType.MARK_ID) {
 			response = toggleStatus(dCommand.getID());
+
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
 		}
@@ -211,6 +220,23 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTask(String name) {
+		DonResponse response = new DonResponse();
+		// TODO: Undone
+		return response;
+	}
+
+	/**
+	 * Find tasks within the given range of time. Either parameter can be null
+	 * to search for tasks before or after a date. For example if startDate is
+	 * null and endDate is set to 09102014, the method will return all tasks
+	 * from before 9th of October 2014. If startDate is 09102014 and endDate is
+	 * null, all tasks beginning after 9th of October 2014 will be returned.
+	 * 
+	 * @param startDate the date to start searching from (inclusive)
+	 * @param endDate	the latest possible start date of a task (inclusive)
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate) {
 		DonResponse response = new DonResponse();
 		// TODO: Undone
 		return response;
@@ -509,6 +535,19 @@ public class DonLogic implements IDonLogic {
 			actionHistory.push(new DonAction(IDonCommand.CommandType.MARK_ID,
 					affectedTasks));
 		}
+		return response;
+	}
+
+	/**
+	 * Show the user help information
+	 * 
+	 * @return response containing help messages
+	 */
+	private IDonResponse getHelp(String command) {
+		// TODO: decide the format of the help
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.HELP);
+		response.addMessage("SOME MESSAGE HERE");
 		return response;
 	}
 
