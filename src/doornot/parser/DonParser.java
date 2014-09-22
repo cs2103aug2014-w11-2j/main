@@ -9,7 +9,8 @@ public class DonParser implements IDonParser{
 	@Override
 	public DonCommand parseCommand(String command) {
 		
-		return null;
+//		readFirstWord(command);
+//		DonCommand.CommandType hi = DonCommand.CommandType.ADD_EVENT;
 	}
 
 }

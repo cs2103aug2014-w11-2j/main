@@ -5,10 +5,25 @@ import java.util.Calendar;
 public interface IDonCommand {
 	
 	
-	public enum CommandType {
-		ADD_FLOAT, ADD_TASK, ADD_EVENT, EDIT_ID_NAME, EDIT_ID_DATE, EDIT_ID_EVENT,
-		EDIT_NAME, EDIT_DATE, EDIT_EVENT, DELETE_ID, DELETE, SEARCH_NAME, SEARCH_DATE, SEARCH_ID,
-		MARK_ID, MARK, UNDO, INVALID, EXIT 
+	public static enum CommandType {
+		ADD_FLOAT, 
+		ADD_TASK, 
+		ADD_EVENT, 
+		EDIT_ID_NAME, 
+		EDIT_ID_DATE, 
+		EDIT_ID_EVENT,
+		EDIT_NAME, 
+		EDIT_DATE, 
+		EDIT_EVENT, 
+		DELETE_ID, 
+		DELETE, 
+		SEARCH_NAME, 
+		SEARCH_DATE, 
+		SEARCH_ID,
+		MARK_ID, 
+		MARK,
+		UNDO, 
+		EXIT;
 	}
 	
 	/**
@@ -68,5 +83,54 @@ public interface IDonCommand {
 	 * @return new deadline
 	 */
 	public Calendar getNewDeadline();
+	
+	/**
+	 * Sets the commandType for this command
+	 * @param type
+	 */
+	public void setType(CommandType type);
+	
+	/**
+	 * Sets the ID of task for this command
+	 * @param ID
+	 */
+	public void setID(int ID);
+	
+	/**
+	 * Sets name of task for this command
+	 * @param name
+	 */
+	public void setName(String name);
+	
+	/**
+	 * Sets deadline of task for this command
+	 * @param deadline
+	 */
+	public void setDeadline(Calendar deadline);
+	
+	/**
+	 * Sets new name of task for this command
+	 * @param newName
+	 */
+	public void setNewName(String newName);
+	
+	/**
+	 * Sets new start date of task for this command
+	 * @param newStart
+	 */
+	public void setNewStartDate(Calendar newStart);
+	
+	/**
+	 * Sets new end date of task for this command
+	 * @param newEnd
+	 */
+	public void setNewEndDate(Calendar newEnd);
+	
+	/**
+	 * Sets new deadline of task for this command
+	 * @param newDeadline
+	 */
+	public void setNewDeadline(Calendar newDeadline);
+	
 	
 }
