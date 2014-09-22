@@ -16,22 +16,42 @@ public class DonParser implements IDonParser{
 		
 		dCommand = new DonCommand();
 		userCommand = command;
-		dType = getCommandType();
 		setDonCommand();
 		return dCommand;
 		
 	}
 	
-	private CommandType getCommandType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 	private void setDonCommand() {
-		// TODO Auto-generated method stub
+		String commandWord = getFirstWord(userCommand);
+		
+		if(commandWord.equalsIgnoreCase("a") || commandWord.equalsIgnoreCase("add")){
+			
+		}else if(commandWord.equalsIgnoreCase("e") || commandWord.equalsIgnoreCase("ed") 
+				|| commandWord.equalsIgnoreCase("edit")){
+			
+		}else if(commandWord.equalsIgnoreCase("s") || commandWord.equalsIgnoreCase("search")){
+
+		}else if(commandWord.equalsIgnoreCase("d") || commandWord.equalsIgnoreCase("del")
+				|| commandWord.equalsIgnoreCase("delete")){
+
+		}else if(commandWord.equalsIgnoreCase("m") || commandWord.equalsIgnoreCase("mark")){
+
+		}else if(commandWord.equalsIgnoreCase("undo")){
+			dCommand.setType(CommandType.UNDO);
+		}else if(commandWord.equalsIgnoreCase("exit")){
+
+		}else{
+			
+		}
 		
 	}
 
 
+	private static String removeFirstWord(String userCommand) {
+		return userCommand.replace(getFirstWord(userCommand), "").trim();
+	}
 
+	private static String getFirstWord(String userCommand) {
+		return userCommand.trim().split("\\s+")[0];
+	}
 }

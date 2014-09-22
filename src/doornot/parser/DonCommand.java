@@ -2,7 +2,7 @@ package doornot.parser;
 
 import java.util.Calendar;
 
-import doornot.parser.IDonCommand.CommandType;
+
 
 public class DonCommand implements IDonCommand{
 	

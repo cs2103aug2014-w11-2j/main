@@ -22,7 +22,8 @@ public interface IDonCommand {
 		SEARCH_ID,
 		MARK_ID, 
 		MARK,
-		UNDO, 
+		UNDO,
+		INVALID,
 		EXIT;
 	}
 	
