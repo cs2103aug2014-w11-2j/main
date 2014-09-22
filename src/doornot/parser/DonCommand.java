@@ -3,57 +3,67 @@ package doornot.parser;
 import java.util.Calendar;
 
 public class DonCommand implements IDonCommand{
-
+	
+	private CommandType commandType;
+	private int taskID;
+	private String taskName;
+	private String taskNewName;
+	private Calendar taskNewDeadline;
+	private Calendar taskNewStartDate;
+	private Calendar taskNewEndDate;
+	
+	
+	
 	public DonCommand() {
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public CommandType getType() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return commandType;
 	}
 
 	@Override
 	public int getID() {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		return taskID;
 	}
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return taskName;
 	}
 
 	@Override
 	public Calendar getDeadline() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return taskNewDeadline;
 	}
 
 	@Override
 	public String getNewName() {
 		// TODO Auto-generated method stub
-		return null;
+		return taskNewName;
 	}
 
 	@Override
 	public Calendar getNewStartDate() {
 		// TODO Auto-generated method stub
-		return null;
+		return taskNewStartDate;
 	}
 
 	@Override
 	public Calendar getNewEndDate() {
 		// TODO Auto-generated method stub
-		return null;
+		return taskNewEndDate;
 	}
 
 	@Override
 	public Calendar getNewDeadline() {
 		// TODO Auto-generated method stub
-		return null;
+		return taskNewDeadline;
 	}
 
 }
