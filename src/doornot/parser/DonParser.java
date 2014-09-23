@@ -22,9 +22,11 @@ public class DonParser implements IDonParser{
 	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
 	
 	// allow 'from DDMMYYYY to DDMMYYYY'
-	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
+	private String eventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
 	
-	private String markIDReg = "[0-9]";
+	// allow 'to DDMMYYYY'
+	private String editDateReg = "\\bto\\s[0-9]{8}$";
+	
 	
 	@Override
 	public DonCommand parseCommand(String command) {
@@ -43,12 +45,12 @@ public class DonParser implements IDonParser{
 			setAddCommand();
 		}else if(commandWord.equalsIgnoreCase("e") || commandWord.equalsIgnoreCase("ed") 
 				|| commandWord.equalsIgnoreCase("edit")){
-			
+			setEditCommand();
 		}else if(commandWord.equalsIgnoreCase("s") || commandWord.equalsIgnoreCase("search")){
-
+			setSearchCommand();
 		}else if(commandWord.equalsIgnoreCase("d") || commandWord.equalsIgnoreCase("del")
 				|| commandWord.equalsIgnoreCase("delete")){
-
+			setDeleteCommand();
 		}else if(commandWord.equalsIgnoreCase("m") || commandWord.equalsIgnoreCase("mark")){
 			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("undo")){
@@ -71,17 +73,25 @@ public class DonParser implements IDonParser{
 			dCommand.setName(getTaskName(parameters, addTaskReg));
 			dCommand.setNewDeadline(getEndDate(parameters, addTaskReg));
 			
-		}else if(isRightCommand(parameters, addEventReg)){
+		}else if(isRightCommand(parameters, eventReg)){
 			dCommand.setType(CommandType.ADD_EVENT);
-			dCommand.setName(getTaskName(parameters, addEventReg));
-			dCommand.setNewStartDate(getStartDate(parameters, addEventReg));
-			dCommand.setNewEndDate(getEndDate(parameters, addEventReg));
+			dCommand.setName(getTaskName(parameters, eventReg));
+			dCommand.setNewStartDate(getStartDate(parameters, eventReg));
+			dCommand.setNewEndDate(getEndDate(parameters, eventReg));
 		}else{
 			dCommand.setType(CommandType.ADD_FLOAT);
 			dCommand.setName(parameters.trim());
 		}
 		
 	}
+	
+	private void setEditCommand(){
+		String parameters = removeFirstWord(userCommand);
+		
+		
+		
+	}
+	
 	
 	private void setMarkCommand(){
 		String parameters = removeFirstWord(userCommand);
@@ -98,6 +108,42 @@ public class DonParser implements IDonParser{
 		
 	}
 	
+	private void setDeleteCommand(){
+		String parameters = removeFirstWord(userCommand);
+		
+		try{
+			int ID = Integer.parseInt(parameters);
+			dCommand.setType(CommandType.DELETE_ID);
+			dCommand.setID(ID);
+			
+		}catch(NumberFormatException e){
+			dCommand.setType(CommandType.DELETE);
+			dCommand.setName(parameters);
+		}
+		
+	}
+	
+	private void setSearchCommand(){
+		String parameters = removeFirstWord(userCommand);
+		
+		try{
+			int num = Integer.parseInt(parameters);
+			
+			if(parameters.length()==8){
+
+				dCommand.setType(CommandType.SEARCH_DATE);
+				dCommand.setDeadline(createDate(parameters));
+			}else{
+				dCommand.setType(CommandType.SEARCH_ID);
+				dCommand.setID(num);
+			}
+			
+		}catch(NumberFormatException e){
+			dCommand.setType(CommandType.SEARCH_NAME);
+			dCommand.setName(parameters);
+		}
+		
+	}
 	private boolean isRightCommand(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
@@ -114,7 +160,6 @@ public class DonParser implements IDonParser{
 		return createDate(date);
 		
 	}
-	
 	
 	private Calendar getEndDate(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
