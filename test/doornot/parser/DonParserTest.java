@@ -23,16 +23,16 @@ public class DonParserTest {
 	public void testAddTask(){
 		
 		CommandTest.setType(CommandType.ADD_TASK);
-		CommandTest.setName("hihihi");
+		CommandTest.setNewName("hihihi");
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9));
 		
 		assertEquals(CommandTest.getType(), parser.parseCommand("add \"hihihi\" at 09082014").getType());
-		assertEquals(CommandTest.getName(), parser.parseCommand("add \"hihihi\" at 09082014").getName());
+		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09082014").getNewName());
 		assertEquals(CommandTest.getNewDeadline(), 
 				parser.parseCommand("add \"hihihi\" at 09082014").getNewDeadline());
 		
-		String test = "\"hi\"";
-		Pattern pattern = Pattern.compile("\".+\"");
+		String test = "\"blah\" to \"hi\"";
+		Pattern pattern = Pattern.compile("\\bto\\s\".+\"$");
 		Matcher m = pattern.matcher(test);
 		System.out.println(m.find());
 		System.out.println(m.group());
@@ -45,15 +45,15 @@ public class DonParserTest {
 	@Test
 	public void testAddEvent(){
 		CommandTest.setType(CommandType.ADD_EVENT);
-		CommandTest.setName("hihihi");
+		CommandTest.setNewName("hihihi");
 		CommandTest.setNewStartDate(new GregorianCalendar(2014,8,7));
 		CommandTest.setNewEndDate(new GregorianCalendar(2014,8,9));
 		
 		
 		assertEquals(CommandTest.getType(),
 				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getType());
-		assertEquals(CommandTest.getName(), 
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getName());
+		assertEquals(CommandTest.getNewName(), 
+				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewName());
 		assertEquals(CommandTest.getNewStartDate(), 
 				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
@@ -68,8 +68,8 @@ public class DonParserTest {
 		
 		assertEquals(CommandTest.getType(),
 				parser.parseCommand("add \"hihihi\"").getType());
-		assertEquals(CommandTest.getName(), 
-				parser.parseCommand("add \"hihihi\"").getName());
+		assertEquals(CommandTest.getNewName(), 
+				parser.parseCommand("add \"hihihi\"").getNewName());
 		assertEquals(CommandType.INVALID, 
 				parser.parseCommand("add \"hihihi\" dfs").getType());
 	}
@@ -84,6 +84,8 @@ public class DonParserTest {
 				parser.parseCommand("mark \"blah95\"").getType());
 		assertEquals(CommandTest.getName(), 
 				parser.parseCommand("mark \"blah95\"").getName());
+		assertEquals(CommandType.INVALID, 
+				parser.parseCommand("mark \"blah95").getType());
 	}
 	
 	@Test
@@ -107,6 +109,8 @@ public class DonParserTest {
 				parser.parseCommand("del \"blah95\"").getType());
 		assertEquals(CommandTest.getName(), 
 				parser.parseCommand("del \"blah95\"").getName());
+		assertEquals(CommandType.INVALID, 
+				parser.parseCommand("del \"blah95").getType());
 	}
 	
 	@Test
@@ -119,6 +123,7 @@ public class DonParserTest {
 				parser.parseCommand("del 666").getType());
 		assertEquals(CommandTest.getID(), 
 				parser.parseCommand("del 666").getID());
+		
 	}
 	@Test
 	public void testSearchName(){
