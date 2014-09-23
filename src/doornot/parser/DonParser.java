@@ -1,6 +1,5 @@
 package doornot.parser;
 
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
@@ -14,7 +13,6 @@ public class DonParser implements IDonParser{
 		// TODO Auto-generated constructor stub
 	}
 	private String userCommand;
-	private CommandType dType;
 	private DonCommand dCommand;
 	
 	
@@ -23,8 +21,10 @@ public class DonParser implements IDonParser{
 	//allow 'at DDMMYYYY' and '@ DDMMYYYY'
 	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
 	
+	// allow 'from DDMMYYYY to DDMMYYYY'
 	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
 	
+	private String markIDReg = "[0-9]";
 	
 	@Override
 	public DonCommand parseCommand(String command) {
@@ -50,7 +50,7 @@ public class DonParser implements IDonParser{
 				|| commandWord.equalsIgnoreCase("delete")){
 
 		}else if(commandWord.equalsIgnoreCase("m") || commandWord.equalsIgnoreCase("mark")){
-
+			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
 		}else if(commandWord.equalsIgnoreCase("exit")){
@@ -79,6 +79,21 @@ public class DonParser implements IDonParser{
 		}else{
 			dCommand.setType(CommandType.ADD_FLOAT);
 			dCommand.setName(parameters.trim());
+		}
+		
+	}
+	
+	private void setMarkCommand(){
+		String parameters = removeFirstWord(userCommand);
+		
+		try{
+			int ID = Integer.parseInt(parameters);
+			dCommand.setType(CommandType.MARK_ID);
+			dCommand.setID(ID);
+			
+		}catch(NumberFormatException e){
+			dCommand.setType(CommandType.MARK);
+			dCommand.setName(parameters);
 		}
 		
 	}

@@ -39,7 +39,7 @@ public class DonParserTest {
 		String[] splits = m.group(0).split("\\D");
 		System.out.println(splits[splits.length-5]);
 
-		System.out.println(Integer.parseInt(splits[splits.length-1].substring(4,8)));
+		System.out.println(Integer.parseInt("555"));
 	}
 	
 	@Test
@@ -71,5 +71,28 @@ public class DonParserTest {
 		assertEquals(addCommandTest.getName(), 
 				parser.parseCommand("add hihihi").getName());
 	}
-
+	
+	@Test
+	public void testMark(){
+		addCommandTest.setType(CommandType.MARK);
+		addCommandTest.setName("blah95");
+		
+		
+		assertEquals(addCommandTest.getType(),
+				parser.parseCommand("mark blah95").getType());
+		assertEquals(addCommandTest.getName(), 
+				parser.parseCommand("mark blah95").getName());
+	}
+	
+	@Test
+	public void testMarkID(){
+		addCommandTest.setType(CommandType.MARK_ID);
+		addCommandTest.setID(666);
+		
+		
+		assertEquals(addCommandTest.getType(),
+				parser.parseCommand("mark 666").getType());
+		assertEquals(addCommandTest.getID(), 
+				parser.parseCommand("mark 666").getID());
+	}
 }
