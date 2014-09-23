@@ -110,25 +110,8 @@ public class DonParser implements IDonParser{
 
 	private void setEditCommand(){
 		String parameters = removeFirstWord(userCommand);
-
-		if(isRightCommand(parameters, editDateReg)){
-			String taskName = getTaskName(parameters, editDateReg);
-			if(isTaskName(taskName)){
-				dCommand.setType(CommandType.EDIT_DATE);
-				dCommand.setName(extractName(taskName));
-				dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
-			}else{
-				try{
-					int ID = Integer.parseInt(taskName);
-					dCommand.setType(CommandType.EDIT_ID_DATE);
-					dCommand.setID(ID);
-					dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
-				
-				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
-				}
-			}
-		}else if(isRightCommand(parameters, editEventReg)){
+		
+		if(isRightCommand(parameters, editEventReg)){
 			String taskName = getTaskName(parameters, editEventReg);
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_EVENT);
@@ -147,6 +130,24 @@ public class DonParser implements IDonParser{
 					dCommand.setType(CommandType.INVALID);
 				}
 			}
+		}else if(isRightCommand(parameters, editDateReg)){
+			String taskName = getTaskName(parameters, editDateReg);
+			if(isTaskName(taskName)){
+				dCommand.setType(CommandType.EDIT_DATE);
+				dCommand.setName(extractName(taskName));
+				dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
+			}else{
+				try{
+					int ID = Integer.parseInt(taskName);
+					dCommand.setType(CommandType.EDIT_ID_DATE);
+					dCommand.setID(ID);
+					dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
+				
+				}catch(Exception e){
+					dCommand.setType(CommandType.INVALID);
+				}
+			}
+			
 		}else{
 			String taskName = getTaskName(parameters, editNameReg);
 			String newName = getNewName(parameters, editNameReg);
