@@ -18,6 +18,9 @@ public class DonParser implements IDonParser{
 	
 	//List of all the allowed types 
 	
+	//name must be between " "
+	private String taskNameReg = "^\".+\"$";
+	
 	//allow 'at DDMMYYYY' and '@ DDMMYYYY'
 	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
 	
@@ -66,28 +69,49 @@ public class DonParser implements IDonParser{
 
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
-		
-		
+
+
 		if(isRightCommand(parameters, addTaskReg)){
-			dCommand.setType(CommandType.ADD_TASK);
-			dCommand.setName(getTaskName(parameters, addTaskReg));
-			dCommand.setNewDeadline(getEndDate(parameters, addTaskReg));
-			
+			String taskName = getTaskName(parameters, addTaskReg);
+			if(isTaskName(taskName)){
+				dCommand.setType(CommandType.ADD_TASK);
+				dCommand.setName(extractName(taskName));
+				dCommand.setNewDeadline(getEndDate(parameters, addTaskReg));
+			}else{
+				dCommand.setType(CommandType.INVALID);
+			}
+
 		}else if(isRightCommand(parameters, eventReg)){
-			dCommand.setType(CommandType.ADD_EVENT);
-			dCommand.setName(getTaskName(parameters, eventReg));
-			dCommand.setNewStartDate(getStartDate(parameters, eventReg));
-			dCommand.setNewEndDate(getEndDate(parameters, eventReg));
+			String taskName = getTaskName(parameters, eventReg);
+			if(isTaskName(taskName)){
+				dCommand.setType(CommandType.ADD_EVENT);
+				dCommand.setName(extractName(taskName));
+				dCommand.setNewStartDate(getStartDate(parameters, eventReg));
+				dCommand.setNewEndDate(getEndDate(parameters, eventReg));
+			}else{
+				dCommand.setType(CommandType.INVALID);
+			}
 		}else{
-			dCommand.setType(CommandType.ADD_FLOAT);
-			dCommand.setName(parameters.trim());
+			if(isTaskName(parameters)){
+				dCommand.setType(CommandType.ADD_FLOAT);
+				dCommand.setName(extractName(parameters));
+			}else{
+				dCommand.setType(CommandType.INVALID);
+			}
 		}
-		
+
 	}
-	
+
+
 	private void setEditCommand(){
 		String parameters = removeFirstWord(userCommand);
+
+		if(parameters.startsWith("\"")){
+
+
+		}else{
 		
+		}
 		
 		
 	}
@@ -96,29 +120,38 @@ public class DonParser implements IDonParser{
 	private void setMarkCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		try{
-			int ID = Integer.parseInt(parameters);
-			dCommand.setType(CommandType.MARK_ID);
-			dCommand.setID(ID);
-			
-		}catch(NumberFormatException e){
+		if(isTaskName(parameters)){
 			dCommand.setType(CommandType.MARK);
-			dCommand.setName(parameters);
+			dCommand.setName(extractName(parameters));
+		}else{
+			try{
+				int ID = Integer.parseInt(parameters);
+				dCommand.setType(CommandType.MARK_ID);
+				dCommand.setID(ID);
+			
+			}catch(Exception e){
+				dCommand.setType(CommandType.INVALID);
+			}
 		}
 		
 	}
 	
+
 	private void setDeleteCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		try{
-			int ID = Integer.parseInt(parameters);
-			dCommand.setType(CommandType.DELETE_ID);
-			dCommand.setID(ID);
-			
-		}catch(NumberFormatException e){
+		if(isTaskName(parameters)){
 			dCommand.setType(CommandType.DELETE);
-			dCommand.setName(parameters);
+			dCommand.setName(extractName(parameters));
+		}else{
+			try{
+				int ID = Integer.parseInt(parameters);
+				dCommand.setType(CommandType.DELETE_ID);
+				dCommand.setID(ID);
+			
+			}catch(Exception e){
+				dCommand.setType(CommandType.INVALID);
+			}
 		}
 		
 	}
@@ -126,23 +159,27 @@ public class DonParser implements IDonParser{
 	private void setSearchCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		try{
-			int num = Integer.parseInt(parameters);
-			
-			if(parameters.length()==8){
-
-				dCommand.setType(CommandType.SEARCH_DATE);
-				dCommand.setDeadline(createDate(parameters));
-			}else{
-				dCommand.setType(CommandType.SEARCH_ID);
-				dCommand.setID(num);
-			}
-			
-		}catch(NumberFormatException e){
-			dCommand.setType(CommandType.SEARCH_NAME);
-			dCommand.setName(parameters);
-		}
 		
+		if(isTaskName(parameters)){
+			dCommand.setType(CommandType.SEARCH_NAME);
+			dCommand.setName(extractName(parameters));
+		}else{
+			try{
+				int num = Integer.parseInt(parameters);
+
+				if(parameters.length()==8){
+
+					dCommand.setType(CommandType.SEARCH_DATE);
+					dCommand.setDeadline(createDate(parameters));
+				}else{
+					dCommand.setType(CommandType.SEARCH_ID);
+					dCommand.setID(num);
+				}
+
+			}catch(Exception e){
+				dCommand.setType(CommandType.INVALID);
+			}
+		}
 	}
 	private boolean isRightCommand(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
@@ -192,4 +229,13 @@ public class DonParser implements IDonParser{
 		return userCommand.trim().split("\\s+")[0];
 	}
 	
+	private boolean isTaskName(String param) {
+		Pattern pattern = Pattern.compile(taskNameReg);
+		Matcher matcher = pattern.matcher(param);
+		return matcher.find();
+	}
+	private String extractName(String param){
+		return param.substring(1, param.length()-1);
+	}
+
 }
