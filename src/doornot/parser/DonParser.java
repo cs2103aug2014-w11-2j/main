@@ -19,8 +19,11 @@ public class DonParser implements IDonParser{
 	
 	
 	//List of all the allowed types 
+	
+	//allow 'at DDMMYYYY' and '@ DDMMYYYY'
 	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
-
+	
+	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
 	
 	
 	@Override
@@ -66,22 +69,36 @@ public class DonParser implements IDonParser{
 		if(isRightCommand(parameters, addTaskReg)){
 			dCommand.setType(CommandType.ADD_TASK);
 			dCommand.setName(getTaskName(parameters, addTaskReg));
-			dCommand.setNewDeadline(getDate(parameters, addTaskReg));
+			dCommand.setNewDeadline(getEndDate(parameters, addTaskReg));
+			
+		}else if(isRightCommand(parameters, addEventReg)){
+			dCommand.setType(CommandType.ADD_EVENT);
+			dCommand.setName(getTaskName(parameters, addEventReg));
+			dCommand.setNewStartDate(getStartDate(parameters, addEventReg));
+			dCommand.setNewEndDate(getEndDate(parameters, addEventReg));
 		}
 		
 	}
-	/**
-	 * allow 'at DDMMYYYY' and '@ DDMMYYYY'
-	 * @param param
-	 * @return
-	 */
+	
 	private boolean isRightCommand(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
 		return matcher.find();
 	}
 	
-	private Calendar getDate(String param, String regex) {
+	private Calendar getStartDate(String param, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(param.toLowerCase());
+		matcher.find();
+		String[] split = matcher.group().split("\\D");
+		String date = split[split.length-5];
+		
+		return createDate(date);
+		
+	}
+	
+	
+	private Calendar getEndDate(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
 		matcher.find();
