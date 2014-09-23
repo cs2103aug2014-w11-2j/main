@@ -85,6 +85,39 @@ public class DonLogicTester {
 		assertEquals("Finish homework", deletedTask.getTitle());
 
 	}
+	
+	/*
+	 * Search tests
+	 */
+	@Test
+	public void testSearchWithName() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add Do homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("s homework");
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask foundTask = searchResponse.getTasks().get(0);
+		
+		assertEquals(addedTask, foundTask);
+	}
+	
+	@Test
+	public void testSearchWithNameFail() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add Do homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("s do work");
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse.getResponseType());
+	}
+	
 
 	/*
 	 * Editing tests
@@ -148,6 +181,45 @@ public class DonLogicTester {
 		assertEquals(2014, endDate.get(Calendar.YEAR));
 		assertEquals(11, endDate.get(Calendar.HOUR_OF_DAY));
 		assertEquals(40, endDate.get(Calendar.MINUTE));
+	}
+	
+	@Test
+	public void testMarkTaskWithID() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("d "+changedTask.getID());
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithIDFail() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("d "+(changedTask.getID()+1));
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				editResponse.getResponseType());
+		assertEquals(false, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithTitle() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("d homework");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
 	}
 
 	/*
