@@ -76,6 +76,9 @@ public class DonParser implements IDonParser{
 			dCommand.setName(getTaskName(parameters, addEventReg));
 			dCommand.setNewStartDate(getStartDate(parameters, addEventReg));
 			dCommand.setNewEndDate(getEndDate(parameters, addEventReg));
+		}else{
+			dCommand.setType(CommandType.ADD_FLOAT);
+			dCommand.setName(parameters.trim());
 		}
 		
 	}

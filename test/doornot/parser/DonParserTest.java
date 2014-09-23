@@ -60,5 +60,16 @@ public class DonParserTest {
 				parser.parseCommand("add hihihi from 07082014 to 09082014").getNewEndDate());
 	}
 	
+	@Test
+	public void testAddFloat(){
+		addCommandTest.setType(CommandType.ADD_FLOAT);
+		addCommandTest.setName("hihihi");
+		
+		
+		assertEquals(addCommandTest.getType(),
+				parser.parseCommand("add hihihi").getType());
+		assertEquals(addCommandTest.getName(), 
+				parser.parseCommand("add hihihi").getName());
+	}
 
 }
