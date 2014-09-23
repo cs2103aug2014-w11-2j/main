@@ -1,5 +1,8 @@
 package doornot.parser;
 
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +16,12 @@ public class DonParser implements IDonParser{
 	private String userCommand;
 	private CommandType dType;
 	private DonCommand dCommand;
+	
+	
+	//List of all the allowed types 
+	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
+
+	
 	
 	@Override
 	public DonCommand parseCommand(String command) {
@@ -53,12 +62,46 @@ public class DonParser implements IDonParser{
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
 		
-		Pattern pattern = Pattern.compile("at\\s+[0-9]{8}\\s+$");
-		Matcher matcher = pattern.matcher(parameters.toLowerCase());
-		if(matcher.find()){
+		
+		if(isRightCommand(parameters, addTaskReg)){
 			dCommand.setType(CommandType.ADD_TASK);
+			dCommand.setName(getTaskName(parameters, addTaskReg));
+			dCommand.setNewDeadline(getDate(parameters, addTaskReg));
 		}
 		
+	}
+	/**
+	 * allow 'at DDMMYYYY' and '@ DDMMYYYY'
+	 * @param param
+	 * @return
+	 */
+	private boolean isRightCommand(String param, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(param.toLowerCase());
+		return matcher.find();
+	}
+	
+	private Calendar getDate(String param, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(param.toLowerCase());
+		matcher.find();
+		String[] split = matcher.group().split("\\D");
+		String date = split[split.length-1];
+		
+		return createDate(date);
+		
+	}
+
+	public Calendar createDate(String date) {
+		int day = Integer.parseInt(date.substring(0,2));
+		int month = Integer.parseInt(date.substring(2,4));
+		int year = Integer.parseInt(date.substring(4,8));
+		
+		return new GregorianCalendar(year, month, day);
+	}
+	
+	private String getTaskName(String param, String regex){
+		return param.split(regex)[0].trim();
 	}
 
 	private static String removeFirstWord(String userCommand) {
@@ -68,4 +111,5 @@ public class DonParser implements IDonParser{
 	private static String getFirstWord(String userCommand) {
 		return userCommand.trim().split("\\s+")[0];
 	}
+	
 }
