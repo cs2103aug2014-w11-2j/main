@@ -48,6 +48,6 @@ public interface IDonStorage {
 	 * Return list
 	 * @return List of Tasks
 	 */
-	public tasks getTaskList(IDonTask.TaskType type)
+	public List<IDonTask> getTaskList(IDonTask.TaskType type);
 
 }
