@@ -10,8 +10,7 @@ import java.util.List;
 public interface IDonResponse {
 
 	public enum ResponseType {
-		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS,
-		EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE, HELP
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS, EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE, HELP
 	}
 
 	public ResponseType getResponseType();
@@ -73,4 +72,14 @@ public interface IDonResponse {
 	 * @return true if the response contains one or more tasks
 	 */
 	public boolean hasTasks();
+
+	/**
+	 * Copies the task from another IDonResponse into this IDonResponse. If the
+	 * response already has tasks inside, the tasks from the other response will
+	 * be appended to the tasks in the response object.
+	 * 
+	 * @param response
+	 *            the response to copy tasks from
+	 */
+	public void copyTasks(IDonResponse response);
 }
