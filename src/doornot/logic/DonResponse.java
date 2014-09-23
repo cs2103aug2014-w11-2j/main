@@ -58,4 +58,12 @@ public class DonResponse implements IDonResponse {
 		this.type = type;
 	}
 
+	@Override
+	public void copyTasks(IDonResponse response) {
+		for(IDonTask task : response.getTasks()) {
+			this.addTask(task);
+		}
+		
+	}
+
 }

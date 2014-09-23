@@ -3,8 +3,11 @@ package doornot.logic;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Stack;
 
+import doornot.logic.IDonResponse.ResponseType;
+import doornot.logic.IDonTask.TaskType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
 import doornot.parser.IDonParser;
@@ -16,14 +19,16 @@ import doornot.storage.IDonStorage;
  * (creation/deletion/modification of tasks)
  * 
  */
-// @author A0111995Y
+//@author A0111995Y
 public class DonLogic implements IDonLogic {
 
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
-	private static final String MSG_SEARCH_ID_FAILED = "No task with ID of %1$d was found.";
+	private static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d was found.";
+	private static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' was found.";
+	private static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in %1$s were found.";
 	private static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
 	private static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
 	private static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
@@ -31,6 +36,9 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
+	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
+
+	private static final String MSG_EX_NO_RANGE_GIVEN = "Task range was not specified";
 
 	private static final String PHRASE_COMPLETE = "complete";
 	private static final String PHRASE_INCOMPLETE = "incomplete";
@@ -48,6 +56,8 @@ public class DonLogic implements IDonLogic {
 		donStorage = new DonStorageTMP();
 		donParser = new DonParser();
 		actionHistory = new Stack<DonAction>();
+
+		donStorage.loadFromDisk();
 	}
 
 	@Override
@@ -69,8 +79,17 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.SEARCH_ID) {
 			response = findTask(dCommand.getID());
 
+		} else if (commandType == IDonCommand.CommandType.SEARCH_NAME) {
+			response = findTask(dCommand.getName());
+
+		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
+			response = findTask(dCommand.getDeadline());
+
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
+
+		} else if (commandType == IDonCommand.CommandType.DELETE) {
+			response = deleteTask(dCommand.getName());
 
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_NAME) {
 			response = editTask(dCommand.getID(), dCommand.getNewName());
@@ -84,8 +103,23 @@ public class DonLogic implements IDonLogic {
 			response = editTask(dCommand.getID(), dCommand.getNewStartDate(),
 					dCommand.getNewEndDate());
 
+		} else if (commandType == IDonCommand.CommandType.EDIT_NAME) {
+			response = editTask(dCommand.getName(), dCommand.getNewName());
+
+		} else if (commandType == IDonCommand.CommandType.EDIT_DATE) {
+			// TODO: recognize different single date edit type
+			response = editTask(dCommand.getName(), true,
+					dCommand.getNewDeadline());
+
+		} else if (commandType == IDonCommand.CommandType.EDIT_EVENT) {
+			response = editTask(dCommand.getName(), dCommand.getNewStartDate(),
+					dCommand.getNewEndDate());
+
 		} else if (commandType == IDonCommand.CommandType.MARK_ID) {
 			response = toggleStatus(dCommand.getID());
+
+		} else if (commandType == IDonCommand.CommandType.MARK) {
+			response = toggleStatus(dCommand.getName());
 
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
@@ -220,25 +254,106 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTask(String name) {
-		DonResponse response = new DonResponse();
-		// TODO: Undone
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			if (task.getTitle().toLowerCase().contains(name.toLowerCase())) {
+				response.addTask(task);
+			}
+		}
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, name));
+		}
 		return response;
 	}
 
 	/**
-	 * Find tasks within the given range of time. Either parameter can be null
-	 * to search for tasks before or after a date. For example if startDate is
-	 * null and endDate is set to 09102014, the method will return all tasks
-	 * from before 9th of October 2014. If startDate is 09102014 and endDate is
-	 * null, all tasks beginning after 9th of October 2014 will be returned.
+	 * Find tasks starting/occurring on a given date
 	 * 
-	 * @param startDate the date to start searching from (inclusive)
-	 * @param endDate	the latest possible start date of a task (inclusive)
+	 * @param date
+	 *            the date to search for
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTask(Calendar date) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			if (task.getType() == TaskType.FLOATING) {
+				// Floating tasks have no date.
+				continue;
+			}
+			Calendar taskDate = task.getStartDate();
+			if (taskDate.get(Calendar.DATE) == date.get(Calendar.DATE)
+					&& taskDate.get(Calendar.MONTH) == date.get(Calendar.MONTH)
+					&& taskDate.get(Calendar.YEAR) == date.get(Calendar.YEAR)) {
+				response.addTask(task);
+			}
+		}
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			String dateString = date.get(Calendar.DATE)
+					+ " "
+					+ date.getDisplayName(Calendar.MONTH, Calendar.LONG,
+							Locale.ENGLISH) + date.get(Calendar.YEAR);
+			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED, dateString));
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks that begin within the given range of time. Either parameter
+	 * can be null to search for tasks before or after a date. For example if
+	 * startDate is null and endDate is set to 09102014, the method will return
+	 * all tasks from before 9th of October 2014. If startDate is 09102014 and
+	 * endDate is null, all tasks beginning after 9th of October 2014 will be
+	 * returned.
+	 * 
+	 * @param startDate
+	 *            the date to start searching from (inclusive)
+	 * @param endDate
+	 *            the latest possible start date of a task (inclusive)
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate) {
 		DonResponse response = new DonResponse();
-		// TODO: Undone
+		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		if (startDate == null && endDate == null) {
+			throw new IllegalArgumentException(MSG_EX_NO_RANGE_GIVEN);
+		}
+		for (IDonTask task : taskList) {
+			if (task.getType() == TaskType.FLOATING) {
+				// Floating tasks have no date.
+				continue;
+			}
+			Calendar taskStart = task.getStartDate();
+			if (startDate == null) {
+				if (dateEqualOrBefore(taskStart, endDate)) {
+					response.addTask(task);
+				}
+			} else if (endDate == null) {
+				if (dateEqualOrAfter(taskStart, startDate)) {
+					response.addTask(task);
+				}
+			} else {
+				if (dateEqualOrAfter(taskStart, startDate)
+						&& dateEqualOrBefore(taskStart, endDate)) {
+					response.addTask(task);
+				}
+			}
+
+		}
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+		}
 		return response;
 	}
 
@@ -299,6 +414,36 @@ public class DonLogic implements IDonLogic {
 	}
 
 	/**
+	 * Deletes the task with the given title. If more than 1 task is found, the
+	 * search results will be returned and nothing will be deleted.
+	 * 
+	 * @param title
+	 *            the title of the task to search for to delete
+	 * @return the response containing the deletion status
+	 */
+	private IDonResponse deleteTask(String title) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.DEL_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = deleteTask(task.getID());
+		}
+
+		return response;
+	}
+
+	/**
 	 * Change the title of the task with ID id to the new title
 	 * 
 	 * @param id
@@ -329,6 +474,38 @@ public class DonLogic implements IDonLogic {
 			actionHistory.push(new DonAction(
 					IDonCommand.CommandType.EDIT_ID_NAME, affectedTasks));
 		}
+		return response;
+	}
+
+	/**
+	 * Change the title of the task with a given title to the new title. The
+	 * task name being searched for must belong to only one task
+	 * 
+	 * @param title
+	 *            the title of the task to search for
+	 * @param newTitle
+	 *            the new title
+	 * @return the response
+	 */
+	private IDonResponse editTask(String title, String newTitle) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = editTask(task.getID(), newTitle);
+		}
+
 		return response;
 	}
 
@@ -391,6 +568,43 @@ public class DonLogic implements IDonLogic {
 	}
 
 	/**
+	 * Change the start date/end date or deadline of the task with a given title
+	 * to the new title. The task name being searched for must belong to only
+	 * one task
+	 * 
+	 * @param title
+	 *            the title of the task to search for
+	 * @param isStartDate
+	 *            true if the date to change is the start date, false otherwise.
+	 *            This will be ignored for deadline tasks.
+	 * @param newDate
+	 *            the new date to be applied to the task
+	 * @return the response
+	 */
+	private IDonResponse editTask(String title, boolean isStartDate,
+			Calendar newDate) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = editTask(task.getID(), isStartDate, newDate);
+		}
+
+		return response;
+	}
+
+	/**
 	 * Change the start and end date of the task with ID id to the new dates
 	 * 
 	 * @param id
@@ -443,6 +657,43 @@ public class DonLogic implements IDonLogic {
 			actionHistory.push(new DonAction(
 					IDonCommand.CommandType.EDIT_ID_EVENT, affectedTasks));
 		}
+		return response;
+	}
+
+	/**
+	 * Change the start and end date of the task with a title containing the
+	 * search string to the new dates. The title of the task must belong to only
+	 * 1 task or the search results will be returned instead and no edits will
+	 * be made.
+	 * 
+	 * @param title
+	 *            the title of the task to search for
+	 * @param newStartDate
+	 *            the new start date to be applied to the task
+	 * @param newEndDate
+	 *            the new end date to be applied to the task
+	 * @return
+	 */
+	private IDonResponse editTask(String title, Calendar newStartDate,
+			Calendar newEndDate) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = editTask(task.getID(), newStartDate, newEndDate);
+		}
+
 		return response;
 	}
 
@@ -539,6 +790,35 @@ public class DonLogic implements IDonLogic {
 	}
 
 	/**
+	 * Toggles the "done" status of the task containing the given title
+	 * 
+	 * @param title
+	 *            the title of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatus(String title) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = toggleStatus(task.getID());
+		}
+
+		return response;
+	}
+
+	/**
 	 * Show the user help information
 	 * 
 	 * @return response containing help messages
@@ -549,6 +829,42 @@ public class DonLogic implements IDonLogic {
 		response.setResponseType(IDonResponse.ResponseType.HELP);
 		response.addMessage("SOME MESSAGE HERE");
 		return response;
+	}
+
+	/****
+	 * Date helper methods
+	 ****/
+
+	/**
+	 * Determines if date is the same as or after the base date.
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is >= baseDate
+	 */
+	private boolean dateEqualOrAfter(Calendar date, Calendar baseDate) {
+		if (date.after(baseDate) || date.equals(baseDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is the same as or before the base date.
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is <= baseDate
+	 */
+	private boolean dateEqualOrBefore(Calendar date, Calendar baseDate) {
+		if (date.before(baseDate) || date.equals(baseDate)) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
