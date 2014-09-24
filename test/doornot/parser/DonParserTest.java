@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import doornot.parser.IDonCommand.CommandType;
 /**
- * Test the DonParser and check if it parses the usercommands correctly and creates the right
+ * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand
  * @author Haritha Ramesh
  * @author A0115503W
@@ -24,14 +24,19 @@ public class DonParserTest {
 	
 	@Test
 	public void testAddTask(){
+		
 		CommandTest.setType(CommandType.ADD_TASK);
 		CommandTest.setNewName("hihihi");
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9));
 		
-		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi\" at 09082014").getType());
+		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09082014").getType());
 		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09082014").getNewName());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi\" @ 09082014").getNewDeadline());
+				parser.parseCommand("add \"hihihi 12345678 \" @ 09082014").getNewDeadline());
+		
+		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
+		assertEquals(CommandTest.getNewDeadline(), 
+				parser.parseCommand("add \"hihihi\" @ 09082014_1324").getNewDeadline());
 		
 		assertEquals(CommandType.INVALID, parser.parseCommand("ad \"hihihi\" at 09082014").getType());
 		assertEquals(CommandType.INVALID, parser.parseCommand("a hihihi\" at 09082014").getType());
@@ -59,6 +64,17 @@ public class DonParserTest {
 				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
 				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewEndDate());
+		
+		CommandTest.setNewStartDate(new GregorianCalendar(2014,8,7,13,24));
+		CommandTest.setNewEndDate(new GregorianCalendar(2014,8,9,15,54));
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014_1554").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("add \"hihihi 12345678 \" from 07082014_1324 to 09082014_1554").getNewEndDate());
+		assertEquals(CommandType.INVALID, 
+				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014_1554").getType());
+		assertEquals(CommandType.INVALID, 
+				parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014").getType());
 		
 		assertEquals(CommandType.INVALID,
 				parser.parseCommand("add \"hihihi\" fro 07082014 to 09082014").getType());
@@ -171,6 +187,10 @@ public class DonParserTest {
 				parser.parseCommand("s 09082014").getType());
 		assertEquals(CommandTest.getDeadline(), 
 				parser.parseCommand("s 09082014").getDeadline());
+		
+		CommandTest.setDeadline(new GregorianCalendar(2014,8,9,11,23));
+		assertEquals(CommandTest.getDeadline(), 
+				parser.parseCommand("s 09082014_1123").getDeadline());
 	}
 	
 	@Test
@@ -231,6 +251,14 @@ public class DonParserTest {
 				parser.parseCommand("edit 666 to from 07082014 to 09082014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
 				parser.parseCommand("edit 666 to from 07082014 to 09082014").getNewEndDate());
+		
+		CommandTest.setNewStartDate(new GregorianCalendar(2014,8,7,13,55));
+		CommandTest.setNewEndDate(new GregorianCalendar(2014,8,9,11,44));
+		
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("edit 666 to from 07082014_1355 to 09082014_1144").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("edit 666 to from 07082014_1355 to 09082014_1144").getNewEndDate());
 	}
 	
 	@Test
@@ -246,6 +274,11 @@ public class DonParserTest {
 				parser.parseCommand("edit \"hihihi\" to 09082014").getName());
 		assertEquals(CommandTest.getNewDeadline(), 
 				parser.parseCommand("edit \"hihihi\" to 09082014").getNewDeadline());
+		
+		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,1,23));
+		
+		assertEquals(CommandTest.getNewDeadline(), 
+				parser.parseCommand("edit \"hihihi\" to 09082014_0123").getNewDeadline());
 		
 		CommandTest.setType(CommandType.EDIT_ID_DATE);
 		CommandTest.setID(666);

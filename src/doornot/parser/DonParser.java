@@ -23,23 +23,29 @@ public class DonParser implements IDonParser{
 	
 	//List of all the allowed types 
 	
+	//date in DDMMYYYY_hhmm format
+	private String dateTimeReg = "[0-9]{8}_[0-9]{4}";
+	
+	//date in DDMMYYYY format
+	private String dateReg = "[0-9]{8}";
+	
 	//name must be between " "
 	private String taskNameReg = "^\".+\"$";
 	
-	//allow 'at DDMMYYYY' and '@ DDMMYYYY'
-	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$";
+	//allow 'at DDMMYYYY' and '@ DDMMYYYY' and 'at DDMMYYYY_hhmm' and '@ DDMMYYYY_hhmm'
+	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$|\\bat\\s[0-9]{8}_[0-9]{4}$|@\\s[0-9]{8}_[0-9]{4}$";
 	
-	// allow 'from DDMMYYYY to DDMMYYYY'
-	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
+	// allow 'from DDMMYYYY to DDMMYYYY' and 'from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
+	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
 	
-	// allow 'to DDMMYYYY'
-	private String editDateReg = "\\bto\\s[0-9]{8}$";
+	// allow 'to DDMMYYYY' and 'to DDMMYYYY_hhmm'
+	private String editDateReg = "\\bto\\s[0-9]{8}$|\\bto\\s[0-9]{8}_[0-9]{4}$";
 	
 	// allow 'to " "'
 	private String editNameReg = "\\bto\\s\".+\"$";
 	
-	// allow 'to from DDMMYYYY to DDMMYYYY'
-	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$";
+	// allow 'to from DDMMYYYY to DDMMYYYY' and 'to from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
+	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bto\\sfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
 	
 	
 	@Override
@@ -90,7 +96,7 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.ADD_TASK);
 				dCommand.setNewName(extractName(taskName));
-				dCommand.setNewDeadline(getEndDate(parameters, addTaskReg));
+				dCommand.setNewDeadline(getEndDate(parameters));
 			}else{
 				dCommand.setType(CommandType.INVALID);
 			}
@@ -100,8 +106,8 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.ADD_EVENT);
 				dCommand.setNewName(extractName(taskName));
-				dCommand.setNewStartDate(getStartDate(parameters, addEventReg));
-				dCommand.setNewEndDate(getEndDate(parameters, addEventReg));
+				dCommand.setNewStartDate(getStartDate(parameters));
+				dCommand.setNewEndDate(getEndDate(parameters));
 			}else{
 				dCommand.setType(CommandType.INVALID);
 			}
@@ -127,15 +133,15 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_EVENT);
 				dCommand.setName(extractName(taskName));
-				dCommand.setNewStartDate(getStartDate(parameters, editEventReg));
-				dCommand.setNewEndDate(getEndDate(parameters, editEventReg));
+				dCommand.setNewStartDate(getStartDate(parameters));
+				dCommand.setNewEndDate(getEndDate(parameters));
 			}else{
 				try{
 					int ID = Integer.parseInt(taskName);
 					dCommand.setType(CommandType.EDIT_ID_EVENT);
 					dCommand.setID(ID);
-					dCommand.setNewStartDate(getStartDate(parameters, editEventReg));
-					dCommand.setNewEndDate(getEndDate(parameters, editEventReg));
+					dCommand.setNewStartDate(getStartDate(parameters));
+					dCommand.setNewEndDate(getEndDate(parameters));
 				
 				}catch(Exception e){
 					dCommand.setType(CommandType.INVALID);
@@ -146,13 +152,13 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_DATE);
 				dCommand.setName(extractName(taskName));
-				dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
+				dCommand.setNewDeadline(getEndDate(parameters));
 			}else{
 				try{
 					int ID = Integer.parseInt(taskName);
 					dCommand.setType(CommandType.EDIT_ID_DATE);
 					dCommand.setID(ID);
-					dCommand.setNewDeadline(getEndDate(parameters, editDateReg));
+					dCommand.setNewDeadline(getEndDate(parameters));
 				
 				}catch(Exception e){
 					dCommand.setType(CommandType.INVALID);
@@ -238,21 +244,21 @@ public class DonParser implements IDonParser{
 			dCommand.setType(CommandType.SEARCH_NAME);
 			dCommand.setName(extractName(parameters));
 		}else{
-			try{
-				int num = Integer.parseInt(parameters);
-
-				if(parameters.length()==8){
-
-					dCommand.setType(CommandType.SEARCH_DATE);
-					dCommand.setDeadline(createDate(parameters));
-				}else{
+			//if date
+			if(isRightCommand(parameters, dateReg)){
+				dCommand.setType(CommandType.SEARCH_DATE);
+				dCommand.setDeadline(getEndDate(parameters));
+			}else{
+				try{
+					int num = Integer.parseInt(parameters);
 					dCommand.setType(CommandType.SEARCH_ID);
 					dCommand.setID(num);
-				}
 
-			}catch(Exception e){
-				dCommand.setType(CommandType.INVALID);
-			}
+
+				}catch(Exception e){
+					dCommand.setType(CommandType.INVALID);
+				}
+			}	
 		}
 	}
 	/**
@@ -267,33 +273,54 @@ public class DonParser implements IDonParser{
 	/**
 	 * Gets the start date from the parameter
 	 */
-	private Calendar getStartDate(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+	private Calendar getStartDate(String param) {
+		Pattern pattern = Pattern.compile(dateTimeReg, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		String[] split = matcher.group().split("\\D");
-		String date = split[split.length-5];
 		
-		return createDate(date);
+		if(matcher.find()){ //if matches time
+			String dateTime = matcher.group();
+			return createDateTime(dateTime);
+		}else{//match date
+			pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
+			matcher = pattern.matcher(param);
+			matcher.find();
+			String date = matcher.group();
+			return createDate(date);
+		}
 		
 	}
 	
 	/**
 	 * Gets the end date from the parameter
 	 */
-	private Calendar getEndDate(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+	private Calendar getEndDate(String param) {
+		Pattern pattern = Pattern.compile(dateTimeReg, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		String[] split = matcher.group().split("\\D");
-		String date = split[split.length-1];
-		
-		return createDate(date);
+		if(matcher.find()){ //first match
+			String dateTime = matcher.group();
+			if(matcher.find()){ //has second match
+				dateTime = matcher.group();
+				return createDateTime(dateTime);
+			}else{ //no second match
+				return createDateTime(dateTime);
+			}
+		}else{
+			pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
+			matcher = pattern.matcher(param);
+			matcher.find();
+			String date = matcher.group();
+			if(matcher.find()){ //has second match
+				date = matcher.group();
+				return createDate(date);
+			}else{ //no second match
+				return createDate(date);
+			}
+		}
 		
 	}
 	
 	/**
-	 * Creates an instance of date using the date string
+	 * Creates date using the date string
 	 */
 	public Calendar createDate(String date) {
 		int day = Integer.parseInt(date.substring(0,2));
@@ -303,6 +330,18 @@ public class DonParser implements IDonParser{
 		return new GregorianCalendar(year, month, day);
 	}
 	
+	/**
+	 * Creates date and time using the date string
+	 */
+	private Calendar createDateTime(String dateTime) {
+		int day = Integer.parseInt(dateTime.substring(0,2));
+		int month = Integer.parseInt(dateTime.substring(2,4));
+		int year = Integer.parseInt(dateTime.substring(4,8));
+		int hour = Integer.parseInt(dateTime.substring(9,11));
+		int min = Integer.parseInt(dateTime.substring(11,13));
+		
+		return new GregorianCalendar(year, month, day, hour, min);
+	}
 	/**
 	 * Gets the new name from the parameter
 	 */
