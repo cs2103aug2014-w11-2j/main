@@ -9,7 +9,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import doornot.parser.IDonCommand.CommandType;
-
+/**
+ * Test the DonParser and check if it parses the usercommands correctly and creates the right
+ * DonCommand
+ * @author Haritha
+ *
+ */
 public class DonParserTest {
 
 	private static DonParser parser;

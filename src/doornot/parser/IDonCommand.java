@@ -1,7 +1,12 @@
 package doornot.parser;
 
 import java.util.Calendar;
-
+/**
+ * Interface for DonCommand, a class for keeping track of what type of command and its parameters
+ * @author Haritha Ramesh
+ * @author A0115503W
+ *
+ */
 public interface IDonCommand {
 	
 	

@@ -1,5 +1,10 @@
 package doornot.parser;
-
+/**
+ * Interface for Parsing commands and creating a DonCommand
+ * @author Haritha Ramesh
+ * @author A0115503W
+ * 
+ */
 public interface IDonParser {
 	
 	/**
