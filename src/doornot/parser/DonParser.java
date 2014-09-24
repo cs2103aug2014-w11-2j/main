@@ -10,7 +10,7 @@ import doornot.parser.IDonCommand.CommandType;
 public class DonParser implements IDonParser{
 
 	public DonParser() {
-		// TODO Auto-generated constructor stub
+
 	}
 	private String userCommand;
 	private DonCommand dCommand;
@@ -320,7 +320,7 @@ public class DonParser implements IDonParser{
 	}
 
 	private static String removeFirstWord(String userCommand) {
-		return userCommand.replace(getFirstWord(userCommand), "").trim();
+		return userCommand.replaceFirst(getFirstWord(userCommand), "").trim();
 	}
 
 	private static String getFirstWord(String userCommand) {
