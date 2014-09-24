@@ -233,14 +233,27 @@ public class DonLogicTester {
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		int taskID = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse addResponse2 = logic.runCommand("add \"Eat food\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse2.getResponseType());
+		int taskID2 = addResponse2.getTasks().get(0).getID();
 
 		IDonResponse undoResponse = logic.runCommand("undo");
 		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
 				undoResponse.getResponseType());
-
-		IDonResponse searchResponse = logic.runCommand("s " + taskID);
+		
+		IDonResponse searchResponse = logic.runCommand("s " + taskID2);
 		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
 				searchResponse.getResponseType());
+		
+		IDonResponse undoResponse2 = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+				undoResponse2.getResponseType());
+
+		IDonResponse searchResponse2 = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse2.getResponseType());
 
 	}
 

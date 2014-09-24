@@ -723,9 +723,13 @@ public class DonLogic implements IDonLogic {
 				// Perform a delete (reverse of Add)
 				for (IDonTask addedTask : lastAction.getAffectedTasks()) {
 					int id = addedTask.getID();
-					IDonResponse temporaryResponse = deleteTask(id);
-					if (temporaryResponse.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
+					boolean deleteSuccess = donStorage.removeTask(id);
+					if (deleteSuccess) {
 						changesReversed++;
+					} else {
+						response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
+						response.addMessage(MSG_UNDO_NO_ACTIONS);
+						return response;
 					}
 				}
 
@@ -753,6 +757,10 @@ public class DonLogic implements IDonLogic {
 							.copyTaskDetails(editedTask);
 					changesReversed++;
 				}
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
+				response.addMessage(MSG_UNDO_NO_ACTIONS);
+				return response;
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
