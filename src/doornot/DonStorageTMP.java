@@ -20,7 +20,6 @@ public class DonStorageTMP implements IDonStorage {
 
 	@Override
 	public boolean removeTask(int taskID) {
-		System.out.println(taskID+","+taskList.size());
 		for(int i=0; i<taskList.size(); i++) {
 			
 			if(taskList.get(i).getID()==taskID) {
@@ -33,9 +32,7 @@ public class DonStorageTMP implements IDonStorage {
 
 	@Override
 	public int addTask(IDonTask task) {
-		System.out.println("addtaskcalled");
-		System.out.println(taskList.add(task));
-		System.out.println("Size:"+taskList.size());
+		taskList.add(task);
 		return id++;
 	}
 
