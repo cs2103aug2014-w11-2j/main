@@ -103,16 +103,16 @@ public class DonStorage implements IDonStorage{
 			File file = new File(FILE_NAME);
 			FileWriter myWriter =new FileWriter(file);
 			if(!tasks.isEmpty()){
-				SimpleDateFormat formatter=new SimpleDateFormat("DDMMyyyy"); 
+				SimpleDateFormat formatter=new SimpleDateFormat("ddMMyyyy_HHmm"); 
 				for(int i=0;i<tasks.size();i++){
 					String taskTitle, taskStartDate = "null", taskEndDate = "null";
 					String taskStatus = "false";
 					int taskID = 0;
 					taskTitle = tasks.get(i).getTitle();
 					if(tasks.get(i).getStartDate() != null)
-						taskStartDate = formatter.format(tasks.get(i).getStartDate());
+						taskStartDate = formatter.format(tasks.get(i).getStartDate().getTime());
 					if(tasks.get(i).getEndDate() != null)
-						taskEndDate = formatter.format(tasks.get(i).getEndDate());
+						taskEndDate = formatter.format(tasks.get(i).getEndDate().getTime());
 					if(tasks.get(i).getStatus() == true)
 						taskStatus ="true";
 					taskID = tasks.get(i).getID();
@@ -185,10 +185,12 @@ public class DonStorage implements IDonStorage{
 	
 	private Calendar convertToDate(String date) {
 		int day = Integer.parseInt(date.substring(0,2));
-		int month = Integer.parseInt(date.substring(2,4));
+		int month = Integer.parseInt(date.substring(2,4))-1;
 		int year = Integer.parseInt(date.substring(4,8));
+		int hour = Integer.parseInt(date.substring(9,11));
+		int min = Integer.parseInt(date.substring(11,13));
 		
-		return new GregorianCalendar(year, month, day);
+		return new GregorianCalendar(year, month, day, hour, min);
 	}
 
 	@Override
