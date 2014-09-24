@@ -2,14 +2,17 @@ package doornot.parser;
 import static org.junit.Assert.*;
 
 import java.util.GregorianCalendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import doornot.parser.IDonCommand.CommandType;
-
+/**
+ * Test the DonParser and check if it parses the usercommands correctly and creates the right
+ * DonCommand
+ * @author Haritha Ramesh
+ * @author A0115503W
+ */
 public class DonParserTest {
 
 	private static DonParser parser;
@@ -175,14 +178,14 @@ public class DonParserTest {
 		
 		CommandTest.setType(CommandType.EDIT_NAME);
 		CommandTest.setName("hihihi");
-		CommandTest.setNewName("hehehe");
+		CommandTest.setNewName("HEHEHE");
 		
 		assertEquals(CommandTest.getType(), 
-				parser.parseCommand("ed \"hihihi\" to \"hehehe\"").getType());
+				parser.parseCommand("ed \"hihihi\" to \"HEHEHE\"").getType());
 		assertEquals(CommandTest.getNewName(), 
-				parser.parseCommand("e \"hihihi\" to \"hehehe\"").getNewName());
+				parser.parseCommand("e \"hihihi\" to \"HEHEHE\"").getNewName());
 		assertEquals(CommandTest.getName(), 
-				parser.parseCommand("edit \"hihihi\" to \"hehehe\"").getName());
+				parser.parseCommand("EDIT \"hihihi\" to \"HEHEHE\"").getName());
 		
 		CommandTest.setType(CommandType.EDIT_ID_NAME);
 		CommandTest.setID(666);

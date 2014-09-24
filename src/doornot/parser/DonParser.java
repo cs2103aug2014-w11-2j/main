@@ -6,7 +6,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import doornot.parser.IDonCommand.CommandType;
-
+/**
+ * DonParser parses the commands and creates a DonCommand
+ * 
+ * @author Haritha Ramesh
+ * @author A0115503W
+ */
 public class DonParser implements IDonParser{
 
 	public DonParser() {
@@ -254,8 +259,8 @@ public class DonParser implements IDonParser{
 	 * Uses regex and checks if parameter conatins regex
 	 */
 	private boolean isRightCommand(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(param.toLowerCase());
+		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
 		return matcher.find();
 	}
 	
@@ -263,8 +268,8 @@ public class DonParser implements IDonParser{
 	 * Gets the start date from the parameter
 	 */
 	private Calendar getStartDate(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(param.toLowerCase());
+		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
 		matcher.find();
 		String[] split = matcher.group().split("\\D");
 		String date = split[split.length-5];
@@ -277,8 +282,8 @@ public class DonParser implements IDonParser{
 	 * Gets the end date from the parameter
 	 */
 	private Calendar getEndDate(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(param.toLowerCase());
+		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
 		matcher.find();
 		String[] split = matcher.group().split("\\D");
 		String date = split[split.length-1];
@@ -302,8 +307,8 @@ public class DonParser implements IDonParser{
 	 * Gets the new name from the parameter
 	 */
 	private String getNewName(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(param.toLowerCase());
+		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
 		matcher.find();
 		String[] split = matcher.group().split("^to\\s");
 		String newName = split[split.length-1];
