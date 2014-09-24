@@ -37,7 +37,8 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
-
+	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
+	
 	private static final String MSG_EX_NO_RANGE_GIVEN = "Task range was not specified";
 
 	private static final String PHRASE_COMPLETE = "complete";
@@ -123,6 +124,11 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
+		} else {
+			//No relevant action could be executed
+			response = new DonResponse();
+			response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+			response.addMessage(MSG_UNKNOWN_COMMAND);
 		}
 
 		return response;
@@ -876,7 +882,7 @@ public class DonLogic implements IDonLogic {
 
 		public DonAction(IDonCommand.CommandType type, List<IDonTask> tasks) {
 			actionType = type;
-			tasks = affectedTasks;
+			affectedTasks = tasks;
 		}
 
 		public IDonCommand.CommandType getActionType() {
