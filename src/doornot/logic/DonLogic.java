@@ -12,6 +12,7 @@ import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
 import doornot.parser.IDonParser;
 import doornot.DonStorageTMP;
+import doornot.storage.DonStorage;
 import doornot.storage.IDonStorage;
 
 /**
@@ -54,7 +55,7 @@ public class DonLogic implements IDonLogic {
 	private Stack<DonAction> actionHistory;
 
 	public DonLogic() {
-		donStorage = new DonStorageTMP();
+		donStorage = new DonStorage();
 		donParser = new DonParser();
 		actionHistory = new Stack<DonAction>();
 
@@ -261,7 +262,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse findTask(String name) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
 			// Search for the given name/title without case sensitivity
 			if (task.getTitle().toLowerCase().contains(name.toLowerCase())) {
@@ -286,7 +287,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse findTask(Calendar date) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
 			// Search for the given name/title without case sensitivity
 			if (task.getType() == TaskType.FLOATING) {
@@ -329,7 +330,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate) {
 		DonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList(TaskType.FLOATING);
+		List<IDonTask> taskList = donStorage.getTaskList();
 		if (startDate == null && endDate == null) {
 			throw new IllegalArgumentException(MSG_EX_NO_RANGE_GIVEN);
 		}

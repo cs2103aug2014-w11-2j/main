@@ -26,7 +26,7 @@ public class DonLogicTester {
 	public void testAddDeadlineTask() {
 		DonLogic logic = new DonLogic();
 		IDonResponse response = logic
-				.runCommand("add \"Finish homework\" 21122014_2030");
+				.runCommand("add \"Finish homework\" at 21122014_2030");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -45,11 +45,12 @@ public class DonLogicTester {
 	public void testAddDurationTask() {
 		DonLogic logic = new DonLogic();
 		IDonResponse response = logic
-				.runCommand("add \"Finish homework\" 21122014_2030 21122014_2356");
+				.runCommand("add \"Finish homework\" from 21122014_2030 to 21122014_2356");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
 		assertEquals("Finish homework", task.getTitle());
+		System.out.println(task.getStartDate().getTime().toString());
 		Calendar startDate = task.getStartDate();
 		Calendar endDate = task.getEndDate();
 		assertEquals(2014, startDate.get(Calendar.YEAR));
@@ -140,12 +141,12 @@ public class DonLogicTester {
 	public void testEditDeadlineWithID() {
 		DonLogic logic = new DonLogic();
 		IDonResponse addResponse = logic
-				.runCommand("add \"Finish homework\" 10052014_0810");
+				.runCommand("add \"Finish homework\" @ 10052014_0810");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
 		IDonResponse editResponse = logic.runCommand("edit "
-				+ changedTask.getID() + " 21052014_1020");
+				+ changedTask.getID() + " to 21052014_1020");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 		Calendar date = changedTask.getStartDate();
@@ -160,12 +161,12 @@ public class DonLogicTester {
 	public void testEditDatesWithID() {
 		DonLogic logic = new DonLogic();
 		IDonResponse addResponse = logic
-				.runCommand("add \"Finish homework\" 10052014_0810 10052014_0850");
+				.runCommand("add \"Finish homework\" from 10052014_0810 to 10052014_0850");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
 		IDonResponse editResponse = logic.runCommand("edit "
-				+ changedTask.getID() + " 21052014_1020 21052014_1140");
+				+ changedTask.getID() + " to from 21052014_1020 to 21052014_1140");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 		Calendar startDate = changedTask.getStartDate();
