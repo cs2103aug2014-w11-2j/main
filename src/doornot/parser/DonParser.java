@@ -324,7 +324,7 @@ public class DonParser implements IDonParser{
 	 */
 	public Calendar createDate(String date) {
 		int day = Integer.parseInt(date.substring(0,2));
-		int month = Integer.parseInt(date.substring(2,4));
+		int month = Integer.parseInt(date.substring(2,4))-1;
 		int year = Integer.parseInt(date.substring(4,8));
 		
 		return new GregorianCalendar(year, month, day);
@@ -335,7 +335,7 @@ public class DonParser implements IDonParser{
 	 */
 	private Calendar createDateTime(String dateTime) {
 		int day = Integer.parseInt(dateTime.substring(0,2));
-		int month = Integer.parseInt(dateTime.substring(2,4));
+		int month = Integer.parseInt(dateTime.substring(2,4))-1;
 		int year = Integer.parseInt(dateTime.substring(4,8));
 		int hour = Integer.parseInt(dateTime.substring(9,11));
 		int min = Integer.parseInt(dateTime.substring(11,13));
