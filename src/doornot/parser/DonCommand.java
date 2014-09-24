@@ -2,58 +2,105 @@ package doornot.parser;
 
 import java.util.Calendar;
 
-public class DonCommand implements IDonCommand{
 
+
+public class DonCommand implements IDonCommand{
+	
+	private CommandType commandType;
+	private int taskID;
+	private String taskName;
+	private String taskNewName;
+	private Calendar taskDeadline;
+	private Calendar taskNewDeadline;
+	private Calendar taskNewStartDate;
+	private Calendar taskNewEndDate;
+	
+	
+	
 	public DonCommand() {
-		// TODO Auto-generated constructor stub
+		
 	}
 
+	@Override
+	public void setType(CommandType type){
+		commandType = type;
+	}
+	
+	@Override
+	public void setID(int ID){
+		taskID = ID;
+	}
+	
+	@Override
+	public void setName(String name){
+		taskName = name;
+	}
+	
+	@Override
+	public void setDeadline(Calendar deadline){
+		taskDeadline = deadline;
+	}
+	
+	@Override
+	public void setNewName(String newName){
+		taskNewName = newName;
+	}
+	
+	@Override
+	public void setNewStartDate(Calendar newStart){
+		taskNewStartDate = newStart;
+	}
+	
+	@Override
+	public void setNewEndDate(Calendar newEnd){
+		taskNewEndDate = newEnd;
+	}
+	
+	@Override
+	public void setNewDeadline(Calendar newDeadline){
+		taskNewDeadline = newDeadline;
+	}
+	
 	@Override
 	public CommandType getType() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return commandType;
 	}
-
+	
 	@Override
 	public int getID() {
-		// TODO Auto-generated method stub
-		return 0;
+		return taskID;
 	}
-
+	
+	
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskName;
 	}
-
+	
 	@Override
 	public Calendar getDeadline() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskDeadline;
 	}
-
+	
 	@Override
 	public String getNewName() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskNewName;
 	}
 
 	@Override
 	public Calendar getNewStartDate() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskNewStartDate;
 	}
 
 	@Override
 	public Calendar getNewEndDate() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskNewEndDate;
 	}
 
 	@Override
 	public Calendar getNewDeadline() {
-		// TODO Auto-generated method stub
-		return null;
+		return taskNewDeadline;
 	}
 
 }
