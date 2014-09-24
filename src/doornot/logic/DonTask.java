@@ -176,17 +176,28 @@ public class DonTask implements IDonTask {
 	@Override
 	public DonTask clone() {
 		DonTask newTask = new DonTask(taskTitle, taskID);
-		newTask.setStartDate((Calendar) this.getStartDate().clone());
-		newTask.setEndDate((Calendar) this.getEndDate().clone());
+		if(this.getStartDate()!=null) {
+			newTask.setStartDate((Calendar) this.getStartDate().clone());
+		}
+		if(this.getEndDate()!=null) {
+			newTask.setEndDate((Calendar) this.getEndDate().clone());
+		}
+		
 		newTask.setStatus(this.getStatus());
 		return newTask;
 
 	}
 	
+	@Override
 	public void copyTaskDetails(IDonTask sourceTask) {
 		this.setTitle(sourceTask.getTitle());
-		this.setStartDate((Calendar) sourceTask.getStartDate().clone());
-		this.setEndDate((Calendar) sourceTask.getEndDate().clone());
+		if(this.getStartDate()!=null) {
+			this.setStartDate((Calendar) sourceTask.getStartDate().clone());
+		}
+		if(this.getEndDate()!=null) {
+			this.setEndDate((Calendar) sourceTask.getEndDate().clone());
+		}
+		
 		this.setStatus(sourceTask.getStatus());
 	}
 

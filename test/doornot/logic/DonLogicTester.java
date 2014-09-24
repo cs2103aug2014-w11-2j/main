@@ -12,7 +12,7 @@ public class DonLogicTester {
 	@Test
 	public void testAddFloatingTask() {
 		DonLogic logic = new DonLogic();
-		IDonResponse response = logic.runCommand("add Finish homework");
+		IDonResponse response = logic.runCommand("add \"Finish homework\"");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -26,7 +26,7 @@ public class DonLogicTester {
 	public void testAddDeadlineTask() {
 		DonLogic logic = new DonLogic();
 		IDonResponse response = logic
-				.runCommand("add Finish homework 21122014_2030");
+				.runCommand("add \"Finish homework\" 21122014_2030");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -45,7 +45,7 @@ public class DonLogicTester {
 	public void testAddDurationTask() {
 		DonLogic logic = new DonLogic();
 		IDonResponse response = logic
-				.runCommand("add Finish homework 21122014_2030 21122014_2356");
+				.runCommand("add \"Finish homework\" 21122014_2030 21122014_2356");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -73,10 +73,11 @@ public class DonLogicTester {
 	@Test
 	public void testDeleteTaskWithID() {
 		DonLogic logic = new DonLogic();
-		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		int taskID = addResponse.getTasks().get(0).getID();
+		
 		IDonResponse delResponse = logic.runCommand("del " + taskID);
 		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
 				delResponse.getResponseType());
@@ -85,6 +86,38 @@ public class DonLogicTester {
 		assertEquals("Finish homework", deletedTask.getTitle());
 
 	}
+	
+	/*
+	 * Search tests
+	 */
+	@Test
+	public void testSearchWithName() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Do homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("s \"homework\"");
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask foundTask = searchResponse.getTasks().get(0);
+		
+		assertEquals(addedTask, foundTask);
+	}
+	
+	@Test
+	public void testSearchWithNameFail() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Do homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+
+		IDonResponse searchResponse = logic.runCommand("s \"do work\"");
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse.getResponseType());
+	}
+	
 
 	/*
 	 * Editing tests
@@ -92,12 +125,12 @@ public class DonLogicTester {
 	@Test
 	public void testEditTitleWithID() {
 		DonLogic logic = new DonLogic();
-		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
 		IDonResponse editResponse = logic.runCommand("edit "
-				+ changedTask.getID() + " Ignore homework");
+				+ changedTask.getID() + " to \"Ignore homework\"");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 		assertEquals("Ignore homework", changedTask.getTitle());
@@ -107,7 +140,7 @@ public class DonLogicTester {
 	public void testEditDeadlineWithID() {
 		DonLogic logic = new DonLogic();
 		IDonResponse addResponse = logic
-				.runCommand("add Finish homework 10052014_0810");
+				.runCommand("add \"Finish homework\" 10052014_0810");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
@@ -127,7 +160,7 @@ public class DonLogicTester {
 	public void testEditDatesWithID() {
 		DonLogic logic = new DonLogic();
 		IDonResponse addResponse = logic
-				.runCommand("add Finish homework 10052014_0810 10052014_0850");
+				.runCommand("add \"Finish homework\" 10052014_0810 10052014_0850");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
@@ -149,6 +182,45 @@ public class DonLogicTester {
 		assertEquals(11, endDate.get(Calendar.HOUR_OF_DAY));
 		assertEquals(40, endDate.get(Calendar.MINUTE));
 	}
+	
+	@Test
+	public void testMarkTaskWithID() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark "+changedTask.getID());
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithIDFail() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark "+(changedTask.getID()+1));
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				editResponse.getResponseType());
+		assertEquals(false, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithTitle() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark \"homework\"");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
+	}
 
 	/*
 	 * Undo tests
@@ -157,7 +229,7 @@ public class DonLogicTester {
 	@Test
 	public void testUndoAfterAdd() {
 		DonLogic logic = new DonLogic();
-		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		int taskID = addResponse.getTasks().get(0).getID();
@@ -176,7 +248,7 @@ public class DonLogicTester {
 	public void testUndoAfterDelete() {
 		DonLogic logic = new DonLogic();
 		// Add
-		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		int taskID = addResponse.getTasks().get(0).getID();
@@ -205,14 +277,14 @@ public class DonLogicTester {
 	public void testUndoAfterEdit() {
 		DonLogic logic = new DonLogic();
 		// Add
-		IDonResponse addResponse = logic.runCommand("add Finish homework");
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask beforeEditTask = addResponse.getTasks().get(0).clone();
 		int taskID = addResponse.getTasks().get(0).getID();
 		// Edit
 		IDonResponse editResponse = logic.runCommand("edit " + taskID
-				+ " Do work");
+				+ " to \"Do work\"");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 
