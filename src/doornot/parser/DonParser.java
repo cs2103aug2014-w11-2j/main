@@ -46,7 +46,9 @@ public class DonParser implements IDonParser{
 		return dCommand;
 		
 	}
-	
+	/**
+	 * Creates the respective dCommand according to the user input
+	 */
 	private void setDonCommand() {
 		String commandWord = getFirstWord(userCommand);
 		
@@ -72,7 +74,9 @@ public class DonParser implements IDonParser{
 		
 	}
 
-
+	/**
+	 * Creates the add CommandType 
+	 */
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
 
@@ -107,7 +111,9 @@ public class DonParser implements IDonParser{
 
 	}
 
-
+	/**
+	 * Creates the edit CommandType 
+	 */
 	private void setEditCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
@@ -172,7 +178,9 @@ public class DonParser implements IDonParser{
 		
 	}
 	
-
+	/**
+	 * Creates the mark CommandType 
+	 */
 	private void setMarkCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
@@ -192,7 +200,9 @@ public class DonParser implements IDonParser{
 		
 	}
 	
-
+	/**
+	 * Creates the delete CommandType 
+	 */
 	private void setDeleteCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
@@ -212,6 +222,9 @@ public class DonParser implements IDonParser{
 		
 	}
 	
+	/**
+	 * Creates the search CommandType 
+	 */
 	private void setSearchCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
@@ -237,12 +250,18 @@ public class DonParser implements IDonParser{
 			}
 		}
 	}
+	/**
+	 * Uses regex and checks if parameter conatins regex
+	 */
 	private boolean isRightCommand(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
 		return matcher.find();
 	}
 	
+	/**
+	 * Gets the start date from the parameter
+	 */
 	private Calendar getStartDate(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
@@ -254,6 +273,9 @@ public class DonParser implements IDonParser{
 		
 	}
 	
+	/**
+	 * Gets the end date from the parameter
+	 */
 	private Calendar getEndDate(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
@@ -264,7 +286,10 @@ public class DonParser implements IDonParser{
 		return createDate(date);
 		
 	}
-
+	
+	/**
+	 * Creates an instance of date using the date string
+	 */
 	public Calendar createDate(String date) {
 		int day = Integer.parseInt(date.substring(0,2));
 		int month = Integer.parseInt(date.substring(2,4));
@@ -273,7 +298,9 @@ public class DonParser implements IDonParser{
 		return new GregorianCalendar(year, month, day);
 	}
 	
-	
+	/**
+	 * Gets the new name from the parameter
+	 */
 	private String getNewName(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(param.toLowerCase());
@@ -285,6 +312,9 @@ public class DonParser implements IDonParser{
 		
 	}
 	
+	/**
+	 * Gets the name of task being referred to from the parameter
+	 */
 	private String getTaskName(String param, String regex){
 		return param.split(regex)[0].trim();
 	}
@@ -297,11 +327,17 @@ public class DonParser implements IDonParser{
 		return userCommand.trim().split("\\s+")[0];
 	}
 	
+	/**
+	 * Checks if the task name is within ""
+	 */
 	private boolean isTaskName(String param) {
 		Pattern pattern = Pattern.compile(taskNameReg);
 		Matcher matcher = pattern.matcher(param);
 		return matcher.find();
 	}
+	/**
+	 * Removes ""
+	 */
 	private String extractName(String param){
 		return param.substring(1, param.length()-1);
 	}
