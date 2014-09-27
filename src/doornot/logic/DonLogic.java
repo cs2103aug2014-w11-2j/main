@@ -52,7 +52,7 @@ public class DonLogic implements IDonLogic {
 	private static final int FIND_COMPLETE = 1;
 	private static final int FIND_ALL = 2;
 
-	private IDonStorage donStorage;
+	public IDonStorage donStorage; //changed by Lin Daqi
 	private IDonParser donParser;
 
 	private Stack<DonAction> actionHistory;
