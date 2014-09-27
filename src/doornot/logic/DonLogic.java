@@ -52,7 +52,7 @@ public class DonLogic implements IDonLogic {
 	private static final int FIND_COMPLETE = 1;
 	private static final int FIND_ALL = 2;
 
-	public IDonStorage donStorage; //changed by Lin Daqi
+	private IDonStorage donStorage;
 	private IDonParser donParser;
 
 	private Stack<DonAction> actionHistory;
@@ -977,6 +977,11 @@ public class DonLogic implements IDonLogic {
 			return affectedTasks;
 		}
 
+	}
+
+	@Override
+	public List<IDonTask> getTaskList() {
+		return donStorage.getTaskList();
 	}
 
 }

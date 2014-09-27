@@ -1,5 +1,7 @@
 package doornot.logic;
 
+import java.util.List;
+
 /**
  * Interface defining the methods required of the logic component 
  */
@@ -30,4 +32,10 @@ public interface IDonLogic {
 	 * @return	the response containing relevant tasks and messages
 	 */
 	public IDonResponse initialize();
+	
+	/**
+	 * Gets the list of tasks held by the storage component of the logic component
+	 * @return the list of tasks
+	 */
+	public List<IDonTask> getTaskList();
 }

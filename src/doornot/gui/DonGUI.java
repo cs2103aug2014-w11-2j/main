@@ -128,7 +128,7 @@ public class DonGUI {
 	
 	private void renewList(){
 		ArrayList<String> arr = new ArrayList<String>();
-		List<IDonTask> tasks = donLogic.donStorage.getTaskList();
+		List<IDonTask> tasks = donLogic.getTaskList();
 		for(int i = 0; i < tasks.size(); i++){
 			String newEntry = "";
 			newEntry += String.valueOf(tasks.get(i).getID()) + ". " + tasks.get(i).getTitle();
@@ -225,7 +225,7 @@ public class DonGUI {
 			public void valueChanged(ListSelectionEvent e) {
 				if(e.getValueIsAdjusting()){
 					int index = ((JList<String>)e.getSource()).getSelectedIndex();
-					selectedTask = donLogic.donStorage.getTaskList().get(index).getID();
+					selectedTask = donLogic.getTaskList().get(index).getID();
 				}
 			}
 		});
