@@ -29,7 +29,8 @@ public interface IDonCommand {
 		MARK,
 		UNDO,
 		INVALID,
-		EXIT;
+		EXIT,
+		HELP
 	}
 	
 	public static enum GeneralCommandType {
