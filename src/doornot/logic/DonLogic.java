@@ -11,7 +11,6 @@ import doornot.logic.IDonTask.TaskType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
 import doornot.parser.IDonParser;
-import doornot.DonStorageTMP;
 import doornot.storage.DonStorage;
 import doornot.storage.IDonStorage;
 
@@ -20,7 +19,7 @@ import doornot.storage.IDonStorage;
  * (creation/deletion/modification of tasks)
  * 
  */
-// @author A0111995Y
+//@author A0111995Y
 public class DonLogic implements IDonLogic {
 
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
