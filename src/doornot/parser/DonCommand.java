@@ -108,4 +108,35 @@ public class DonCommand implements IDonCommand{
 		return taskNewDeadline;
 	}
 
+	@Override
+	public GeneralCommandType getGeneralType() {
+		if(getType()==CommandType.ADD_EVENT 
+			|| getType()== CommandType.ADD_EVENT
+			|| getType() == CommandType.ADD_FLOAT) {
+			return GeneralCommandType.ADD;
+		} else if(getType()==CommandType.EDIT_DATE
+				|| getType()==CommandType.EDIT_EVENT
+				|| getType()==CommandType.EDIT_ID_DATE
+				|| getType()==CommandType.EDIT_ID_EVENT
+				|| getType()==CommandType.EDIT_ID_NAME
+				|| getType()==CommandType.EDIT_NAME) {
+			return GeneralCommandType.EDIT;
+		} else if(getType()==CommandType.DELETE
+				|| getType()==CommandType.DELETE_ID) {
+			return GeneralCommandType.DELETE;
+		} else if(getType()==CommandType.MARK
+				|| getType()==CommandType.MARK_ID) {
+			return GeneralCommandType.MARK;
+		} else if(getType()==CommandType.SEARCH_DATE
+				|| getType()==CommandType.SEARCH_ID
+				|| getType()==CommandType.SEARCH_NAME) {
+			return GeneralCommandType.SEARCH;
+		} else if(getType()==CommandType.UNDO) {
+			return GeneralCommandType.UNDO;
+		} else if(getType()==CommandType.EXIT) {
+			return GeneralCommandType.EXIT;
+		}
+		return null;
+	}
+
 }

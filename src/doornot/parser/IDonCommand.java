@@ -32,12 +32,23 @@ public interface IDonCommand {
 		EXIT;
 	}
 	
+	public static enum GeneralCommandType {
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, HELP, EXIT
+	}
+	
 	/**
 	 * Returns the type of command
 	 * 
 	 * @return the type of command
 	 */
 	public CommandType getType();
+	
+	/**
+	 * Returns the broader type of a command
+	 * 
+	 * @return the general type of command
+	 */
+	public GeneralCommandType getGeneralType();
 	
 	/**
 	 * Gets the ID of the task
