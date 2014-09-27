@@ -292,14 +292,18 @@ public class DonLogic implements IDonLogic {
 		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
 			// Search for the given name/title without case sensitivity
-			if (task.getType() == TaskType.FLOATING) {
+			TaskType taskType = task.getType();
+			if (taskType == TaskType.FLOATING) {
 				// Floating tasks have no date.
 				continue;
 			}
 			Calendar taskDate = task.getStartDate();
-			if (taskDate.get(Calendar.DATE) == date.get(Calendar.DATE)
-					&& taskDate.get(Calendar.MONTH) == date.get(Calendar.MONTH)
-					&& taskDate.get(Calendar.YEAR) == date.get(Calendar.YEAR)) {
+			Calendar taskEndDate = task.getEndDate();
+			// If the date falls within the start and end date of an event, the
+			// event is returned as well
+			if (isSameDay(taskDate, date)
+					|| (taskType == TaskType.DURATION && isBetweenDates(date,
+							taskDate, taskEndDate))) {
 				response.addTask(task);
 			}
 		}
@@ -914,7 +918,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("Examples:");
 			response.addMessage("undo");
 			response.addMessage("(What were you expecting?)");
-			
+
 		}
 
 		return response;
@@ -951,6 +955,43 @@ public class DonLogic implements IDonLogic {
 	 */
 	private boolean dateEqualOrBefore(Calendar date, Calendar baseDate) {
 		if (date.before(baseDate) || date.equals(baseDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is on the same day as baseDate
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is on the same DAY as baseDate
+	 */
+	private boolean isSameDay(Calendar date, Calendar baseDate) {
+		if (date.get(Calendar.DATE) == baseDate.get(Calendar.DATE)
+				&& date.get(Calendar.MONTH) == baseDate.get(Calendar.MONTH)
+				&& date.get(Calendar.YEAR) == baseDate.get(Calendar.YEAR)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is between minDate and maxDate
+	 * 
+	 * @param date
+	 *            the date to check
+	 * @param minDate
+	 *            the earlier date
+	 * @param maxDate
+	 *            the later date
+	 * @return true if date is between minDate and maxDate
+	 */
+	private boolean isBetweenDates(Calendar date, Calendar minDate,
+			Calendar maxDate) {
+		if (dateEqualOrAfter(date, minDate) && dateEqualOrBefore(date, maxDate)) {
 			return true;
 		}
 		return false;
