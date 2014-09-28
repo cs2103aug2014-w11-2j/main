@@ -133,7 +133,7 @@ public class DonCommand implements IDonCommand{
 			return GeneralCommandType.SEARCH;
 		} else if(getType()==CommandType.INVALID_COMMAND
 				|| getType()==CommandType.INVALID_DATE
-				|| getType()==CommandType.INVALID_TASK) {
+				|| getType()==CommandType.INVALID_FORMAT) {
 			return GeneralCommandType.INVALID;
 		} else if(getType()==CommandType.UNDO) {
 			return GeneralCommandType.UNDO;

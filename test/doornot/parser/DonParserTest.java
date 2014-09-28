@@ -26,28 +26,23 @@ public class DonParserTest {
 	@Test
 	public void testAddTask(){
 		
+		Calendar cal = new GregorianCalendar(0,0,0);
+		System.out.println("blah: "+ cal.getTime());
 		
-		Calendar cal = new GregorianCalendar();
-		cal.set(Calendar.MONTH, 1);
-		cal.set(Calendar.YEAR, 2012);
-		cal.set(Calendar.DAY_OF_MONTH,1);
-		Calendar cal2 = new GregorianCalendar(2014,5,23);
-		System.out.println("blah: "+cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-		System.out.println("blah: "+cal.getTime());
-		System.out.println("blah: "+cal2.getTime());
 		
 		CommandTest.setType(CommandType.ADD_TASK);
 		CommandTest.setNewName("hihihi");
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9));
 		
-		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09082014").getType());
-		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09082014").getNewName());
+		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09092014").getType());
+		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09092014").getNewName());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi 12345678 \" @ 09082014").getNewDeadline());
+				parser.parseCommand("add \"hihihi 12345678 \" @ 09092014").getNewDeadline());
+		assertEquals(CommandType.INVALID_DATE, parser.parseCommand("a \"hihihi 12345678 \" at 12132014").getType());
 		
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi\" @ 09082014_1324").getNewDeadline());
+				parser.parseCommand("add \"hihihi\" @ 09092014_1324").getNewDeadline());
 		
 //		assertEquals(CommandType.INVALID, parser.parseCommand("ad \"hihihi\" at 09082014").getType());
 //		assertEquals(CommandType.INVALID, parser.parseCommand("a hihihi\" at 09082014").getType());

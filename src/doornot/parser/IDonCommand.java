@@ -29,8 +29,8 @@ public interface IDonCommand {
 		MARK,
 		UNDO,
 		INVALID_COMMAND,
-		// when task names or ID are wrongly typed in
-		INVALID_TASK,
+		// when format of command is wrongly typed
+		INVALID_FORMAT,
 		INVALID_DATE,
 		EXIT,
 		HELP
