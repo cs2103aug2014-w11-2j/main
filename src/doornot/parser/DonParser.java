@@ -325,24 +325,50 @@ public class DonParser implements IDonParser{
 	 * Creates date using the date string
 	 */
 	public Calendar createDate(String date) {
+		Calendar calCheck =  new GregorianCalendar();
+		
 		int day = Integer.parseInt(date.substring(0,2));
 		int month = Integer.parseInt(date.substring(2,4))-1;
 		int year = Integer.parseInt(date.substring(4,8));
 		
-		return new GregorianCalendar(year, month, day);
+		calCheck.set(Calendar.YEAR, year);
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=13)){
+			dCommand.setType(CommandType.INVALID_DATE);
+			return new GregorianCalendar(year,month,day);
+		}else{
+			return new GregorianCalendar(year,month,day);
+		}
+		
+		
 	}
 	
 	/**
 	 * Creates date and time using the date string
 	 */
 	private Calendar createDateTime(String dateTime) {
+		Calendar calCheck =  new GregorianCalendar();
+		
 		int day = Integer.parseInt(dateTime.substring(0,2));
 		int month = Integer.parseInt(dateTime.substring(2,4))-1;
 		int year = Integer.parseInt(dateTime.substring(4,8));
 		int hour = Integer.parseInt(dateTime.substring(9,11));
 		int min = Integer.parseInt(dateTime.substring(11,13));
 		
-		return new GregorianCalendar(year, month, day, hour, min);
+		calCheck.set(Calendar.YEAR, year);
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=13)
+				||(hour>=24) ||(min>=60)){
+			dCommand.setType(CommandType.INVALID_DATE);
+			return new GregorianCalendar(year,month,day, hour, min);
+		}else{
+			return new GregorianCalendar(year,month,day, hour, min);
+		}
+		
 	}
 	/**
 	 * Gets the new name from the parameter
