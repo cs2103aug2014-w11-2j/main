@@ -77,6 +77,8 @@ public class DonParser implements IDonParser{
 			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
+		}else if(commandWord.equalsIgnoreCase("help")){
+			dCommand.setType(CommandType.HELP);
 		}else if(commandWord.equalsIgnoreCase("exit")){
 			dCommand.setType(CommandType.EXIT);
 		}else{
