@@ -34,7 +34,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
 	private static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
-	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
+	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
@@ -133,6 +133,9 @@ public class DonLogic implements IDonLogic {
 			response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 			response.addMessage(MSG_UNKNOWN_COMMAND);
 		}
+		
+		//Perform a save after every command
+		saveToDrive();
 
 		return response;
 	}
@@ -782,7 +785,7 @@ public class DonLogic implements IDonLogic {
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-			response.addMessage(String.format(MSG_UNDO_ADD_SUCCESS,
+			response.addMessage(String.format(MSG_UNDO_SUCCESS,
 					changesReversed));
 		}
 		return response;
