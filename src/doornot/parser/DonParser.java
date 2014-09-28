@@ -82,7 +82,7 @@ public class DonParser implements IDonParser{
 		}else if(commandWord.equalsIgnoreCase("exit")){
 			dCommand.setType(CommandType.EXIT);
 		}else{
-			dCommand.setType(CommandType.INVALID);
+			dCommand.setType(CommandType.INVALID_COMMAND);
 		}
 		
 	}
@@ -100,7 +100,7 @@ public class DonParser implements IDonParser{
 				dCommand.setNewName(extractName(taskName));
 				dCommand.setNewDeadline(getEndDate(parameters));
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 
 		}else if(isRightCommand(parameters, addEventReg)){
@@ -111,14 +111,14 @@ public class DonParser implements IDonParser{
 				dCommand.setNewStartDate(getStartDate(parameters));
 				dCommand.setNewEndDate(getEndDate(parameters));
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 		}else{
 			if(isTaskName(parameters)){
 				dCommand.setType(CommandType.ADD_FLOAT);
 				dCommand.setNewName(extractName(parameters));
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 		}
 
@@ -146,7 +146,7 @@ public class DonParser implements IDonParser{
 					dCommand.setNewEndDate(getEndDate(parameters));
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_TASK);
 				}
 			}
 		}else if(isRightCommand(parameters, editDateReg)){
@@ -163,7 +163,7 @@ public class DonParser implements IDonParser{
 					dCommand.setNewDeadline(getEndDate(parameters));
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_TASK);
 				}
 			}
 			
@@ -182,10 +182,10 @@ public class DonParser implements IDonParser{
 					dCommand.setNewName(extractName(newName));
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_TASK);
 				}
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 		}
 		
@@ -207,7 +207,7 @@ public class DonParser implements IDonParser{
 				dCommand.setID(ID);
 			
 			}catch(Exception e){
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 		}
 		
@@ -229,7 +229,7 @@ public class DonParser implements IDonParser{
 				dCommand.setID(ID);
 			
 			}catch(Exception e){
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_TASK);
 			}
 		}
 		
@@ -258,7 +258,7 @@ public class DonParser implements IDonParser{
 
 
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_TASK);
 				}
 			}	
 		}

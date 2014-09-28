@@ -28,13 +28,16 @@ public interface IDonCommand {
 		MARK_ID, 
 		MARK,
 		UNDO,
-		INVALID,
+		INVALID_COMMAND,
+		// when task names or ID are wrongly typed in
+		INVALID_TASK,
+		INVALID_DATE,
 		EXIT,
 		HELP
 	}
 	
 	public static enum GeneralCommandType {
-		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, HELP, EXIT
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, HELP, EXIT, INVALID
 	}
 	
 	/**

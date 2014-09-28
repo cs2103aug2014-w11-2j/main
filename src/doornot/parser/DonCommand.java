@@ -131,8 +131,14 @@ public class DonCommand implements IDonCommand{
 				|| getType()==CommandType.SEARCH_ID
 				|| getType()==CommandType.SEARCH_NAME) {
 			return GeneralCommandType.SEARCH;
+		} else if(getType()==CommandType.INVALID_COMMAND
+				|| getType()==CommandType.INVALID_DATE
+				|| getType()==CommandType.INVALID_TASK) {
+			return GeneralCommandType.INVALID;
 		} else if(getType()==CommandType.UNDO) {
 			return GeneralCommandType.UNDO;
+		} else if(getType()==CommandType.HELP) {
+			return GeneralCommandType.HELP;
 		} else if(getType()==CommandType.EXIT) {
 			return GeneralCommandType.EXIT;
 		}
