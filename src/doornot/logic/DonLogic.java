@@ -22,6 +22,8 @@ import doornot.storage.IDonStorage;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
+	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
@@ -127,6 +129,17 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
+			
+		} else if (commandType == IDonCommand.CommandType.HELP) {
+			//TODO allow commands to be passed in
+			response = getHelp("");
+			
+		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
+			response = createInvalidFormatResponse();
+			
+		} else if (commandType == IDonCommand.CommandType.INVALID_DATE) {
+			response = createInvalidDateResponse();
+			
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
@@ -158,6 +171,28 @@ public class DonLogic implements IDonLogic {
 	public IDonResponse initialize() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	/**
+	 * Creates a response for user entered commands with invalid formatting
+	 * @return	the response
+	 */
+	private IDonResponse createInvalidFormatResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_COMMAND_WRONG_FORMAT);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+	
+	/**
+	 * Creates a response for user entered commands with invalid dates
+	 * @return	the response
+	 */
+	private IDonResponse createInvalidDateResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_COMMAND_WRONG_DATE);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
 	}
 
 	/**
