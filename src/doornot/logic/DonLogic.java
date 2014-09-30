@@ -22,6 +22,8 @@ import doornot.storage.IDonStorage;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
+	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
@@ -34,11 +36,11 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
 	private static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
-	private static final String MSG_UNDO_ADD_SUCCESS = "Last action undone. %1$d addition(s) removed.";
+	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
-	
+
 	private static final String MSG_EX_NO_RANGE_GIVEN = "Task range was not specified";
 
 	private static final String PHRASE_COMPLETE = "complete";
@@ -47,6 +49,9 @@ public class DonLogic implements IDonLogic {
 	private static final String PHRASE_START_DATE = "Start date";
 
 	private static final int FAILURE = -1;
+	private static final int FIND_INCOMPLETE = 0;
+	private static final int FIND_COMPLETE = 1;
+	private static final int FIND_ALL = 2;
 
 	private IDonStorage donStorage;
 	private IDonParser donParser;
@@ -124,12 +129,26 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
+			
+		} else if (commandType == IDonCommand.CommandType.HELP) {
+			//TODO allow commands to be passed in
+			response = getHelp("");
+			
+		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
+			response = createInvalidFormatResponse();
+			
+		} else if (commandType == IDonCommand.CommandType.INVALID_DATE) {
+			response = createInvalidDateResponse();
+			
 		} else {
-			//No relevant action could be executed
+			// No relevant action could be executed
 			response = new DonResponse();
 			response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 			response.addMessage(MSG_UNKNOWN_COMMAND);
 		}
+		
+		//Perform a save after every command
+		saveToDrive();
 
 		return response;
 	}
@@ -152,6 +171,28 @@ public class DonLogic implements IDonLogic {
 	public IDonResponse initialize() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	/**
+	 * Creates a response for user entered commands with invalid formatting
+	 * @return	the response
+	 */
+	private IDonResponse createInvalidFormatResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_COMMAND_WRONG_FORMAT);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+	
+	/**
+	 * Creates a response for user entered commands with invalid dates
+	 * @return	the response
+	 */
+	private IDonResponse createInvalidDateResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_COMMAND_WRONG_DATE);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
 	}
 
 	/**
@@ -289,14 +330,18 @@ public class DonLogic implements IDonLogic {
 		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
 			// Search for the given name/title without case sensitivity
-			if (task.getType() == TaskType.FLOATING) {
+			TaskType taskType = task.getType();
+			if (taskType == TaskType.FLOATING) {
 				// Floating tasks have no date.
 				continue;
 			}
 			Calendar taskDate = task.getStartDate();
-			if (taskDate.get(Calendar.DATE) == date.get(Calendar.DATE)
-					&& taskDate.get(Calendar.MONTH) == date.get(Calendar.MONTH)
-					&& taskDate.get(Calendar.YEAR) == date.get(Calendar.YEAR)) {
+			Calendar taskEndDate = task.getEndDate();
+			// If the date falls within the start and end date of an event, the
+			// event is returned as well
+			if (isSameDay(taskDate, date)
+					|| (taskType == TaskType.DURATION && isBetweenDates(date,
+							taskDate, taskEndDate))) {
 				response.addTask(task);
 			}
 		}
@@ -308,7 +353,8 @@ public class DonLogic implements IDonLogic {
 					+ " "
 					+ date.getDisplayName(Calendar.MONTH, Calendar.LONG,
 							Locale.ENGLISH) + date.get(Calendar.YEAR);
-			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED, dateString));
+			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
+					dateString));
 		}
 		return response;
 	}
@@ -325,9 +371,13 @@ public class DonLogic implements IDonLogic {
 	 *            the date to start searching from (inclusive)
 	 * @param endDate
 	 *            the latest possible start date of a task (inclusive)
+	 * @param completeType
+	 *            0 if the tasks found must be incomplete, 1 if it must be
+	 *            completed 2 if it can be complete or incomplete
 	 * @return the response containing the tasks
 	 */
-	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate) {
+	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate,
+			int completeType) {
 		DonResponse response = new DonResponse();
 		List<IDonTask> taskList = donStorage.getTaskList();
 		if (startDate == null && endDate == null) {
@@ -336,6 +386,12 @@ public class DonLogic implements IDonLogic {
 		for (IDonTask task : taskList) {
 			if (task.getType() == TaskType.FLOATING) {
 				// Floating tasks have no date.
+				continue;
+			}
+			// Ignore tasks that do not match the completion status to search
+			// for
+			if ((task.getStatus() && completeType == FIND_INCOMPLETE)
+					|| (!task.getStatus() && completeType == FIND_COMPLETE)) {
 				continue;
 			}
 			Calendar taskStart = task.getStartDate();
@@ -764,7 +820,7 @@ public class DonLogic implements IDonLogic {
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-			response.addMessage(String.format(MSG_UNDO_ADD_SUCCESS,
+			response.addMessage(String.format(MSG_UNDO_SUCCESS,
 					changesReversed));
 		}
 		return response;
@@ -841,7 +897,68 @@ public class DonLogic implements IDonLogic {
 		// TODO: decide the format of the help
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.HELP);
-		response.addMessage("SOME MESSAGE HERE");
+		IDonCommand pCommand = donParser.parseCommand(command);
+		if (command.equals("")) {
+			// Give info on all commands available
+			response.addMessage("Welcome to DoOrNot. These are the available commands:");
+			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m");
+			response.addMessage("Type help command name to learn how to use the command!");
+		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.ADD) {
+			// Help for add
+			response.addMessage("add / a: Adds a task to the todo list");
+			response.addMessage("Command format: add \"Task title\"");
+			response.addMessage("Command format: add \"Task title\" @ DDMMYYYY_HHmm");
+			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
+			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("Examples:");
+			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
+			response.addMessage("add \"Submit CS9842 assignment\" @ 18112014 <-- Adds a task with a deadline at 18th of November 2014");
+			response.addMessage("add \"Talk by person\" from 05082015_1500 to 05082015_1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
+		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.EDIT) {
+			// Help for edit
+			response.addMessage("edit / ed / e: Edits a task in the todo list");
+			response.addMessage("Command format: edit Task_id to \"New task title\"");
+			response.addMessage("Command format: edit \"Part of old Task title\" to \"New task title\"");
+			response.addMessage("Command format: edit Task_id to DDMMYYYY_HHmm");
+			response.addMessage("Command format: edit \"Part of old Task title\" to DDMMYYYY_HHmm");
+			response.addMessage("Command format: edit Task_id to from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
+			response.addMessage("Command format: edit \"Part of old Task title\" to from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
+			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
+			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("Examples:");
+			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
+			response.addMessage("edit \"Do work\" to 17012015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
+			response.addMessage("edit 14 to from 02052015 to 03052015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
+		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.DELETE) {
+			// Help for delete
+			response.addMessage("del / d: Delete a task in the todo list");
+			response.addMessage("Command format: del Task_id");
+			response.addMessage("Command format: del \"Part of Task title\"");
+			response.addMessage("If multiple tasks are found with the given title, nothing will be deleted.");
+			response.addMessage("Examples:");
+			response.addMessage("del 22 <-- Deletes task 22");
+			response.addMessage("del \"Do work\" <-- Deletes the task containing \"Do work\" in the title");
+		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.SEARCH) {
+			// Help for search
+			response.addMessage("search / s: Finds a task with the given ID, title or date");
+			response.addMessage("Command format: search Task_id");
+			response.addMessage("Command format: search \"Part of Task title\"");
+			response.addMessage("Command format: search 22012016");
+			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("Examples:");
+			response.addMessage("search 22 <-- Searches for task 22");
+			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
+			response.addMessage("search 22012016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
+		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.UNDO) {
+			// Help for undo
+			response.addMessage("undo : Undoes the previous action");
+			response.addMessage("Command format: undo");
+			response.addMessage("Examples:");
+			response.addMessage("undo");
+			response.addMessage("(What were you expecting?)");
+
+		}
+
 		return response;
 	}
 
@@ -882,6 +999,43 @@ public class DonLogic implements IDonLogic {
 	}
 
 	/**
+	 * Determines if date is on the same day as baseDate
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is on the same DAY as baseDate
+	 */
+	private boolean isSameDay(Calendar date, Calendar baseDate) {
+		if (date.get(Calendar.DATE) == baseDate.get(Calendar.DATE)
+				&& date.get(Calendar.MONTH) == baseDate.get(Calendar.MONTH)
+				&& date.get(Calendar.YEAR) == baseDate.get(Calendar.YEAR)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is between minDate and maxDate
+	 * 
+	 * @param date
+	 *            the date to check
+	 * @param minDate
+	 *            the earlier date
+	 * @param maxDate
+	 *            the later date
+	 * @return true if date is between minDate and maxDate
+	 */
+	private boolean isBetweenDates(Calendar date, Calendar minDate,
+			Calendar maxDate) {
+		if (dateEqualOrAfter(date, minDate) && dateEqualOrBefore(date, maxDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Keeps track of an action performed the user for use with the undo command
 	 */
 	private class DonAction {
@@ -901,6 +1055,11 @@ public class DonLogic implements IDonLogic {
 			return affectedTasks;
 		}
 
+	}
+
+	@Override
+	public List<IDonTask> getTaskList() {
+		return donStorage.getTaskList();
 	}
 
 }

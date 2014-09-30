@@ -77,10 +77,12 @@ public class DonParser implements IDonParser{
 			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
+		}else if(commandWord.equalsIgnoreCase("help")){
+			dCommand.setType(CommandType.HELP);
 		}else if(commandWord.equalsIgnoreCase("exit")){
 			dCommand.setType(CommandType.EXIT);
 		}else{
-			dCommand.setType(CommandType.INVALID);
+			dCommand.setType(CommandType.INVALID_COMMAND);
 		}
 		
 	}
@@ -96,27 +98,31 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.ADD_TASK);
 				dCommand.setNewName(extractName(taskName));
-				dCommand.setNewDeadline(getEndDate(parameters));
+	
+				setDeadlineForCommand(parameters);
+				
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 
 		}else if(isRightCommand(parameters, addEventReg)){
+			
 			String taskName = getTaskName(parameters, addEventReg);
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.ADD_EVENT);
 				dCommand.setNewName(extractName(taskName));
-				dCommand.setNewStartDate(getStartDate(parameters));
-				dCommand.setNewEndDate(getEndDate(parameters));
+				
+				setStartAndEndForCommand(parameters);
+				
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}else{
 			if(isTaskName(parameters)){
 				dCommand.setType(CommandType.ADD_FLOAT);
 				dCommand.setNewName(extractName(parameters));
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
 
@@ -133,18 +139,19 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_EVENT);
 				dCommand.setName(extractName(taskName));
-				dCommand.setNewStartDate(getStartDate(parameters));
-				dCommand.setNewEndDate(getEndDate(parameters));
+				
+				setStartAndEndForCommand(parameters);
+				
 			}else{
 				try{
 					int ID = Integer.parseInt(taskName);
 					dCommand.setType(CommandType.EDIT_ID_EVENT);
 					dCommand.setID(ID);
-					dCommand.setNewStartDate(getStartDate(parameters));
-					dCommand.setNewEndDate(getEndDate(parameters));
+					
+					setStartAndEndForCommand(parameters);
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_FORMAT);
 				}
 			}
 		}else if(isRightCommand(parameters, editDateReg)){
@@ -152,16 +159,17 @@ public class DonParser implements IDonParser{
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_DATE);
 				dCommand.setName(extractName(taskName));
-				dCommand.setNewDeadline(getEndDate(parameters));
+				setDeadlineForCommand(parameters);
+				
 			}else{
 				try{
 					int ID = Integer.parseInt(taskName);
 					dCommand.setType(CommandType.EDIT_ID_DATE);
 					dCommand.setID(ID);
-					dCommand.setNewDeadline(getEndDate(parameters));
+					setDeadlineForCommand(parameters);
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_FORMAT);
 				}
 			}
 			
@@ -172,6 +180,7 @@ public class DonParser implements IDonParser{
 				dCommand.setType(CommandType.EDIT_NAME);
 				dCommand.setName(extractName(taskName));
 				dCommand.setNewName(extractName(newName));
+				
 			}else if(isTaskName(newName)){
 				try{
 					int ID = Integer.parseInt(taskName);
@@ -180,10 +189,10 @@ public class DonParser implements IDonParser{
 					dCommand.setNewName(extractName(newName));
 				
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_FORMAT);
 				}
 			}else{
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
 		
@@ -205,7 +214,7 @@ public class DonParser implements IDonParser{
 				dCommand.setID(ID);
 			
 			}catch(Exception e){
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
 		
@@ -227,7 +236,7 @@ public class DonParser implements IDonParser{
 				dCommand.setID(ID);
 			
 			}catch(Exception e){
-				dCommand.setType(CommandType.INVALID);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
 		
@@ -247,7 +256,7 @@ public class DonParser implements IDonParser{
 			//if date
 			if(isRightCommand(parameters, dateReg)){
 				dCommand.setType(CommandType.SEARCH_DATE);
-				dCommand.setDeadline(getEndDate(parameters));
+				setDeadlineForCommand(parameters);
 			}else{
 				try{
 					int num = Integer.parseInt(parameters);
@@ -256,7 +265,7 @@ public class DonParser implements IDonParser{
 
 
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID);
+					dCommand.setType(CommandType.INVALID_DATE);
 				}
 			}	
 		}
@@ -323,25 +332,82 @@ public class DonParser implements IDonParser{
 	 * Creates date using the date string
 	 */
 	public Calendar createDate(String date) {
+		Calendar calCheck =  new GregorianCalendar();
+		
 		int day = Integer.parseInt(date.substring(0,2));
 		int month = Integer.parseInt(date.substring(2,4))-1;
 		int year = Integer.parseInt(date.substring(4,8));
 		
-		return new GregorianCalendar(year, month, day);
+		calCheck.set(Calendar.YEAR, year);
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
+			//create an error date ref
+			return new GregorianCalendar(0,0,0);
+		}else{
+			return new GregorianCalendar(year,month,day);
+		}
+		
+		
 	}
 	
 	/**
 	 * Creates date and time using the date string
 	 */
 	private Calendar createDateTime(String dateTime) {
+		Calendar calCheck =  new GregorianCalendar();
+		
 		int day = Integer.parseInt(dateTime.substring(0,2));
 		int month = Integer.parseInt(dateTime.substring(2,4))-1;
 		int year = Integer.parseInt(dateTime.substring(4,8));
 		int hour = Integer.parseInt(dateTime.substring(9,11));
 		int min = Integer.parseInt(dateTime.substring(11,13));
 		
-		return new GregorianCalendar(year, month, day, hour, min);
+		calCheck.set(Calendar.YEAR, year);
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)
+				||(hour>=24) ||(min>=60)){
+			//create an error date ref
+			return new GregorianCalendar(0,0,0);
+		}else{
+			return new GregorianCalendar(year,month,day, hour, min);
+		}
+		
 	}
+	
+	public void setDeadlineForCommand(String parameters) {
+		if(rightDate(getEndDate(parameters))){
+			dCommand.setNewDeadline(getEndDate(parameters));
+		}else{
+			dCommand = new DonCommand();
+			dCommand.setType(CommandType.INVALID_DATE);
+		}
+	}
+	
+	public void setStartAndEndForCommand(String parameters) {
+		if(rightDate(getEndDate(parameters)) && rightDate(getStartDate(parameters))){
+			dCommand.setNewStartDate(getStartDate(parameters));
+			dCommand.setNewEndDate(getEndDate(parameters));
+		}else{
+			dCommand = new DonCommand();
+			dCommand.setType(CommandType.INVALID_DATE);
+		}
+	}
+	
+	/**
+	 * Checks whether it's an error date (0,0,0) is used to represent error dates
+	 * @param Date
+	 * @return
+	 */
+	private boolean rightDate(Calendar Date) {
+		
+		Calendar cal = new GregorianCalendar(0,0,0);
+		return !(cal.equals(Date));
+	}
+
 	/**
 	 * Gets the new name from the parameter
 	 */

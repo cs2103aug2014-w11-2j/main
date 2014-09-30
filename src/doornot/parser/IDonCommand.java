@@ -28,8 +28,16 @@ public interface IDonCommand {
 		MARK_ID, 
 		MARK,
 		UNDO,
-		INVALID,
-		EXIT;
+		INVALID_COMMAND,
+		// when format of command is wrongly typed
+		INVALID_FORMAT,
+		INVALID_DATE,
+		EXIT,
+		HELP
+	}
+	
+	public static enum GeneralCommandType {
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, HELP, EXIT, INVALID
 	}
 	
 	/**
@@ -38,6 +46,13 @@ public interface IDonCommand {
 	 * @return the type of command
 	 */
 	public CommandType getType();
+	
+	/**
+	 * Returns the broader type of a command
+	 * 
+	 * @return the general type of command
+	 */
+	public GeneralCommandType getGeneralType();
 	
 	/**
 	 * Gets the ID of the task

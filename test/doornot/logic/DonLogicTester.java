@@ -88,6 +88,23 @@ public class DonLogicTester {
 
 	}
 	
+	@Test
+	public void testDeleteTaskWithName() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse delResponse = logic.runCommand("del \"Finish\"");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		IDonTask deletedTask = delResponse.getTasks().get(0);
+		assertEquals(taskID, deletedTask.getID());
+		assertEquals("Finish homework", deletedTask.getTitle());
+
+	}
+	
 	/*
 	 * Search tests
 	 */
@@ -117,6 +134,29 @@ public class DonLogicTester {
 		IDonResponse searchResponse = logic.runCommand("s \"do work\"");
 		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
 				searchResponse.getResponseType());
+	}
+	
+	@Test
+	public void testSearchWithDate() {
+		DonLogic logic = new DonLogic();
+		IDonResponse addResponse = logic.runCommand("add \"Do homework\" @ 26012015");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse addResponse2 = logic.runCommand("add \"Complete walk\" @ 26012015");
+		IDonTask addedTask2 = addResponse2.getTasks().get(0);
+		
+		IDonResponse addResponse3 = logic.runCommand("add \"Complete walk\" @ 27012015");
+		IDonTask addedTask3 = addResponse3.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("search 26012015");
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		
+		assertEquals(true, searchResponse.getTasks().contains(addedTask));
+		assertEquals(true, searchResponse.getTasks().contains(addedTask2));
+		assertEquals(false, searchResponse.getTasks().contains(addedTask3));
 	}
 	
 
