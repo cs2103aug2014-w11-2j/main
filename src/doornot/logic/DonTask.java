@@ -140,17 +140,22 @@ public class DonTask implements IDonTask {
 		if (this.getType() == TaskType.FLOATING) {
 			// For floating tasks the title will be compared based on
 			// lexicographic ordering
-			return this.getTitle().compareTo(otherTask.getTitle());
+			return compareTitle(otherTask);
 		} else if (this.getType() == TaskType.DEADLINE) {
 			// For deadline tasks the deadline will be compared first
 			// with an earlier deadline being "less than" a later deadline
-			int startDateComp = this.getStartDate().compareTo(
-					otherTask.getStartDate());
-			if (startDateComp == 0) {
-				return this.getTitle().compareTo(otherTask.getTitle());
+			if (otherTask.getType()==TaskType.FLOATING) {
+				//If a deadline task is being compared to a floating one,
+				//only the title can be compared.
+				return compareTitle(otherTask);
 			}
-
+			int startDateComp = compareStartDate(otherTask);
+			if (startDateComp == 0) {
+				return compareTitle(otherTask);
+			}
 			return startDateComp;
+			
+
 		} else if (this.getType() == TaskType.DURATION) {
 			// For tasks with a duration the start date will be compared first
 			// with an earlier start date being "less than" the later one.
@@ -158,19 +163,64 @@ public class DonTask implements IDonTask {
 			// one being "less than" the later one.
 			// If both start and end dates are equivalent the title will be
 			// compared.
-			int startDateComp = this.getStartDate().compareTo(
-					otherTask.getStartDate());
-			int endDateComp = this.getEndDate().compareTo(
-					otherTask.getEndDate());
-			if (startDateComp == 0 && endDateComp != 0) {
-				return endDateComp;
-			} else if (startDateComp == 0 && endDateComp == 0) {
-				return this.getTitle().compareTo(otherTask.getTitle());
-			}
+			if (otherTask.getType()==TaskType.FLOATING) {
+				//If a duration task is being compared to a floating one,
+				//only the title can be compared.
+				return compareTitle(otherTask);
+			} else if (otherTask.getType()==TaskType.DEADLINE) {
+				//If a duration task is being compared to a deadline task,
+				//only the start date and title can be compared.
+				int startDateComp = compareStartDate(otherTask);
+				if (startDateComp == 0) {
+					return compareTitle(otherTask);
+				}
+				return startDateComp;
+			} else {
+				int startDateComp = compareStartDate(otherTask);
+				int endDateComp = compareEndDate(otherTask);
+				if (startDateComp == 0 && endDateComp != 0) {
+					return endDateComp;
+				} else if (startDateComp == 0 && endDateComp == 0) {
+					return compareTitle(otherTask);
+				}
 
-			return startDateComp;
+				return startDateComp;
+			}
+			
 		}
 		return 0;
+	}
+	
+	/**
+	 * Helper method for compareTo to utilize.
+	 * Compares the title of the current and another task. Assumes title exists
+	 * @param otherTask	the task to compare with
+	 * @return -1 if the title is smaller, 0 if they are the same, 1 if the other task is larger
+	 */
+	private int compareTitle(IDonTask otherTask) {
+		return this.getTitle().compareTo(otherTask.getTitle());
+	}
+	
+	/**
+	 * Helper method for compareTo to utilize.
+	 * Compares the start date of the current and another task.
+	 * Assumes that start date is not null
+	 * @param otherTask the task to compare with
+	 * @return -1 if the title starts earlier, 0 if they are the same, 1 if the other task starts later
+	 */
+	private int compareStartDate(IDonTask otherTask) {
+		return this.getStartDate().compareTo(otherTask.getStartDate());
+	}
+	
+	/**
+	 * Helper method for compareTo to utilize.
+	 * Compares the end date of the current and another task.
+	 * Assumes that end date is not null
+	 * @param otherTask the task to compare with
+	 * @return -1 if the title ends earlier, 0 if they are the same, 1 if the other task ends later
+	 */
+	private int compareEndDate(IDonTask otherTask) {
+		return this.getEndDate().compareTo(otherTask.getEndDate());
 	}
 
 	@Override

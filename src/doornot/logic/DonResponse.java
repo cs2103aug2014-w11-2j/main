@@ -11,11 +11,13 @@ public class DonResponse implements IDonResponse {
 	
 	private List<String> messages;
 	private List<IDonTask> tasks;
+	private List<DonPeriod> periods;
 	private ResponseType type;
 	
 	public DonResponse() {
 		messages = new ArrayList<String>();
 		tasks = new ArrayList<IDonTask>();
+		periods = new ArrayList<DonPeriod>();
 	}
 	
 	@Override
@@ -64,6 +66,16 @@ public class DonResponse implements IDonResponse {
 			this.addTask(task);
 		}
 		
+	}
+
+	@Override
+	public List<DonPeriod> getPeriods() {
+		return new ArrayList<DonPeriod>(periods);
+	}
+
+	@Override
+	public boolean addPeriod(DonPeriod period) {
+		return periods.add(period);
 	}
 
 }
