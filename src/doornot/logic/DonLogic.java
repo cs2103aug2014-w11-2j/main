@@ -2,6 +2,7 @@ package doornot.logic;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
@@ -40,6 +41,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
+	private static final String MSG_FREE_EVERYWHERE = "You are free!";
 
 	private static final String MSG_EX_NO_RANGE_GIVEN = "Task range was not specified";
 
@@ -886,6 +888,91 @@ public class DonLogic implements IDonLogic {
 		}
 
 		return response;
+	}
+	
+	/**
+	 * Find free time in the user's schedule based on existing task and events.
+	 * For dates with no time stated, it is assumed that the user means that the whole
+	 * day is taken up.
+	 * @return
+	 */
+	private IDonResponse findFreeTime() {
+		IDonResponse response = new DonResponse();
+		//Get all tasks with deadlines or events that end after today
+		List<IDonTask> taskList = getTaskByType(IDonTask.TaskType.DEADLINE, false, false);
+		taskList.addAll(getTaskByType(IDonTask.TaskType.DURATION, false, false));
+		Collections.sort(taskList);
+		
+		if(taskList.size()<=0) {
+			response.addMessage(MSG_FREE_EVERYWHERE);
+			return response;
+		}
+		
+		//TODO handle the case where there are no tasks
+		//Find free period between now and the start time of the earliest task if possible
+		Calendar now = Calendar.getInstance();
+		if(taskList.get(0).getStartDate().after(now)) {
+			DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
+			response.addPeriod(free);
+		}
+		
+		for(int i=0; i<taskList.size()-1; i++) {
+			IDonTask currentTask = taskList.get(i);
+			IDonTask nextTask = taskList.get(i+1);
+			//Check if there is a free period between the end time
+			//and the start time of the next event
+			if(currentTask.getType()==IDonTask.TaskType.DEADLINE) {
+				//A deadline task has no end date
+				//If the user did not specify a time in the deadline
+				//0000hr on the given day will be used as the deadline
+				if(currentTask.getStartDate().compareTo(nextTask.getStartDate())<0) {
+					//There is a free period
+					DonPeriod free = new DonPeriod(currentTask.getStartDate(), nextTask.getStartDate());
+					response.addPeriod(free);
+				}
+			} else {
+				if(currentTask.getEndDate().compareTo(nextTask.getStartDate())<0) {
+					//There is a free period
+					DonPeriod free = new DonPeriod(currentTask.getEndDate(), nextTask.getStartDate());
+					response.addPeriod(free);
+				}
+			}
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * Returns a list of tasks by the given task type
+	 * @param type	the type of the task
+	 * @param allowOverdue true if overdue tasks are allowed.
+	 * @param allowFinished true if completed tasks are allowed
+	 * @return	the list of tasks
+	 */
+	private List<IDonTask> getTaskByType(IDonTask.TaskType type, boolean allowOverdue, boolean allowFinished) {
+		List<IDonTask> taskList = donStorage.getTaskList();
+		List<IDonTask> resultList = new ArrayList<IDonTask>();
+		Calendar now = Calendar.getInstance();
+		for(IDonTask task : taskList) {
+			if(task.getType()==type) {
+				if (type==IDonTask.TaskType.DEADLINE) {
+					if((!allowOverdue && task.getStartDate().before(now))
+							|| (!allowFinished && task.getStatus())) {
+						//is overdue or finished
+						continue;
+					}
+				} else if (type==IDonTask.TaskType.DURATION) {
+					if((!allowOverdue && task.getEndDate().before(now))
+							|| (!allowFinished && task.getStatus())) {
+						//is overdue or finished
+						continue;
+					}
+				}
+				//Clone the task to prevent the original from being edited.
+				resultList.add(task.clone());
+			}
+		}
+		return resultList;
 	}
 
 	/**
