@@ -9,9 +9,10 @@ import doornot.parser.IDonCommand.CommandType;
 /**
  * DonParser parses the commands and creates a DonCommand
  * 
- * @author Haritha Ramesh
- * @author A0115503W
+
  */
+
+//@author A0115503W
 public class DonParser implements IDonParser{
 
 	public DonParser() {
