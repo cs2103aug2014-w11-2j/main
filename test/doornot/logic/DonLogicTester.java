@@ -6,6 +6,8 @@ import java.util.Calendar;
 
 import org.junit.Test;
 
+import doornot.storage.IDonTask;
+
 //@author A0111995Y
 public class DonLogicTester {
 

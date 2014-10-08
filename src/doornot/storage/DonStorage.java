@@ -11,9 +11,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import doornot.logic.DonTask;
-import doornot.logic.IDonTask;
-
 
 /**
  * DonStorage - Class for handling the storage of the program

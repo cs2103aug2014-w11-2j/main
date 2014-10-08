@@ -2,6 +2,8 @@ package doornot.logic;
 
 import java.util.List;
 
+import doornot.storage.IDonTask;
+
 /**
  * Interface defining the methods required of the logic component 
  */

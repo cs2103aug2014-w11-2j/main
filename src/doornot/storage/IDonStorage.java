@@ -2,8 +2,6 @@ package doornot.storage;
 
 import java.util.List;
 
-import doornot.logic.IDonTask;
-
 /**
  * Interface defining the functionalities of the storage component
  * 

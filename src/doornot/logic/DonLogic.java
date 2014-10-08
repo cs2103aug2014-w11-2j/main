@@ -8,12 +8,14 @@ import java.util.Locale;
 import java.util.Stack;
 
 import doornot.logic.IDonResponse.ResponseType;
-import doornot.logic.IDonTask.TaskType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
+import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
+import doornot.storage.IDonTask;
+import doornot.storage.IDonTask.TaskType;
 
 /**
  * DonLogic - Class for handling the logic of the program
