@@ -93,7 +93,7 @@ public class DonLogic implements IDonLogic {
 			response = findTask(dCommand.getName());
 
 		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
-			response = findTask(dCommand.getDeadline());
+			response = findTask(dCommand.getNewDeadline());
 
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
@@ -356,7 +356,7 @@ public class DonLogic implements IDonLogic {
 			String dateString = date.get(Calendar.DATE)
 					+ " "
 					+ date.getDisplayName(Calendar.MONTH, Calendar.LONG,
-							Locale.ENGLISH) + date.get(Calendar.YEAR);
+							Locale.ENGLISH) + " " + date.get(Calendar.YEAR);
 			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
 					dateString));
 		}
