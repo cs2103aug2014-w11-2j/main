@@ -356,7 +356,7 @@ public class DonLogic implements IDonLogic {
 			String dateString = date.get(Calendar.DATE)
 					+ " "
 					+ date.getDisplayName(Calendar.MONTH, Calendar.LONG,
-							Locale.ENGLISH) + date.get(Calendar.YEAR);
+							Locale.ENGLISH) + " " + date.get(Calendar.YEAR);
 			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
 					dateString));
 		}
