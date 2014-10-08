@@ -1,4 +1,4 @@
-package doornot.logic;
+package doornot.storage;
 
 import java.util.Calendar;
 

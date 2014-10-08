@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 
-import org.junit.Test;
 
-import doornot.logic.DonTask;
-import doornot.logic.IDonTask;
+
+import org.junit.Test;
 
 //@author A0100493R
 public class DonStorageTester {

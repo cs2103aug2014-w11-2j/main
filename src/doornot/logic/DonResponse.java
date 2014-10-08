@@ -3,6 +3,8 @@ package doornot.logic;
 import java.util.ArrayList;
 import java.util.List;
 
+import doornot.storage.IDonTask;
+
 /**
  * Class defining a response object
  */

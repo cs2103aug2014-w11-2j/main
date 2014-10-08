@@ -2,6 +2,8 @@ package doornot.logic;
 
 import java.util.List;
 
+import doornot.storage.IDonTask;
+
 /**
  * Interface defining the methods that the GUI needs from a IDonResponse object
  * Each command call by the user should result in 1 IDonResponse object
