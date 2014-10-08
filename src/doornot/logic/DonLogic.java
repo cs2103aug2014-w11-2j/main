@@ -93,7 +93,7 @@ public class DonLogic implements IDonLogic {
 			response = findTask(dCommand.getName());
 
 		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
-			response = findTask(dCommand.getNewDeadline());
+			response = findTask(dCommand.getDeadline());
 
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
