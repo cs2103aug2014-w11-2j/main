@@ -381,7 +381,12 @@ public class DonParser implements IDonParser{
 	
 	public void setDeadlineForCommand(String parameters) {
 		if(rightDate(getEndDate(parameters))){
-			dCommand.setNewDeadline(getEndDate(parameters));
+		
+			if(dCommand.getType()==CommandType.SEARCH_DATE){
+				dCommand.setDeadline(getEndDate(parameters));
+			}else{
+				dCommand.setNewDeadline(getEndDate(parameters));
+			}
 		}else{
 			dCommand = new DonCommand();
 			dCommand.setType(CommandType.INVALID_DATE);
