@@ -11,9 +11,8 @@ import doornot.parser.IDonCommand.CommandType;
 /**
  * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand
- * @author Haritha Ramesh
- * @author A0115503W
  */
+//@author A0115503W
 public class DonParserTest {
 
 	private static DonParser parser;
