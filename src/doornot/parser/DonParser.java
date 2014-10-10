@@ -54,14 +54,14 @@ public class DonParser implements IDonParser{
 		
 		dCommand = new DonCommand();
 		userCommand = command;
-		setDonCommand();
+		setDonCommand(userCommand);
 		return dCommand;
 		
 	}
 	
 	@Override
-	public void setDonCommand() {
-		String commandWord = getFirstWord(userCommand);
+	public void setDonCommand(String command) {
+		String commandWord = getFirstWord(command);
 		
 		if(commandWord.equalsIgnoreCase("a") || commandWord.equalsIgnoreCase("add")){
 			setAddCommand();

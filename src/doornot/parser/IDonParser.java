@@ -8,17 +8,18 @@ package doornot.parser;
 public interface IDonParser {
 	
 	/**
-	 * Returns DonCommand object with the respective properties
-	 * Calls setDonCommand()
-	 * @param command
+	 * Initialises and returns DonCommand object with the respective properties.
+	 * Calls setDonCommand(String command).
+	 * @param command string from user
 	 * @return DonCommand
 	 */
 	public DonCommand parseCommand(String command);
 	
 	/**
-	 * Creates the respective dCommand according to the user input
-	 * along with its properties
+	 * Creates the respective dCommand according to the user input.
+	 * Requires parseCommand(String command) to initialise DonCommand object.
+	 * @param command string from user
 	 */
-	public void setDonCommand();
+	public void setDonCommand(String command);
 
 }
