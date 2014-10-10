@@ -330,8 +330,10 @@ public class DonParser implements IDonParser{
 	
 	/**
 	 * Creates date using the date string
+	 * @param String date
+	 * @return Calendar date
 	 */
-	public Calendar createDate(String date) {
+	private Calendar createDate(String date) {
 		Calendar calCheck =  new GregorianCalendar();
 		
 		int day = Integer.parseInt(date.substring(0,2));
@@ -378,7 +380,7 @@ public class DonParser implements IDonParser{
 		
 	}
 	
-	public void setDeadlineForCommand(String parameters) {
+	private void setDeadlineForCommand(String parameters) {
 		if(rightDate(getEndDate(parameters))){
 		
 			if(dCommand.getType()==CommandType.SEARCH_DATE){
@@ -392,7 +394,7 @@ public class DonParser implements IDonParser{
 		}
 	}
 	
-	public void setStartAndEndForCommand(String parameters) {
+	private void setStartAndEndForCommand(String parameters) {
 		if(rightDate(getEndDate(parameters)) && rightDate(getStartDate(parameters))){
 			dCommand.setNewStartDate(getStartDate(parameters));
 			dCommand.setNewEndDate(getEndDate(parameters));
