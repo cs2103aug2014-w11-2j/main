@@ -58,10 +58,9 @@ public class DonParser implements IDonParser{
 		return dCommand;
 		
 	}
-	/**
-	 * Creates the respective dCommand according to the user input
-	 */
-	private void setDonCommand() {
+	
+	@Override
+	public void setDonCommand() {
 		String commandWord = getFirstWord(userCommand);
 		
 		if(commandWord.equalsIgnoreCase("a") || commandWord.equalsIgnoreCase("add")){
