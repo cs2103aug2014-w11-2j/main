@@ -1,11 +1,17 @@
 package doornot.logic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
@@ -45,8 +51,8 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	private static final String MSG_FREE_EVERYWHERE = "You are free!";
 
-	private static final String MSG_EX_NO_RANGE_GIVEN = "Task range was not specified";
-
+	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
+	
 	private static final String PHRASE_COMPLETE = "complete";
 	private static final String PHRASE_INCOMPLETE = "incomplete";
 	private static final String PHRASE_END_DATE = "End date";
@@ -62,16 +68,56 @@ public class DonLogic implements IDonLogic {
 
 	private Stack<DonAction> actionHistory;
 
+	private final static Logger log = Logger
+			.getLogger(DonLogic.class.getName());
+
 	public DonLogic() {
 		donStorage = new DonStorage();
 		donParser = new DonParser();
 		actionHistory = new Stack<DonAction>();
 
 		donStorage.loadFromDisk();
+
+		initLogger();
+	}
+	
+	/**
+	 * Constructor for dependency injection during testing
+	 * @param storage	the storage component
+	 * @param parser	the parser component
+	 */
+	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
+		donStorage = storage;
+		donParser = parser;
+		actionHistory = new Stack<DonAction>();
+		donStorage.loadFromDisk();
+		if(useLog) {
+			initLogger();
+		}
+	}
+	
+	public static void setDebug(Level level) {
+		log.setLevel(level);
+	}
+
+	private static void initLogger() {
+		try {
+			Handler fileHandler = new FileHandler("donlogic.log");
+			fileHandler.setFormatter(new SimpleFormatter());
+			log.addHandler(fileHandler);
+			Logger.getLogger(DonLogic.class.getName()).setLevel(Level.FINE);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public IDonResponse runCommand(String command) {
+		if(command==null) {
+			throw new IllegalArgumentException(MSG_EX_COMMAND_CANNOT_BE_NULL);
+		}
 		IDonCommand dCommand = donParser.parseCommand(command);
 		IDonCommand.CommandType commandType = dCommand.getType();
 		IDonResponse response = null;
@@ -133,25 +179,27 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
-			
+
 		} else if (commandType == IDonCommand.CommandType.HELP) {
-			//TODO allow commands to be passed in
+			// TODO allow commands to be passed in
 			response = getHelp("");
-			
+
 		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
 			response = createInvalidFormatResponse();
-			
+
 		} else if (commandType == IDonCommand.CommandType.INVALID_DATE) {
 			response = createInvalidDateResponse();
-			
+
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
 			response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 			response.addMessage(MSG_UNKNOWN_COMMAND);
 		}
-		
-		//Perform a save after every command
+
+		log.fine(command);
+
+		// Perform a save after every command
 		saveToDrive();
 
 		return response;
@@ -176,10 +224,11 @@ public class DonLogic implements IDonLogic {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	/**
 	 * Creates a response for user entered commands with invalid formatting
-	 * @return	the response
+	 * 
+	 * @return the response
 	 */
 	private IDonResponse createInvalidFormatResponse() {
 		IDonResponse response = new DonResponse();
@@ -187,10 +236,11 @@ public class DonLogic implements IDonLogic {
 		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 		return response;
 	}
-	
+
 	/**
 	 * Creates a response for user entered commands with invalid dates
-	 * @return	the response
+	 * 
+	 * @return the response
 	 */
 	private IDonResponse createInvalidDateResponse() {
 		IDonResponse response = new DonResponse();
@@ -207,6 +257,7 @@ public class DonLogic implements IDonLogic {
 	 * @return the response
 	 */
 	private IDonResponse createTask(String title) {
+		assert title != null;
 		IDonTask task = new DonTask(title, donStorage.getNextID());
 		int addResult = donStorage.addTask(task);
 
@@ -214,12 +265,13 @@ public class DonLogic implements IDonLogic {
 		if (addResult == FAILURE) {
 			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
 			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, title));
+			log.fine(String.format(MSG_ADD_TASK_FAILURE, title));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
 			response.addTask(task);
-
+			log.fine(String.format(MSG_ADD_FLOATING_TASK_SUCCESS, title));
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
@@ -239,6 +291,9 @@ public class DonLogic implements IDonLogic {
 	 * @return the response
 	 */
 	private IDonResponse createTask(String title, Calendar deadline) {
+		assert title != null && deadline != null; // This method should only be
+													// called when both
+													// parameters are present
 		IDonTask task = new DonTask(title, deadline, donStorage.getNextID());
 		int addResult = donStorage.addTask(task);
 
@@ -246,10 +301,12 @@ public class DonLogic implements IDonLogic {
 		if (addResult == FAILURE) {
 			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
 			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, title));
+			log.fine(String.format(MSG_ADD_TASK_FAILURE, title));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
+			log.fine(String.format(MSG_ADD_FLOATING_TASK_SUCCESS, title));
 			response.addTask(task);
 
 			// Add add action to history
@@ -274,6 +331,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse createTask(String title, Calendar startDate,
 			Calendar endDate) {
+		assert title != null && startDate != null && endDate!=null;
 		IDonTask task = new DonTask(title, startDate, endDate,
 				donStorage.getNextID());
 		int addResult = donStorage.addTask(task);
@@ -282,10 +340,12 @@ public class DonLogic implements IDonLogic {
 		if (addResult == FAILURE) {
 			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
 			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, title));
+			log.fine(String.format(MSG_ADD_TASK_FAILURE, title));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					title));
+			log.fine(String.format(MSG_ADD_FLOATING_TASK_SUCCESS, title));
 			response.addTask(task);
 
 			// Add add action to history
@@ -305,6 +365,7 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTask(String name) {
+		assert name!=null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
@@ -315,9 +376,11 @@ public class DonLogic implements IDonLogic {
 		}
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			log.fine("Search success");
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, name));
+			log.fine(String.format(MSG_SEARCH_TITLE_FAILED, name));
 		}
 		return response;
 	}
@@ -330,6 +393,7 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTask(Calendar date) {
+		assert date!=null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> taskList = donStorage.getTaskList();
 		for (IDonTask task : taskList) {
@@ -351,6 +415,7 @@ public class DonLogic implements IDonLogic {
 		}
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			log.fine("Search success");
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 			String dateString = date.get(Calendar.DATE)
@@ -359,6 +424,7 @@ public class DonLogic implements IDonLogic {
 							Locale.ENGLISH) + " " + date.get(Calendar.YEAR);
 			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
 					dateString));
+			log.fine(String.format(MSG_SEARCH_DATE_FAILED, dateString));
 		}
 		return response;
 	}
@@ -382,11 +448,10 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate,
 			int completeType) {
-		DonResponse response = new DonResponse();
+		assert !(startDate==null && endDate==null);
+		IDonResponse response = new DonResponse();
 		List<IDonTask> taskList = donStorage.getTaskList();
-		if (startDate == null && endDate == null) {
-			throw new IllegalArgumentException(MSG_EX_NO_RANGE_GIVEN);
-		}
+
 		for (IDonTask task : taskList) {
 			if (task.getType() == TaskType.FLOATING) {
 				// Floating tasks have no date.
@@ -417,8 +482,10 @@ public class DonLogic implements IDonLogic {
 		}
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			log.fine("Search success");
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			log.fine("Search empty");
 		}
 		return response;
 	}
@@ -431,14 +498,16 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTask(int id) {
-		DonResponse response = new DonResponse();
+		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
 		if (task == null) {
 			// No task with given ID found
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			log.fine("Search success");
 			response.addTask(task);
 		}
 		return response;
@@ -488,6 +557,7 @@ public class DonLogic implements IDonLogic {
 	 * @return the response containing the deletion status
 	 */
 	private IDonResponse deleteTask(String title) {
+		assert title!=null;
 		IDonResponse response = new DonResponse();
 
 		IDonResponse searchResponse = findTask(title);
@@ -519,12 +589,14 @@ public class DonLogic implements IDonLogic {
 	 * @return the response
 	 */
 	private IDonResponse editTask(int id, String newTitle) {
-		DonResponse response = new DonResponse();
+		assert newTitle!=null;
+		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
 		if (task == null) {
 			// No task with ID found
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
 		} else {
 			IDonTask unchangedTask = task.clone();
 			String oldTitle = task.getTitle();
@@ -533,7 +605,7 @@ public class DonLogic implements IDonLogic {
 			response.addTask(task);
 			response.addMessage(String.format(MSG_EDIT_TITLE_SUCCESS, oldTitle,
 					newTitle));
-
+			log.fine(String.format(MSG_EDIT_TITLE_SUCCESS, oldTitle, newTitle));
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
@@ -554,14 +626,15 @@ public class DonLogic implements IDonLogic {
 	 * @return the response
 	 */
 	private IDonResponse editTask(String title, String newTitle) {
+		assert newTitle!=null && title!=null;
 		IDonResponse response = new DonResponse();
-
 		IDonResponse searchResponse = findTask(title);
 
 		if (searchResponse.getTasks().size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
 			response.copyTasks(searchResponse);
 		} else if (!searchResponse.hasTasks()) {
 			// No task with the name found, return the response of the search
@@ -589,7 +662,8 @@ public class DonLogic implements IDonLogic {
 	 * @return the success response
 	 */
 	private IDonResponse editTask(int id, boolean isStartDate, Calendar newDate) {
-		DonResponse response = new DonResponse();
+		assert newDate!=null;
+		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
 		if (task == null) {
 			// No task with ID found
@@ -623,7 +697,8 @@ public class DonLogic implements IDonLogic {
 			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
 					dateType, oldDate.getTime().toString(), newDate.getTime()
 							.toString()));
-
+			log.fine(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS, dateType,
+					oldDate.getTime().toString(), newDate.getTime().toString()));
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
@@ -649,6 +724,7 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse editTask(String title, boolean isStartDate,
 			Calendar newDate) {
+		assert title!=null && newDate!=null;
 		IDonResponse response = new DonResponse();
 
 		IDonResponse searchResponse = findTask(title);
@@ -657,6 +733,7 @@ public class DonLogic implements IDonLogic {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
 			response.copyTasks(searchResponse);
 		} else if (!searchResponse.hasTasks()) {
 			// No task with the name found, return the response of the search
@@ -683,12 +760,14 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse editTask(int id, Calendar newStartDate,
 			Calendar newEndDate) {
-		DonResponse response = new DonResponse();
+		assert newStartDate!=null && newEndDate!=null;
+		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
 		if (task == null) {
 			// No task with ID found
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
 		} else {
 			IDonTask unchangedTask = task.clone();
 			Calendar oldStartDate = null, oldEndDate = null;
@@ -714,6 +793,12 @@ public class DonLogic implements IDonLogic {
 					PHRASE_START_DATE, oldStartDate.getTime().toString(),
 					newStartDate.getTime().toString()));
 			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+					PHRASE_END_DATE, oldEndDate.getTime().toString(),
+					newEndDate.getTime().toString()));
+			log.fine(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+					PHRASE_START_DATE, oldStartDate.getTime().toString(),
+					newStartDate.getTime().toString()));
+			log.fine(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
 					PHRASE_END_DATE, oldEndDate.getTime().toString(),
 					newEndDate.getTime().toString()));
 
@@ -742,14 +827,15 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse editTask(String title, Calendar newStartDate,
 			Calendar newEndDate) {
+		assert newStartDate!=null && newEndDate!=null;
 		IDonResponse response = new DonResponse();
-
 		IDonResponse searchResponse = findTask(title);
 
 		if (searchResponse.getTasks().size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
 			response.copyTasks(searchResponse);
 		} else if (!searchResponse.hasTasks()) {
 			// No task with the name found, return the response of the search
@@ -773,6 +859,7 @@ public class DonLogic implements IDonLogic {
 		if (actionHistory.size() <= 0) {
 			response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 			response.addMessage(MSG_UNDO_NO_ACTIONS);
+			log.fine(MSG_UNDO_NO_ACTIONS);
 		} else {
 			DonAction lastAction = actionHistory.pop();
 			int changesReversed = 0;
@@ -789,6 +876,7 @@ public class DonLogic implements IDonLogic {
 					} else {
 						response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 						response.addMessage(MSG_UNDO_NO_ACTIONS);
+						log.fine(MSG_UNDO_NO_ACTIONS);
 						return response;
 					}
 				}
@@ -820,12 +908,14 @@ public class DonLogic implements IDonLogic {
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 				response.addMessage(MSG_UNDO_NO_ACTIONS);
+				log.fine(MSG_UNDO_NO_ACTIONS);
 				return response;
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-			response.addMessage(String.format(MSG_UNDO_SUCCESS,
-					changesReversed));
+			response.addMessage(String
+					.format(MSG_UNDO_SUCCESS, changesReversed));
+			log.fine(String.format(MSG_UNDO_SUCCESS, changesReversed));
 		}
 		return response;
 	}
@@ -844,6 +934,7 @@ public class DonLogic implements IDonLogic {
 			// No task with ID found
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
 		} else {
 			IDonTask unchangedTask = task.clone();
 			boolean taskCompleted = !task.getStatus();
@@ -853,7 +944,8 @@ public class DonLogic implements IDonLogic {
 			response.addTask(task);
 			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, id,
 					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
-
+			log.fine(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, id,
+					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
@@ -871,14 +963,15 @@ public class DonLogic implements IDonLogic {
 	 * @return the response
 	 */
 	private IDonResponse toggleStatus(String title) {
+		assert title!=null;
 		IDonResponse response = new DonResponse();
-
 		IDonResponse searchResponse = findTask(title);
 
 		if (searchResponse.getTasks().size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
 			response.copyTasks(searchResponse);
 		} else if (!searchResponse.hasTasks()) {
 			// No task with the name found, return the response of the search
@@ -891,86 +984,101 @@ public class DonLogic implements IDonLogic {
 
 		return response;
 	}
-	
+
 	/**
 	 * Find free time in the user's schedule based on existing task and events.
-	 * For dates with no time stated, it is assumed that the user means that the whole
-	 * day is taken up.
+	 * For dates with no time stated, it is assumed that the user means that the
+	 * whole day is taken up.
+	 * 
 	 * @return
 	 */
 	private IDonResponse findFreeTime() {
 		IDonResponse response = new DonResponse();
-		//Get all tasks with deadlines or events that end after today
-		List<IDonTask> taskList = getTaskByType(IDonTask.TaskType.DEADLINE, false, false);
+		// Get all tasks with deadlines or events that end after today
+		List<IDonTask> taskList = getTaskByType(IDonTask.TaskType.DEADLINE,
+				false, false);
 		taskList.addAll(getTaskByType(IDonTask.TaskType.DURATION, false, false));
 		Collections.sort(taskList);
-		
-		if(taskList.size()<=0) {
+
+		if (taskList.size() <= 0) {
 			response.addMessage(MSG_FREE_EVERYWHERE);
+			log.fine(MSG_FREE_EVERYWHERE);
 			return response;
 		}
-		
-		//TODO handle the case where there are no tasks
-		//Find free period between now and the start time of the earliest task if possible
+
+		// TODO handle the case where there are no tasks
+		// Find free period between now and the start time of the earliest task
+		// if possible
 		Calendar now = Calendar.getInstance();
-		if(taskList.get(0).getStartDate().after(now)) {
+		if (taskList.get(0).getStartDate().after(now)) {
 			DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
 			response.addPeriod(free);
+			log.fine(free.toString());
 		}
-		
-		for(int i=0; i<taskList.size()-1; i++) {
+
+		for (int i = 0; i < taskList.size() - 1; i++) {
 			IDonTask currentTask = taskList.get(i);
-			IDonTask nextTask = taskList.get(i+1);
-			//Check if there is a free period between the end time
-			//and the start time of the next event
-			if(currentTask.getType()==IDonTask.TaskType.DEADLINE) {
-				//A deadline task has no end date
-				//If the user did not specify a time in the deadline
-				//0000hr on the given day will be used as the deadline
-				if(currentTask.getStartDate().compareTo(nextTask.getStartDate())<0) {
-					//There is a free period
-					DonPeriod free = new DonPeriod(currentTask.getStartDate(), nextTask.getStartDate());
+			IDonTask nextTask = taskList.get(i + 1);
+			// Check if there is a free period between the end time
+			// and the start time of the next event
+			if (currentTask.getType() == IDonTask.TaskType.DEADLINE) {
+				// A deadline task has no end date
+				// If the user did not specify a time in the deadline
+				// 0000hr on the given day will be used as the deadline
+				if (currentTask.getStartDate().compareTo(
+						nextTask.getStartDate()) < 0) {
+					// There is a free period
+					DonPeriod free = new DonPeriod(currentTask.getStartDate(),
+							nextTask.getStartDate());
 					response.addPeriod(free);
+					log.fine(free.toString());
 				}
 			} else {
-				if(currentTask.getEndDate().compareTo(nextTask.getStartDate())<0) {
-					//There is a free period
-					DonPeriod free = new DonPeriod(currentTask.getEndDate(), nextTask.getStartDate());
+				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
+					// There is a free period
+					DonPeriod free = new DonPeriod(currentTask.getEndDate(),
+							nextTask.getStartDate());
 					response.addPeriod(free);
+					log.fine(free.toString());
 				}
 			}
 		}
-		
+
 		return response;
 	}
-	
+
 	/**
 	 * Returns a list of tasks by the given task type
-	 * @param type	the type of the task
-	 * @param allowOverdue true if overdue tasks are allowed.
-	 * @param allowFinished true if completed tasks are allowed
-	 * @return	the list of tasks
+	 * 
+	 * @param type
+	 *            the type of the task
+	 * @param allowOverdue
+	 *            true if overdue tasks are allowed.
+	 * @param allowFinished
+	 *            true if completed tasks are allowed
+	 * @return the list of tasks
 	 */
-	private List<IDonTask> getTaskByType(IDonTask.TaskType type, boolean allowOverdue, boolean allowFinished) {
+	private List<IDonTask> getTaskByType(IDonTask.TaskType type,
+			boolean allowOverdue, boolean allowFinished) {
 		List<IDonTask> taskList = donStorage.getTaskList();
 		List<IDonTask> resultList = new ArrayList<IDonTask>();
 		Calendar now = Calendar.getInstance();
-		for(IDonTask task : taskList) {
-			if(task.getType()==type) {
-				if (type==IDonTask.TaskType.DEADLINE) {
-					if((!allowOverdue && task.getStartDate().before(now))
+		for (IDonTask task : taskList) {
+			if (task.getType() == type) {
+				if (type == IDonTask.TaskType.DEADLINE) {
+					if ((!allowOverdue && task.getStartDate().before(now))
 							|| (!allowFinished && task.getStatus())) {
-						//is overdue or finished
+						// is overdue or finished
 						continue;
 					}
-				} else if (type==IDonTask.TaskType.DURATION) {
-					if((!allowOverdue && task.getEndDate().before(now))
+				} else if (type == IDonTask.TaskType.DURATION) {
+					if ((!allowOverdue && task.getEndDate().before(now))
 							|| (!allowFinished && task.getStatus())) {
-						//is overdue or finished
+						// is overdue or finished
 						continue;
 					}
 				}
-				//Clone the task to prevent the original from being edited.
+				// Clone the task to prevent the original from being edited.
 				resultList.add(task.clone());
 			}
 		}

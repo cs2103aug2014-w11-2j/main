@@ -33,4 +33,13 @@ public class DonPeriod {
 		return end;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append(start.getTime().toString());
+		s.append(" ");
+		s.append(end.getTime().toString());
+		return s.toString();
+	}
+	
 }
