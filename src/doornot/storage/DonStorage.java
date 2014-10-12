@@ -31,7 +31,7 @@ public class DonStorage implements IDonStorage{
 	private static final int MAX_OF_TASK_ID = 1000;
 	private static final int MIN_OF_TASK_ID = 1;
 	
-	private List<IDonTask> tasks = new ArrayList<IDonTask>();
+	protected List<IDonTask> tasks = new ArrayList<IDonTask>();
 
 	private int nextID = 0;
 	private int[] listOfIDs = new int[MAX_OF_TASK_ID + 1];
@@ -144,7 +144,7 @@ public class DonStorage implements IDonStorage{
 	}
 	
 
-	private boolean readFile(File file) {
+	protected boolean readFile(File file) {
 		try {
 			BufferedReader myReader = new BufferedReader(new FileReader(file));
 			String textLine = null;

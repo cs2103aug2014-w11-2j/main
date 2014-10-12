@@ -2,18 +2,37 @@ package doornot.logic;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.Calendar;
 
+import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import doornot.parser.DonParser;
 import doornot.storage.IDonTask;
 
 //@author A0111995Y
 public class DonLogicTester {
+	
+	private static DonLogic logic;
+	private static DonStorageStub storage;
+	@BeforeClass
+	public static void initLogic() {
+		storage = new DonStorageStub("logic_test");
+		logic = new DonLogic(storage, new DonParser(), false);
+	}
+	
+	@After
+	public void removeTestFile() {
+		File f = new File("logic_test");
+		f.delete();
+		storage.clearTasks();
+	}
 
 	@Test
 	public void testAddFloatingTask() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse response = logic.runCommand("add \"Finish homework\"");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
@@ -26,7 +45,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testAddDeadlineTask() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse response = logic
 				.runCommand("add \"Finish homework\" at 21122014_2030");
 		IDonTask task = response.getTasks().get(0);
@@ -45,7 +64,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testAddDurationTask() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse response = logic
 				.runCommand("add \"Finish homework\" from 21122014_2030 to 21122014_2356");
 		IDonTask task = response.getTasks().get(0);
@@ -75,7 +94,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testDeleteTaskWithID() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -92,7 +111,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testDeleteTaskWithName() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -112,7 +131,7 @@ public class DonLogicTester {
 	 */
 	@Test
 	public void testSearchWithName() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Do homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -128,7 +147,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testSearchWithNameFail() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Do homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -140,7 +159,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testSearchWithDate() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Do homework\" @ 26012015");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -167,7 +186,7 @@ public class DonLogicTester {
 	 */
 	@Test
 	public void testEditTitleWithID() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -181,7 +200,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testEditDeadlineWithID() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic
 				.runCommand("add \"Finish homework\" @ 10052014_0810");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
@@ -201,7 +220,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testEditDatesWithID() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic
 				.runCommand("add \"Finish homework\" from 10052014_0810 to 10052014_0850");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
@@ -228,7 +247,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testMarkTaskWithID() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -241,7 +260,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testMarkTaskWithIDFail() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -254,7 +273,7 @@ public class DonLogicTester {
 	
 	@Test
 	public void testMarkTaskWithTitle() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -271,7 +290,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testUndoAfterAdd() {
-		DonLogic logic = new DonLogic();
+		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -302,7 +321,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testUndoAfterDelete() {
-		DonLogic logic = new DonLogic();
+		
 		// Add
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
@@ -331,7 +350,7 @@ public class DonLogicTester {
 
 	@Test
 	public void testUndoAfterEdit() {
-		DonLogic logic = new DonLogic();
+		
 		// Add
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
