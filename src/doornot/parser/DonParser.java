@@ -267,7 +267,7 @@ public class DonParser implements IDonParser{
 
 
 				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID_DATE);
+					dCommand.setType(CommandType.INVALID_FORMAT);
 				}
 			}	
 		}
@@ -294,7 +294,7 @@ public class DonParser implements IDonParser{
 			}else if(parameters.equalsIgnoreCase("mark")){
 				dCommand.setType(CommandType.HELP_MARK);
 			}else{
-				dCommand.setType(CommandType.INVALID_COMMAND);
+				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
 		
