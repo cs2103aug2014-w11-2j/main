@@ -26,6 +26,12 @@ public interface IDonCommand {
 		SEARCH_ID,
 		MARK_ID, 
 		MARK,
+		HELP_ADD,
+		HELP_EDIT,
+		HELP_SEARCH,
+		HELP_DELETE,
+		HELP_MARK,
+		HELP_GENERAL,
 		UNDO,
 		INVALID_COMMAND,
 		// when format of command is wrongly typed
@@ -151,6 +157,7 @@ public interface IDonCommand {
 	 * @param newDeadline
 	 */
 	public void setNewDeadline(Calendar newDeadline);
+	
 	
 	
 }

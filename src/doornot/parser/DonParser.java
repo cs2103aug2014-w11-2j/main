@@ -54,14 +54,14 @@ public class DonParser implements IDonParser{
 		
 		dCommand = new DonCommand();
 		userCommand = command;
-		setDonCommand(userCommand);
+		setDonCommand();
 		return dCommand;
 		
 	}
 	
 	@Override
-	public void setDonCommand(String command) {
-		String commandWord = getFirstWord(command);
+	public void setDonCommand() {
+		String commandWord = getFirstWord(userCommand);
 		
 		if(commandWord.equalsIgnoreCase("a") || commandWord.equalsIgnoreCase("add")){
 			setAddCommand();
@@ -78,7 +78,7 @@ public class DonParser implements IDonParser{
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
 		}else if(commandWord.equalsIgnoreCase("help")){
-			dCommand.setType(CommandType.HELP);
+			setHelpCommand();
 		}else if(commandWord.equalsIgnoreCase("exit")){
 			dCommand.setType(CommandType.EXIT);
 		}else{
@@ -86,6 +86,8 @@ public class DonParser implements IDonParser{
 		}
 		
 	}
+
+
 
 	/**
 	 * Creates the add CommandType 
@@ -269,6 +271,33 @@ public class DonParser implements IDonParser{
 				}
 			}	
 		}
+	}
+	/**
+	 * Set the help command types
+	 */
+	private void setHelpCommand() {
+		
+		String parameters = removeFirstWord(userCommand);
+		
+		if(parameters.isEmpty()){
+			dCommand.setType(CommandType.HELP_GENERAL);
+		}else{
+			if(parameters.equalsIgnoreCase("add")){
+				dCommand.setType(CommandType.HELP_ADD);
+			}else if(parameters.equalsIgnoreCase("edit")){
+				dCommand.setType(CommandType.HELP_EDIT);
+			}else if(parameters.equalsIgnoreCase("search")){
+				dCommand.setType(CommandType.HELP_SEARCH);
+			}else if(parameters.equalsIgnoreCase("del")
+					|| parameters.equalsIgnoreCase("delete")){
+				dCommand.setType(CommandType.HELP_DELETE);
+			}else if(parameters.equalsIgnoreCase("mark")){
+				dCommand.setType(CommandType.HELP_MARK);
+			}else{
+				dCommand.setType(CommandType.INVALID_COMMAND);
+			}
+		}
+		
 	}
 	/**
 	 * Uses regex and checks if parameter conatins regex
