@@ -16,6 +16,7 @@ import java.util.logging.SimpleFormatter;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
+import doornot.parser.IDonCommand.GeneralCommandType;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
 import doornot.storage.DonTask;
@@ -120,6 +121,7 @@ public class DonLogic implements IDonLogic {
 		}
 		IDonCommand dCommand = donParser.parseCommand(command);
 		IDonCommand.CommandType commandType = dCommand.getType();
+		IDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
 		IDonResponse response = null;
 		if (commandType == IDonCommand.CommandType.ADD_FLOAT) {
 			response = createTask(dCommand.getNewName());
@@ -180,9 +182,9 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
 
-		} else if (commandType == IDonCommand.CommandType.HELP) {
+		} else if (genCommandType == IDonCommand.GeneralCommandType.HELP) {
 			// TODO allow commands to be passed in
-			response = getHelp("");
+			response = getHelp(commandType);
 
 		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
 			response = createInvalidFormatResponse();
@@ -1090,17 +1092,17 @@ public class DonLogic implements IDonLogic {
 	 * 
 	 * @return response containing help messages
 	 */
-	private IDonResponse getHelp(String command) {
+	private IDonResponse getHelp(IDonCommand.CommandType commandType) {
 		// TODO: decide the format of the help
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.HELP);
-		IDonCommand pCommand = donParser.parseCommand(command);
-		if (command.equals("")) {
+
+		if (commandType == IDonCommand.CommandType.HELP_GENERAL) {
 			// Give info on all commands available
 			response.addMessage("Welcome to DoOrNot. These are the available commands:");
 			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m");
 			response.addMessage("Type help command name to learn how to use the command!");
-		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.ADD) {
+		} else if (commandType == IDonCommand.CommandType.HELP_ADD) {
 			// Help for add
 			response.addMessage("add / a: Adds a task to the todo list");
 			response.addMessage("Command format: add \"Task title\"");
@@ -1111,7 +1113,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
 			response.addMessage("add \"Submit CS9842 assignment\" @ 18112014 <-- Adds a task with a deadline at 18th of November 2014");
 			response.addMessage("add \"Talk by person\" from 05082015_1500 to 05082015_1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
-		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.EDIT) {
+		} else if (commandType == IDonCommand.CommandType.HELP_EDIT) {
 			// Help for edit
 			response.addMessage("edit / ed / e: Edits a task in the todo list");
 			response.addMessage("Command format: edit Task_id to \"New task title\"");
@@ -1126,7 +1128,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
 			response.addMessage("edit \"Do work\" to 17012015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
 			response.addMessage("edit 14 to from 02052015 to 03052015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
-		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.DELETE) {
+		} else if (commandType == IDonCommand.CommandType.HELP_DELETE) {
 			// Help for delete
 			response.addMessage("del / d: Delete a task in the todo list");
 			response.addMessage("Command format: del Task_id");
@@ -1135,7 +1137,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("Examples:");
 			response.addMessage("del 22 <-- Deletes task 22");
 			response.addMessage("del \"Do work\" <-- Deletes the task containing \"Do work\" in the title");
-		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.SEARCH) {
+		} else if (commandType == IDonCommand.CommandType.HELP_SEARCH) {
 			// Help for search
 			response.addMessage("search / s: Finds a task with the given ID, title or date");
 			response.addMessage("Command format: search Task_id");
@@ -1146,8 +1148,9 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
 			response.addMessage("search 22012016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
-		} else if (pCommand.getGeneralType() == IDonCommand.GeneralCommandType.UNDO) {
-			// Help for undo
+		} else if (commandType == IDonCommand.CommandType.HELP_MARK) {
+			// TODO change commandtype when help_undo commandtype is up.
+			//Help for undo
 			response.addMessage("undo : Undoes the previous action");
 			response.addMessage("Command format: undo");
 			response.addMessage("Examples:");
