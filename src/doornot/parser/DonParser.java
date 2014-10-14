@@ -2,6 +2,8 @@ package doornot.parser;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,9 +50,13 @@ public class DonParser implements IDonParser{
 	// allow 'to from DDMMYYYY to DDMMYYYY' and 'to from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
 	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bto\\sfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
 	
-	
+	// Obtain a suitable logger.
+	 private static Logger logger = Logger. getLogger("Parser");
+	 
 	@Override
 	public DonCommand parseCommand(String command) {
+		
+		logger.log(Level.INFO, "going to start parsing" );
 		
 		dCommand = new DonCommand();
 		userCommand = command;
@@ -82,6 +88,8 @@ public class DonParser implements IDonParser{
 		}else if(commandWord.equalsIgnoreCase("exit")){
 			dCommand.setType(CommandType.EXIT);
 		}else{
+			logger.log(Level.WARNING, "Command word invalid" );
+			
 			dCommand.setType(CommandType.INVALID_COMMAND);
 		}
 		
@@ -104,6 +112,7 @@ public class DonParser implements IDonParser{
 				setDeadlineForCommand(parameters);
 				
 			}else{
+				logger.log(Level.WARNING, "Add task date invalid" );
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 
@@ -117,6 +126,7 @@ public class DonParser implements IDonParser{
 				setStartAndEndForCommand(parameters);
 				
 			}else{
+				logger.log(Level.WARNING, "Add event date invalid" );
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}else{
@@ -124,6 +134,7 @@ public class DonParser implements IDonParser{
 				dCommand.setType(CommandType.ADD_FLOAT);
 				dCommand.setNewName(extractName(parameters));
 			}else{
+				logger.log(Level.WARNING, "Add floating task name invalid format" );
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
