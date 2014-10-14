@@ -293,6 +293,8 @@ public class DonParser implements IDonParser{
 				dCommand.setType(CommandType.HELP_DELETE);
 			}else if(parameters.equalsIgnoreCase("mark")){
 				dCommand.setType(CommandType.HELP_MARK);
+			}else if(parameters.equalsIgnoreCase("undo")){
+				dCommand.setType(CommandType.HELP_UNDO);
 			}else{
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
@@ -300,7 +302,7 @@ public class DonParser implements IDonParser{
 		
 	}
 	/**
-	 * Uses regex and checks if parameter conatins regex
+	 * Uses regex and checks if parameter contains regex
 	 */
 	private boolean isRightCommand(String param, String regex) {
 		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);

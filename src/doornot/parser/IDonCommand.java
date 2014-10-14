@@ -31,6 +31,7 @@ public interface IDonCommand {
 		HELP_SEARCH,
 		HELP_DELETE,
 		HELP_MARK,
+		HELP_UNDO,
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
 		UNDO,
