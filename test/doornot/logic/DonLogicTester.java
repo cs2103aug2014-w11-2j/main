@@ -375,4 +375,75 @@ public class DonLogicTester {
 		assertEquals(uneditedTask, beforeEditTask);
 
 	}
+	
+	/*
+	 * Redo 
+	 */
+	
+	@Test
+	public void testRedoAfterAdd() {
+		// Add
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		IDonTask task1 = addResponse.getTasks().get(0).clone();
+		int taskID1 = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse addResponse2 = logic.runCommand("add \"Eat\" @ 21102014");
+		IDonTask task2 = addResponse2.getTasks().get(0).clone();
+		int taskID2 = addResponse2.getTasks().get(0).getID();
+
+		// Undo the edits
+		logic.runCommand("undo");
+		logic.runCommand("undo");
+		
+		//Redo the edit
+		IDonResponse redoResponse1 = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.REDO_SUCCESS,
+				redoResponse1.getResponseType());
+
+		IDonResponse searchResponse1 = logic.runCommand("s " + taskID1);
+		IDonTask redoneTask1 = searchResponse1.getTasks().get(0);
+		assertEquals(redoneTask1, task1);
+		
+		IDonResponse redoResponse2 = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.REDO_SUCCESS,
+				redoResponse2.getResponseType());
+
+		IDonResponse searchResponse2 = logic.runCommand("s " + taskID2);
+		IDonTask redoneTask2 = searchResponse2.getTasks().get(0);
+		assertEquals(redoneTask2, task2);
+
+	}
+	
+	@Test
+	public void testRedoAfterEdit() {
+		// Add
+		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask beforeEditTask = addResponse.getTasks().get(0).clone();
+		int taskID = addResponse.getTasks().get(0).getID();
+		// Edit
+		IDonResponse editResponse = logic.runCommand("edit " + taskID
+				+ " to \"Do work\"");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		IDonTask afterEditTask = editResponse.getTasks().get(0);
+
+		// Undo the edit
+		IDonResponse undoResponse = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+				undoResponse.getResponseType());
+		
+		//Redo the edit
+		IDonResponse redoResponse = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.REDO_SUCCESS,
+				redoResponse.getResponseType());
+
+		IDonResponse searchResponse = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask editedTask = searchResponse.getTasks().get(0);
+		assertEquals(editedTask, afterEditTask);
+
+	}
 }

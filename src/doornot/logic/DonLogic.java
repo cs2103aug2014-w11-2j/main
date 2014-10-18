@@ -95,6 +95,7 @@ public class DonLogic implements IDonLogic {
 		donStorage = storage;
 		donParser = parser;
 		actionPast = new Stack<DonAction>();
+		actionFuture = new Stack<DonAction>();
 		donStorage.loadFromDisk();
 		if(useLog) {
 			initLogger();
@@ -196,6 +197,8 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.INVALID_DATE) {
 			response = createInvalidDateResponse();
 
+		} else if(commandType == IDonCommand.CommandType.REDO) {
+			response = redoAction();
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
