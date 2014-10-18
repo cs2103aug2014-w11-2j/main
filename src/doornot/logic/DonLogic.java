@@ -1230,13 +1230,14 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
 			response.addMessage("search 22012016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
-		} else if (commandType == IDonCommand.CommandType.HELP_MARK) {
-			// TODO change commandtype when help_undo commandtype is up.
+		} else if (commandType == IDonCommand.CommandType.HELP_UNDO || commandType == IDonCommand.CommandType.HELP_REDO) {
 			//Help for undo
 			response.addMessage("undo : Undoes the previous action");
-			response.addMessage("Command format: undo");
+			response.addMessage("redo : Performs the last undone action");
+			response.addMessage("Command format: undo/redo");
 			response.addMessage("Examples:");
 			response.addMessage("undo");
+			response.addMessage("redo");
 			response.addMessage("(What were you expecting?)");
 
 		}
