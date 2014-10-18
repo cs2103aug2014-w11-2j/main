@@ -16,7 +16,6 @@ import java.util.logging.SimpleFormatter;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
-import doornot.parser.IDonCommand.GeneralCommandType;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
 import doornot.storage.DonTask;
@@ -47,6 +46,8 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
+	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
+	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
@@ -67,7 +68,9 @@ public class DonLogic implements IDonLogic {
 	private IDonStorage donStorage;
 	private IDonParser donParser;
 
-	private Stack<DonAction> actionHistory;
+	//actionPast contains the actions to undo, actionFuture to redo
+	//If a new action that performs modifications is made, actionFuture has to be cleared.
+	private Stack<DonAction> actionPast, actionFuture;
 
 	private final static Logger log = Logger
 			.getLogger(DonLogic.class.getName());
@@ -75,7 +78,8 @@ public class DonLogic implements IDonLogic {
 	public DonLogic() {
 		donStorage = new DonStorage();
 		donParser = new DonParser();
-		actionHistory = new Stack<DonAction>();
+		actionPast = new Stack<DonAction>();
+		actionFuture = new Stack<DonAction>();
 
 		donStorage.loadFromDisk();
 
@@ -90,7 +94,7 @@ public class DonLogic implements IDonLogic {
 	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
 		donStorage = storage;
 		donParser = parser;
-		actionHistory = new Stack<DonAction>();
+		actionPast = new Stack<DonAction>();
 		donStorage.loadFromDisk();
 		if(useLog) {
 			initLogger();
@@ -277,8 +281,8 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_FLOAT,
-					affectedTasks));
+			actionPast.push(new DonAction(IDonCommand.CommandType.ADD_FLOAT, IDonCommand.GeneralCommandType.ADD, affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -314,8 +318,8 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_TASK,
-					affectedTasks));
+			actionPast.push(new DonAction(IDonCommand.CommandType.ADD_TASK, IDonCommand.GeneralCommandType.ADD, affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -353,8 +357,9 @@ public class DonLogic implements IDonLogic {
 			// Add add action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(task.clone());
-			actionHistory.push(new DonAction(IDonCommand.CommandType.ADD_EVENT,
+			actionPast.push(new DonAction(IDonCommand.CommandType.ADD_EVENT, IDonCommand.GeneralCommandType.ADD, 
 					affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -540,8 +545,9 @@ public class DonLogic implements IDonLogic {
 				// Add delete action to history
 				ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 				affectedTasks.add(task.clone());
-				actionHistory.push(new DonAction(
-						IDonCommand.CommandType.DELETE, affectedTasks));
+				actionPast.push(new DonAction(
+						IDonCommand.CommandType.DELETE, IDonCommand.GeneralCommandType.DELETE, affectedTasks));
+				actionFuture.clear();
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
 				response.addMessage(MSG_DELETE_FAILED);
@@ -611,8 +617,9 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(
-					IDonCommand.CommandType.EDIT_ID_NAME, affectedTasks));
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -704,8 +711,9 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(
-					IDonCommand.CommandType.EDIT_ID_DATE, affectedTasks));
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_DATE, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -807,8 +815,9 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(
-					IDonCommand.CommandType.EDIT_ID_EVENT, affectedTasks));
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_EVENT, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -858,17 +867,15 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse undoLastAction() {
 		IDonResponse response = new DonResponse();
-		if (actionHistory.size() <= 0) {
+		if (actionPast.size() <= 0) {
 			response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 			response.addMessage(MSG_UNDO_NO_ACTIONS);
 			log.fine(MSG_UNDO_NO_ACTIONS);
 		} else {
-			DonAction lastAction = actionHistory.pop();
+			DonAction lastAction = actionPast.pop();
 			int changesReversed = 0;
-			IDonCommand.CommandType lastActionType = lastAction.getActionType();
-			if (lastActionType == IDonCommand.CommandType.ADD_TASK
-					|| lastActionType == IDonCommand.CommandType.ADD_EVENT
-					|| lastActionType == IDonCommand.CommandType.ADD_FLOAT) {
+			IDonCommand.GeneralCommandType generalActionType = lastAction.getGeneralType();
+			if (generalActionType == IDonCommand.GeneralCommandType.ADD) {
 				// Perform a delete (reverse of Add)
 				for (IDonTask addedTask : lastAction.getAffectedTasks()) {
 					int id = addedTask.getID();
@@ -883,7 +890,7 @@ public class DonLogic implements IDonLogic {
 					}
 				}
 
-			} else if (lastActionType == IDonCommand.CommandType.DELETE) {
+			} else if (generalActionType == IDonCommand.GeneralCommandType.DELETE) {
 				// Perform an add (reverse of Delete)
 				for (IDonTask removedTask : lastAction.getAffectedTasks()) {
 					int id = donStorage.addTask(removedTask);
@@ -891,33 +898,104 @@ public class DonLogic implements IDonLogic {
 						changesReversed++;
 					}
 				}
-			} else if (lastActionType == IDonCommand.CommandType.EDIT_DATE
-					|| lastActionType == IDonCommand.CommandType.EDIT_EVENT
-					|| lastActionType == IDonCommand.CommandType.EDIT_ID_DATE
-					|| lastActionType == IDonCommand.CommandType.EDIT_ID_EVENT
-					|| lastActionType == IDonCommand.CommandType.EDIT_ID_NAME
-					|| lastActionType == IDonCommand.CommandType.EDIT_NAME
-					|| lastActionType == IDonCommand.CommandType.MARK
-					|| lastActionType == IDonCommand.CommandType.MARK_ID) {
+			} else if (generalActionType == IDonCommand.GeneralCommandType.EDIT
+					|| generalActionType == IDonCommand.GeneralCommandType.MARK) {
 				// Replace the edited tasks with their previous properties
+				List<IDonTask> redoTaskList = new ArrayList<IDonTask>();
 				for (IDonTask editedTask : lastAction.getAffectedTasks()) {
 					int id = editedTask.getID();
 					IDonResponse searchResponse = findTask(id);
-					searchResponse.getTasks().get(0)
-							.copyTaskDetails(editedTask);
+					//Clone the tasks which will have undo applied on them for redo to work
+					IDonTask affectedTask = searchResponse.getTasks().get(0);
+					redoTaskList.add(affectedTask.clone());
+					affectedTask.copyTaskDetails(editedTask);
 					changesReversed++;
+					
 				}
+				lastAction = new DonAction(lastAction.getActionType(), lastAction.getGeneralType(), redoTaskList);
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 				response.addMessage(MSG_UNDO_NO_ACTIONS);
 				log.fine(MSG_UNDO_NO_ACTIONS);
 				return response;
 			}
+			//Add undone action to the future stack for redo to use
+			actionFuture.add(lastAction); 
 
 			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
 			response.addMessage(String
 					.format(MSG_UNDO_SUCCESS, changesReversed));
 			log.fine(String.format(MSG_UNDO_SUCCESS, changesReversed));
+		}
+		return response;
+	}
+	
+	/**
+	 * Undoes the last action
+	 * 
+	 * @return response stating the status of the undo operation
+	 */
+	private IDonResponse redoAction() {
+		IDonResponse response = new DonResponse();
+		if (actionFuture.size() <= 0) {
+			response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
+			response.addMessage(MSG_REDO_NO_ACTIONS);
+			log.fine(MSG_REDO_NO_ACTIONS);
+		} else {
+			DonAction nextAction = actionFuture.pop();
+			int changesReversed = 0;
+			IDonCommand.GeneralCommandType generalActionType = nextAction.getGeneralType();
+			if (generalActionType == IDonCommand.GeneralCommandType.ADD) {
+				// Perform an add
+				for (IDonTask addedTask : nextAction.getAffectedTasks()) {
+					int id = donStorage.addTask(addedTask);
+					if (id != -1) {
+						changesReversed++;
+					}
+				}
+
+			} else if (generalActionType == IDonCommand.GeneralCommandType.DELETE) {
+				// Perform a delete
+				for (IDonTask deletedTask : nextAction.getAffectedTasks()) {
+					int id = deletedTask.getID();
+					boolean deleteSuccess = donStorage.removeTask(id);
+					if (deleteSuccess) {
+						changesReversed++;
+					} else {
+						response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
+						response.addMessage(MSG_REDO_NO_ACTIONS);
+						log.fine(MSG_REDO_NO_ACTIONS);
+						return response;
+					}
+				}
+			} else if (generalActionType == IDonCommand.GeneralCommandType.EDIT
+					|| generalActionType == IDonCommand.GeneralCommandType.MARK) {
+				// Replace the edited tasks with their previous properties
+				List<IDonTask> undoTaskList = new ArrayList<IDonTask>();
+				for (IDonTask editedTask : nextAction.getAffectedTasks()) {
+					int id = editedTask.getID();
+					IDonResponse searchResponse = findTask(id);
+					//Clone the tasks which will have redo applied on them for undo to work
+					IDonTask affectedTask = searchResponse.getTasks().get(0);
+					undoTaskList.add(affectedTask.clone());
+					affectedTask.copyTaskDetails(editedTask);
+					changesReversed++;
+					
+				}
+				nextAction = new DonAction(nextAction.getActionType(), nextAction.getGeneralType(), undoTaskList);
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
+				response.addMessage(MSG_REDO_NO_ACTIONS);
+				log.fine(MSG_REDO_NO_ACTIONS);
+				return response;
+			}
+			//Add redone action to the future stack for undo to use
+			actionPast.add(nextAction); 
+
+			response.setResponseType(IDonResponse.ResponseType.REDO_SUCCESS);
+			response.addMessage(String
+					.format(MSG_REDO_SUCCESS, changesReversed));
+			log.fine(String.format(MSG_REDO_SUCCESS, changesReversed));
 		}
 		return response;
 	}
@@ -951,8 +1029,9 @@ public class DonLogic implements IDonLogic {
 			// Add edit action to history
 			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
 			affectedTasks.add(unchangedTask);
-			actionHistory.push(new DonAction(IDonCommand.CommandType.MARK_ID,
+			actionPast.push(new DonAction(IDonCommand.CommandType.MARK_ID, IDonCommand.GeneralCommandType.MARK,
 					affectedTasks));
+			actionFuture.clear();
 		}
 		return response;
 	}
@@ -1239,16 +1318,22 @@ public class DonLogic implements IDonLogic {
 	 * Keeps track of an action performed the user for use with the undo command
 	 */
 	private class DonAction {
+		private IDonCommand.GeneralCommandType generalType;
 		private IDonCommand.CommandType actionType;
 		private List<IDonTask> affectedTasks;
 
-		public DonAction(IDonCommand.CommandType type, List<IDonTask> tasks) {
+		public DonAction(IDonCommand.CommandType type, IDonCommand.GeneralCommandType genType, List<IDonTask> tasks) {
 			actionType = type;
+			generalType = genType;
 			affectedTasks = tasks;
 		}
 
 		public IDonCommand.CommandType getActionType() {
 			return actionType;
+		}
+		
+		public IDonCommand.GeneralCommandType getGeneralType() {
+			return generalType;
 		}
 
 		public List<IDonTask> getAffectedTasks() {
