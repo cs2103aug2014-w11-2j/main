@@ -354,6 +354,10 @@ public class DonParserTest {
 		CommandTest.setType(CommandType.HELP_UNDO);
 		
 		assertEquals(CommandTest.getType(), parser.parseCommand("help undo").getType());
+		
+		CommandTest.setType(CommandType.HELP_REDO);
+		
+		assertEquals(CommandTest.getType(), parser.parseCommand("help redo").getType());
 		// test invalid
 		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("help commands").getType());
 		assertEquals(CommandType.INVALID_COMMAND, parser.parseCommand("helpppp add").getType());
