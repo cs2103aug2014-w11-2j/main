@@ -113,7 +113,7 @@ public class DonStorageTester {
 		storage.changeFileName("testFile6.txt");
 		storage.clear();
 		if (storage.loadFromDisk()) {
-			int ID = 1;
+
 			List<String> testLabels = new ArrayList<String>();
 			testLabels.add("label1");
 			testLabels.add("label2");
@@ -139,6 +139,20 @@ public class DonStorageTester {
 		storage.changeFileName("testFile6.txt");
 		if (storage.loadFromDisk()) {
 			storage.changeFileName("testFile6_Compare.txt");
+			storage.saveToDisk();
+		}
+	}
+	
+	@Test
+	public void testAddDeleteLabel(){
+		DonStorage storage = new DonStorage();
+		storage.changeFileName("testFile6.txt");
+		if (storage.loadFromDisk()) {
+			assertEquals(null,true,storage.getTask(1).addLabel("label7"));
+			assertEquals(null,true,storage.getTask(1).deleteLabel("label1"));
+			assertEquals(null,false,storage.getTask(1).addLabel("label2"));
+			assertEquals(null,false,storage.getTask(1).deleteLabel("label8"));
+			storage.changeFileName("testFile6_AddDeleteLabel.txt");
 			storage.saveToDisk();
 		}
 	}
