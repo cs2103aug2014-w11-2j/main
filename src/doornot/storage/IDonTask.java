@@ -1,6 +1,7 @@
 package doornot.storage;
 
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Interface defining the basic requirements of a Task
@@ -59,6 +60,12 @@ public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	public TaskType getType();
 	
 	/**
+	 * Returns the label of the task if it is present. Return null otherwise.
+	 * @return	the label of the task
+	 */
+	public List<String> getLabels();
+	
+	/**
 	 * Sets the title of the task to the given title
 	 * 
 	 * @param	newTitle the new title of the task
@@ -88,10 +95,30 @@ public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	public void setStatus(boolean newStatus);
 	
 	/**
+	 * Sets the labels of the task.
+	 * @param	labels of the task.
+	 */
+	public void setLabels(List<String> newLabels);
+	
+	/**
 	 * Copies all fields of the given IDonTask into the current IDonTask
 	 * @param	sourceTask	the task to copy details from
 	 */
 	public void copyTaskDetails(IDonTask sourceTask);
-
+	
+	/**
+	 * Add new labels for a task, duplication checked ignoring case.
+	 * @param	label of the task.
+	 * @return true for successful add, false if there is duplication
+	 */
+	public boolean addLabel(String newLabel);
+	
+	/**
+	 * Delete a label for a task.
+	 * @param	index of label to be deleted.
+	 * @return  true for successful delete, false otherwise
+	 */
+	public boolean deleteLabel(String labelToDelete);
+	
 	public IDonTask clone();
 }
