@@ -105,6 +105,20 @@ public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	 * @param	sourceTask	the task to copy details from
 	 */
 	public void copyTaskDetails(IDonTask sourceTask);
-
+	
+	/**
+	 * Add new labels for a task, duplication checked ignoring case.
+	 * @param	label of the task.
+	 * @return true for successful add, false if there is duplication
+	 */
+	public boolean addLabel(String newLabel);
+	
+	/**
+	 * Delete a label for a task.
+	 * @param	index of label to be deleted.
+	 * @return  true for successful delete, false otherwise
+	 */
+	public boolean deleteLabel(String labelToDelete);
+	
 	public IDonTask clone();
 }
