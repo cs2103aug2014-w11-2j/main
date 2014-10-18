@@ -43,7 +43,6 @@ public interface IDonStorage {
 	 * @return successful
 	 */
 	public boolean loadFromDisk();
-	
 	/**
 	 * Return list
 	 * @return List of Tasks

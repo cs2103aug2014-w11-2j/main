@@ -1,7 +1,9 @@
 package doornot.storage;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Class containing the properties of a task
@@ -13,6 +15,7 @@ public class DonTask implements IDonTask {
 	private Calendar startDate, endDate;
 	private boolean status;
 	private int taskID;
+	private List<String> labels;
 
 	public DonTask(String title, int ID) {
 		taskTitle = title;
@@ -20,6 +23,7 @@ public class DonTask implements IDonTask {
 		endDate = null;
 		status = false;
 		taskID = ID;
+		labels = new ArrayList<String>();
 	}
 
 	public DonTask(String title, Calendar deadline, int ID) {
@@ -28,7 +32,9 @@ public class DonTask implements IDonTask {
 		endDate = null;
 		status = false;
 		taskID = ID;
+		labels = new ArrayList<String>();
 	}
+	
 
 	public DonTask(String title, Calendar startDate, Calendar endDate, int ID) {
 		taskTitle = title;
@@ -36,6 +42,16 @@ public class DonTask implements IDonTask {
 		this.endDate = endDate;
 		status = false;
 		taskID = ID;
+		labels = new ArrayList<String>();
+	}
+
+	public DonTask(String title, Calendar startDate, Calendar endDate, int ID, List<String> labels) {
+		taskTitle = title;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		status = false;
+		taskID = ID;
+		this.labels = labels;
 	}
 
 	@Override
@@ -63,6 +79,12 @@ public class DonTask implements IDonTask {
 	public boolean getStatus() {
 		return status;
 	}
+	
+	@Override
+	public List<String> getLabels() {
+		return labels;
+	}
+
 
 	@Override
 	public void setTitle(String newTitle) {
@@ -83,6 +105,12 @@ public class DonTask implements IDonTask {
 	public void setStatus(boolean newStatus) {
 		status = newStatus;
 	}
+	
+	@Override
+	public void setLabels(List<String> newLabels) {
+		labels = newLabels;
+	}
+
 
 	@Override
 	public TaskType getType() {
@@ -261,4 +289,7 @@ public class DonTask implements IDonTask {
 		}
 
 	}
+
+
+
 }
