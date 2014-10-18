@@ -135,6 +135,7 @@ public class DonCommand implements IDonCommand{
 					|| getType()==CommandType.HELP_DELETE
 					|| getType()==CommandType.HELP_MARK
 					|| getType()==CommandType.HELP_UNDO
+					|| getType()==CommandType.HELP_REDO
 					|| getType()==CommandType.HELP_GENERAL) {
 				return GeneralCommandType.HELP;
 		} else if(getType()==CommandType.INVALID_COMMAND
@@ -143,6 +144,8 @@ public class DonCommand implements IDonCommand{
 			return GeneralCommandType.INVALID;
 		} else if(getType()==CommandType.UNDO) {
 			return GeneralCommandType.UNDO;
+		} else if(getType()==CommandType.REDO) {
+			return GeneralCommandType.REDO;
 		} else if(getType()==CommandType.HELP) {
 			return GeneralCommandType.HELP;
 		} else if(getType()==CommandType.EXIT) {

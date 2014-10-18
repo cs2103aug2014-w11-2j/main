@@ -32,9 +32,11 @@ public interface IDonCommand {
 		HELP_DELETE,
 		HELP_MARK,
 		HELP_UNDO,
+		HELP_REDO,
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
 		UNDO,
+		REDO,
 		INVALID_COMMAND,
 		// when format of command is wrongly typed
 		INVALID_FORMAT,
@@ -44,7 +46,7 @@ public interface IDonCommand {
 	}
 	
 	public static enum GeneralCommandType {
-		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, HELP, EXIT, INVALID
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, REDO, HELP, EXIT, INVALID
 	}
 	
 	/**

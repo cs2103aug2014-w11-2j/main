@@ -83,6 +83,8 @@ public class DonParser implements IDonParser{
 			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
+		}else if(commandWord.equalsIgnoreCase("redo")){
+			dCommand.setType(CommandType.REDO);
 		}else if(commandWord.equalsIgnoreCase("help")){
 			setHelpCommand();
 		}else if(commandWord.equalsIgnoreCase("exit")){
@@ -306,6 +308,8 @@ public class DonParser implements IDonParser{
 				dCommand.setType(CommandType.HELP_MARK);
 			}else if(parameters.equalsIgnoreCase("undo")){
 				dCommand.setType(CommandType.HELP_UNDO);
+			}else if(parameters.equalsIgnoreCase("redo")){
+				dCommand.setType(CommandType.HELP_REDO);
 			}else{
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
