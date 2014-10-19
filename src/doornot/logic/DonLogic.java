@@ -150,6 +150,15 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
 			response = findTask(dCommand.getDeadline());
 
+		} else if (commandType == IDonCommand.CommandType.SEARCH_AFTDATE) {
+			//If given search date has a time, will search after the given time.
+			//If given search does not include a time, will search from the day after
+			Calendar givenDate = dCommand.getDeadline();
+			if (givenDate.get(Calendar.HOUR_OF_DAY) == 0 && givenDate.get(Calendar.MINUTE) == 0) {
+				givenDate = CalHelper.getDayAfter(givenDate);
+			}
+			response = findTaskRange(givenDate, null, FIND_INCOMPLETE);
+
 		} else if (commandType == IDonCommand.CommandType.TODAY) {
 			response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
 
@@ -422,8 +431,8 @@ public class DonLogic implements IDonLogic {
 			Calendar taskEndDate = task.getEndDate();
 			// If the date falls within the start and end date of an event, the
 			// event is returned as well
-			if (isSameDay(taskDate, date)
-					|| (taskType == TaskType.DURATION && isBetweenDates(date,
+			if (CalHelper.isSameDay(taskDate, date)
+					|| (taskType == TaskType.DURATION && CalHelper.isBetweenDates(date,
 							taskDate, taskEndDate))) {
 				response.addTask(task);
 			}
@@ -480,16 +489,16 @@ public class DonLogic implements IDonLogic {
 			}
 			Calendar taskStart = task.getStartDate();
 			if (startDate == null) {
-				if (dateEqualOrBefore(taskStart, endDate)) {
+				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
 					response.addTask(task);
 				}
 			} else if (endDate == null) {
-				if (dateEqualOrAfter(taskStart, startDate)) {
+				if (CalHelper.dateEqualOrAfter(taskStart, startDate)) {
 					response.addTask(task);
 				}
 			} else {
-				if (dateEqualOrAfter(taskStart, startDate)
-						&& dateEqualOrBefore(taskStart, endDate)) {
+				if (CalHelper.dateEqualOrAfter(taskStart, startDate)
+						&& CalHelper.dateEqualOrBefore(taskStart, endDate)) {
 					response.addTask(task);
 				}
 			}
@@ -1254,74 +1263,6 @@ public class DonLogic implements IDonLogic {
 	 * Date helper methods
 	 ****/
 
-	/**
-	 * Determines if date is the same as or after the base date.
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is >= baseDate
-	 */
-	private boolean dateEqualOrAfter(Calendar date, Calendar baseDate) {
-		if (date.after(baseDate) || date.equals(baseDate)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is the same as or before the base date.
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is <= baseDate
-	 */
-	private boolean dateEqualOrBefore(Calendar date, Calendar baseDate) {
-		if (date.before(baseDate) || date.equals(baseDate)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is on the same day as baseDate
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is on the same DAY as baseDate
-	 */
-	private boolean isSameDay(Calendar date, Calendar baseDate) {
-		if (date.get(Calendar.DATE) == baseDate.get(Calendar.DATE)
-				&& date.get(Calendar.MONTH) == baseDate.get(Calendar.MONTH)
-				&& date.get(Calendar.YEAR) == baseDate.get(Calendar.YEAR)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is between minDate and maxDate
-	 * 
-	 * @param date
-	 *            the date to check
-	 * @param minDate
-	 *            the earlier date
-	 * @param maxDate
-	 *            the later date
-	 * @return true if date is between minDate and maxDate
-	 */
-	private boolean isBetweenDates(Calendar date, Calendar minDate,
-			Calendar maxDate) {
-		if (dateEqualOrAfter(date, minDate) && dateEqualOrBefore(date, maxDate)) {
-			return true;
-		}
-		return false;
-	}
 	
 	
 
