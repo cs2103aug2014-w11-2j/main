@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
@@ -13,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import doornot.CalHelper;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
@@ -147,6 +149,9 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
 			response = findTask(dCommand.getDeadline());
+
+		} else if (commandType == IDonCommand.CommandType.TODAY) {
+			response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
 
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
@@ -1317,6 +1322,8 @@ public class DonLogic implements IDonLogic {
 		}
 		return false;
 	}
+	
+	
 
 	/**
 	 * Keeps track of an action performed the user for use with the undo command
