@@ -13,19 +13,31 @@ public interface IDonCommand {
 		ADD_FLOAT, 
 		ADD_TASK, 
 		ADD_EVENT, 
+		
 		EDIT_ID_NAME, 
 		EDIT_ID_DATE, 
 		EDIT_ID_EVENT,
 		EDIT_NAME, 
 		EDIT_DATE, 
 		EDIT_EVENT, 
+		
 		DELETE_ID, 
 		DELETE, 
+		
 		SEARCH_NAME, 
 		SEARCH_DATE, 
 		SEARCH_ID,
+		
+		SEARCH_FREE,
+		SEARCH_UNDONE,
+		SEARCH_ALL,
+		SEARCH_AFTDATE,
+		TODAY,
+		OVERDUE,
+		
 		MARK_ID, 
 		MARK,
+		
 		HELP_ADD,
 		HELP_EDIT,
 		HELP_SEARCH,
@@ -35,8 +47,10 @@ public interface IDonCommand {
 		HELP_REDO,
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
+		
 		UNDO,
 		REDO,
+		
 		INVALID_COMMAND,
 		// when format of command is wrongly typed
 		INVALID_FORMAT,

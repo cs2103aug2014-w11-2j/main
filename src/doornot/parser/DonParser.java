@@ -76,11 +76,19 @@ public class DonParser implements IDonParser{
 			setEditCommand();
 		}else if(commandWord.equalsIgnoreCase("s") || commandWord.equalsIgnoreCase("search")){
 			setSearchCommand();
+		}else if(commandWord.equalsIgnoreCase("saf")){
+			setSearchAfterCommand();
 		}else if(commandWord.equalsIgnoreCase("d") || commandWord.equalsIgnoreCase("del")
 				|| commandWord.equalsIgnoreCase("delete")){
 			setDeleteCommand();
 		}else if(commandWord.equalsIgnoreCase("m") || commandWord.equalsIgnoreCase("mark")){
 			setMarkCommand();
+		}else if(commandWord.equalsIgnoreCase("sud")){
+			dCommand.setType(CommandType.SEARCH_UNDONE);
+		}else if(commandWord.equalsIgnoreCase("today")){
+			dCommand.setType(CommandType.TODAY);
+		}else if(commandWord.equalsIgnoreCase("od") || commandWord.equalsIgnoreCase("overdue")){
+			dCommand.setType(CommandType.OVERDUE);
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
 		}else if(commandWord.equalsIgnoreCase("redo")){
@@ -262,28 +270,52 @@ public class DonParser implements IDonParser{
 	 */
 	private void setSearchCommand(){
 		String parameters = removeFirstWord(userCommand);
-		
-		
-		if(isTaskName(parameters)){
-			dCommand.setType(CommandType.SEARCH_NAME);
-			dCommand.setName(extractName(parameters));
+
+		if(parameters.isEmpty()){
+			dCommand.setType(CommandType.SEARCH_ALL);
+		}else if(parameters.equalsIgnoreCase("free")){
+			dCommand.setType(CommandType.SEARCH_FREE);
+		}else if(parameters.equalsIgnoreCase("undone")){
+			dCommand.setType(CommandType.SEARCH_UNDONE);
 		}else{
-			//if date
-			if(isRightCommand(parameters, dateReg)){
-				dCommand.setType(CommandType.SEARCH_DATE);
-				setDeadlineForCommand(parameters);
+			if(isTaskName(parameters)){
+				dCommand.setType(CommandType.SEARCH_NAME);
+				dCommand.setName(extractName(parameters));
 			}else{
-				try{
-					int num = Integer.parseInt(parameters);
-					dCommand.setType(CommandType.SEARCH_ID);
-					dCommand.setID(num);
+				//if date
+				if(isRightCommand(parameters, dateReg)){
+					dCommand.setType(CommandType.SEARCH_DATE);
+					setDeadlineForCommand(parameters);
+				}else{
+					try{
+						int num = Integer.parseInt(parameters);
+						dCommand.setType(CommandType.SEARCH_ID);
+						dCommand.setID(num);
 
 
-				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID_FORMAT);
-				}
-			}	
+					}catch(Exception e){
+						dCommand.setType(CommandType.INVALID_FORMAT);
+					}
+				}	
+			}
 		}
+	}
+	/**
+	 * Creates the search after CommandType 
+	 */
+	private void setSearchAfterCommand(){
+		String parameters = removeFirstWord(userCommand);
+
+		//if date
+		if(isRightCommand(parameters, dateReg)){
+			dCommand.setType(CommandType.SEARCH_AFTDATE);
+			setDeadlineForCommand(parameters);
+		}else{
+
+			dCommand.setType(CommandType.INVALID_FORMAT);
+
+		}	
+
 	}
 	/**
 	 * Set the help command types

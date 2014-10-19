@@ -127,7 +127,13 @@ public class DonCommand implements IDonCommand{
 			return GeneralCommandType.MARK;
 		} else if(getType()==CommandType.SEARCH_DATE
 				|| getType()==CommandType.SEARCH_ID
-				|| getType()==CommandType.SEARCH_NAME) {
+				|| getType()==CommandType.SEARCH_NAME
+				|| getType()==CommandType.SEARCH_UNDONE
+				|| getType()==CommandType.SEARCH_ALL
+				|| getType()==CommandType.SEARCH_FREE
+				|| getType()==CommandType.SEARCH_AFTDATE
+				|| getType()==CommandType.TODAY
+				|| getType()==CommandType.OVERDUE) {
 			return GeneralCommandType.SEARCH;
 		} else if(getType()==CommandType.HELP_ADD
 					|| getType()==CommandType.HELP_EDIT
