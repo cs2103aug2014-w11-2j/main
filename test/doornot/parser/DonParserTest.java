@@ -213,6 +213,56 @@ public class DonParserTest {
 	}
 	
 	@Test
+	public void testSearchGeneral(){
+
+//		TODAY,
+//		OVERDUE,
+		CommandTest.setType(CommandType.SEARCH_AFTDATE);
+		CommandTest.setDeadline(new GregorianCalendar(2014,7,9));
+		
+		// test search after date
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("saf 09082014").getType());
+		assertEquals(CommandTest.getDeadline(), 
+				parser.parseCommand("saf 09082014").getDeadline());
+		
+		// test search free
+		CommandTest.setType(CommandType.SEARCH_FREE);
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("s free").getType());
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("search free").getType());
+		
+		// test search all
+		CommandTest.setType(CommandType.SEARCH_ALL);
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("s").getType());
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("search").getType());
+		
+		// test search undone
+		CommandTest.setType(CommandType.SEARCH_UNDONE);
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("sud").getType());
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("s undone").getType());
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("search undone").getType());
+		
+		// test today
+		CommandTest.setType(CommandType.TODAY);
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("today").getType());
+		
+		// test overdue
+		CommandTest.setType(CommandType.OVERDUE);
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("od").getType());
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("overdue").getType());
+		
+	}
+	@Test
 	public void testEditName(){
 		
 		// test edit 
