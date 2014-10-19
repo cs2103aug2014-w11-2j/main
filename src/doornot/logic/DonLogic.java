@@ -33,6 +33,7 @@ import doornot.storage.IDonTask.TaskType;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
 	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
 	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
@@ -158,6 +159,15 @@ public class DonLogic implements IDonLogic {
 				givenDate = CalHelper.getDayAfter(givenDate);
 			}
 			response = findTaskRange(givenDate, null, FIND_INCOMPLETE);
+
+		} else if (commandType == IDonCommand.CommandType.SEARCH_FREE) {
+			response = findFreeTime();
+
+		} else if (commandType == IDonCommand.CommandType.SEARCH_UNDONE) {
+			response = findUndone();
+
+		} else if (commandType == IDonCommand.CommandType.OVERDUE) {
+			response = findTaskRange(null, Calendar.getInstance(), FIND_INCOMPLETE);
 
 		} else if (commandType == IDonCommand.CommandType.TODAY) {
 			response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
@@ -1142,6 +1152,27 @@ public class DonLogic implements IDonLogic {
 			}
 		}
 
+		return response;
+	}
+	
+	/**
+	 * Find all undone/incomplete tasks
+	 * @return the response containing incomplete tasks
+	 */
+	private IDonResponse findUndone() {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			if (!task.getStatus()) {
+				response.addTask(task.clone());
+			}
+		}
+		if(response.hasTasks()) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+		} else {
+			response.addMessage(MSG_NO_UNDONE_TASKS);
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+		}
 		return response;
 	}
 
