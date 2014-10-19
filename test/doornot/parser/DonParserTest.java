@@ -24,7 +24,7 @@ public class DonParserTest {
 	
 	@Test
 	public void testAddTask(){
-		
+
 		// test add task
 		CommandTest.setType(CommandType.ADD_TASK);
 		CommandTest.setNewName("hihihi");
@@ -49,7 +49,7 @@ public class DonParserTest {
 		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" 09082014").getType());
 		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" at 090814").getType());
 		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a \"hihihi\" a 09082014").getType());
-		
+		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a \"hihih;i\" at 09082014").getType());
 		
 		
 	}

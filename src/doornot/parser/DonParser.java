@@ -529,7 +529,16 @@ public class DonParser implements IDonParser{
 	private boolean isTaskName(String param) {
 		Pattern pattern = Pattern.compile(taskNameReg);
 		Matcher matcher = pattern.matcher(param);
-		return matcher.find();
+		// ensures semi colon not in name
+		if( matcher.find()){
+			if(!extractName(param).contains(";")){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
+		}
 	}
 	/**
 	 * Removes ""
