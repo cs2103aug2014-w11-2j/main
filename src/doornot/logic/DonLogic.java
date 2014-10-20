@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
@@ -13,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import doornot.CalHelper;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonCommand;
@@ -31,6 +33,7 @@ import doornot.storage.IDonTask.TaskType;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
 	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
 	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
@@ -148,6 +151,27 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.SEARCH_DATE) {
 			response = findTask(dCommand.getDeadline());
 
+		} else if (commandType == IDonCommand.CommandType.SEARCH_AFTDATE) {
+			//If given search date has a time, will search after the given time.
+			//If given search does not include a time, will search from the day after
+			Calendar givenDate = dCommand.getDeadline();
+			if (givenDate.get(Calendar.HOUR_OF_DAY) == 0 && givenDate.get(Calendar.MINUTE) == 0) {
+				givenDate = CalHelper.getDayAfter(givenDate);
+			}
+			response = findTaskRange(givenDate, null, FIND_INCOMPLETE);
+
+		} else if (commandType == IDonCommand.CommandType.SEARCH_FREE) {
+			response = findFreeTime();
+
+		} else if (commandType == IDonCommand.CommandType.SEARCH_UNDONE) {
+			response = findUndone();
+
+		} else if (commandType == IDonCommand.CommandType.OVERDUE) {
+			response = findTaskRange(null, Calendar.getInstance(), FIND_INCOMPLETE);
+
+		} else if (commandType == IDonCommand.CommandType.TODAY) {
+			response = getTasksToday();
+
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
 
@@ -188,7 +212,6 @@ public class DonLogic implements IDonLogic {
 			response = undoLastAction();
 
 		} else if (genCommandType == IDonCommand.GeneralCommandType.HELP) {
-			// TODO allow commands to be passed in
 			response = getHelp(commandType);
 
 		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
@@ -214,6 +237,12 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
+	private IDonResponse getTasksToday() {
+		IDonResponse response;
+		response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
+		return response;
+	}
+
 	@Override
 	public IDonResponse saveToDrive() {
 		boolean saveSuccess = donStorage.saveToDisk();
@@ -230,8 +259,7 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public IDonResponse initialize() {
-		// TODO Auto-generated method stub
-		return null;
+		return getTasksToday();
 	}
 
 	/**
@@ -417,8 +445,8 @@ public class DonLogic implements IDonLogic {
 			Calendar taskEndDate = task.getEndDate();
 			// If the date falls within the start and end date of an event, the
 			// event is returned as well
-			if (isSameDay(taskDate, date)
-					|| (taskType == TaskType.DURATION && isBetweenDates(date,
+			if (CalHelper.isSameDay(taskDate, date)
+					|| (taskType == TaskType.DURATION && CalHelper.isBetweenDates(date,
 							taskDate, taskEndDate))) {
 				response.addTask(task);
 			}
@@ -475,16 +503,16 @@ public class DonLogic implements IDonLogic {
 			}
 			Calendar taskStart = task.getStartDate();
 			if (startDate == null) {
-				if (dateEqualOrBefore(taskStart, endDate)) {
+				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
 					response.addTask(task);
 				}
 			} else if (endDate == null) {
-				if (dateEqualOrAfter(taskStart, startDate)) {
+				if (CalHelper.dateEqualOrAfter(taskStart, startDate)) {
 					response.addTask(task);
 				}
 			} else {
-				if (dateEqualOrAfter(taskStart, startDate)
-						&& dateEqualOrBefore(taskStart, endDate)) {
+				if (CalHelper.dateEqualOrAfter(taskStart, startDate)
+						&& CalHelper.dateEqualOrBefore(taskStart, endDate)) {
 					response.addTask(task);
 				}
 			}
@@ -1130,6 +1158,27 @@ public class DonLogic implements IDonLogic {
 
 		return response;
 	}
+	
+	/**
+	 * Find all undone/incomplete tasks
+	 * @return the response containing incomplete tasks
+	 */
+	private IDonResponse findUndone() {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			if (!task.getStatus()) {
+				response.addTask(task.clone());
+			}
+		}
+		if(response.hasTasks()) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+		} else {
+			response.addMessage(MSG_NO_UNDONE_TASKS);
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+		}
+		return response;
+	}
 
 	/**
 	 * Returns a list of tasks by the given task type
@@ -1167,6 +1216,85 @@ public class DonLogic implements IDonLogic {
 			}
 		}
 		return resultList;
+	}
+	
+	/**
+	 * Add a label to a task with the given id
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabel(int id, String labelName) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.contains(labelName)) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
+				response.addMessage(String.format("The label '%1$s' already exists", labelName));
+				log.fine(String.format("The label '%1$s' already exists", labelName));
+			} else {
+				task.addLabel(labelName);
+				response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
+				response.addTask(task);
+			}
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			//TODO change commandtype to label commands
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * Removes a label from a task with the given id
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabel(int id, String labelName) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.remove(labelName)) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
+				response.addMessage(String.format("The label '%1$s' has been removed", labelName));
+				log.fine(String.format("The label '%1$s' has been removed", labelName));
+				response.addTask(task);
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_NOT_FOUND);
+				response.addMessage(String.format("The label '%1$s' does not exist", labelName));
+				log.fine(String.format("The label '%1$s' does not exist", labelName));
+			}
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			//TODO change commandtype to label commands
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
+		}
+		
+		return response;
 	}
 
 	/**
@@ -1249,74 +1377,8 @@ public class DonLogic implements IDonLogic {
 	 * Date helper methods
 	 ****/
 
-	/**
-	 * Determines if date is the same as or after the base date.
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is >= baseDate
-	 */
-	private boolean dateEqualOrAfter(Calendar date, Calendar baseDate) {
-		if (date.after(baseDate) || date.equals(baseDate)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is the same as or before the base date.
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is <= baseDate
-	 */
-	private boolean dateEqualOrBefore(Calendar date, Calendar baseDate) {
-		if (date.before(baseDate) || date.equals(baseDate)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is on the same day as baseDate
-	 * 
-	 * @param date
-	 *            the date to compare
-	 * @param baseDate
-	 *            the base date to check against
-	 * @return true if date is on the same DAY as baseDate
-	 */
-	private boolean isSameDay(Calendar date, Calendar baseDate) {
-		if (date.get(Calendar.DATE) == baseDate.get(Calendar.DATE)
-				&& date.get(Calendar.MONTH) == baseDate.get(Calendar.MONTH)
-				&& date.get(Calendar.YEAR) == baseDate.get(Calendar.YEAR)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if date is between minDate and maxDate
-	 * 
-	 * @param date
-	 *            the date to check
-	 * @param minDate
-	 *            the earlier date
-	 * @param maxDate
-	 *            the later date
-	 * @return true if date is between minDate and maxDate
-	 */
-	private boolean isBetweenDates(Calendar date, Calendar minDate,
-			Calendar maxDate) {
-		if (dateEqualOrAfter(date, minDate) && dateEqualOrBefore(date, maxDate)) {
-			return true;
-		}
-		return false;
-	}
+	
+	
 
 	/**
 	 * Keeps track of an action performed the user for use with the undo command
