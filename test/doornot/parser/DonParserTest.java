@@ -1,7 +1,6 @@
 package doornot.parser;
 import static org.junit.Assert.*;
 
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.junit.BeforeClass;
@@ -320,13 +319,17 @@ public class DonParserTest {
 		
 		
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("edit \"hihihi\" to from 07082014 to 09082014").getType());
+				parser.parseCommand("edit \"hihihi\" to from 07/08/2014 to 09/08/2014").getType());
 		assertEquals(CommandTest.getName(), 
-				parser.parseCommand("edit \"hihihi\" to from 07082014 to 09082014").getName());
+				parser.parseCommand("edit \"hihihi\" to from 07/08/2014 to 09/08/2014").getName());
 		assertEquals(CommandTest.getNewStartDate(), 
-				parser.parseCommand("edit \"hihihi\" to from 07082014 to 09082014").getNewStartDate());
+				parser.parseCommand("edit \"hihihi\" to from 07/08/2014 to 09/08/2014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
-				parser.parseCommand("edit \"hihihi\" to from 07082014 to 09082014").getNewEndDate());
+				parser.parseCommand("edit \"hihihi\" to from 07/08 to 09/08").getNewEndDate());
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("edit \"hihihi\" to from 7 aug to 9 aug").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("edit \"hihihi\" to from 7 aug to 9 aug").getNewEndDate());
 		
 		// test edit ID event
 		CommandTest.setType(CommandType.EDIT_ID_EVENT);
@@ -336,22 +339,30 @@ public class DonParserTest {
 		
 		
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("edit 666 to from 07082014 to 09082014").getType());
+				parser.parseCommand("edit 666 to from 07/08/2014 to 09/08/2014").getType());
 		assertEquals(CommandTest.getID(), 
-				parser.parseCommand("edit 666 to from 07082014 to 09082014").getID());
+				parser.parseCommand("edit 666 to from 07/08/2014 to 09/08/2014").getID());
 		assertEquals(CommandTest.getNewStartDate(), 
-				parser.parseCommand("edit 666 to from 07082014 to 09082014").getNewStartDate());
+				parser.parseCommand("edit 666 to from 07/08/2014 to 09/08/2014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
-				parser.parseCommand("edit 666 to from 07082014 to 09082014").getNewEndDate());
+				parser.parseCommand("edit 666 to from 07/08/2014 to 09/08/2014").getNewEndDate());
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("edit 666 to from 7 aug to 9 aug").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("edit 666 to from 7 aug to 9 aug").getNewEndDate());
 		
 		// tets with time
 		CommandTest.setNewStartDate(new GregorianCalendar(2014,7,7,13,55));
 		CommandTest.setNewEndDate(new GregorianCalendar(2014,7,9,11,44));
 		
 		assertEquals(CommandTest.getNewStartDate(), 
-				parser.parseCommand("edit 666 to from 07082014_1355 to 09082014_1144").getNewStartDate());
+				parser.parseCommand("edit 666 to from 07/08/2014 13:55 to 09/08/2014 11:44").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
-				parser.parseCommand("edit 666 to from 07082014_1355 to 09082014_1144").getNewEndDate());
+				parser.parseCommand("edit 666 to from 07/08/2014 13:55 to 09/08/2014 11:44").getNewEndDate());
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("edit 666 to from 7 aug 13:55 to 9 aug 11:44").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("edit 666 to from 7 aug 13:55 to 9 aug 11:44").getNewEndDate());
 	}
 	
 	@Test
@@ -363,17 +374,21 @@ public class DonParserTest {
 		
 		
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("edit \"hihihi\" to 09082014").getType());
+				parser.parseCommand("edit \"hihihi\" to 09/08/2014").getType());
 		assertEquals(CommandTest.getName(), 
-				parser.parseCommand("edit \"hihihi\" to 09082014").getName());
+				parser.parseCommand("edit \"hihihi\" to 09/08/2014").getName());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("edit \"hihihi\" to 09082014").getNewDeadline());
+				parser.parseCommand("edit \"hihihi\" to 09/08/2014").getNewDeadline());
+		assertEquals(CommandTest.getNewDeadline(), 
+				parser.parseCommand("edit \"hihihi\" to 9 aug").getNewDeadline());
 		
 		// tets with time
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,7,9,1,23));
 		
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("edit \"hihihi\" to 09082014_0123").getNewDeadline());
+				parser.parseCommand("edit \"hihihi\" to 09/08/2014 1.23 am").getNewDeadline());
+		assertEquals(CommandTest.getNewDeadline(), 
+				parser.parseCommand("edit \"hihihi\" to 9 aug 1.23 am").getNewDeadline());
 		
 		// tets ID edit date
 		CommandTest.setType(CommandType.EDIT_ID_DATE);
@@ -382,11 +397,13 @@ public class DonParserTest {
 		
 		
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("edit 666 to 09082014").getType());
+				parser.parseCommand("e 666 to 09/08/2014").getType());
 		assertEquals(CommandTest.getID(), 
-				parser.parseCommand("edit 666 to 09082014").getID());
+				parser.parseCommand("edit 666 to 09/08/2014").getID());
+		assertEquals(CommandTest.getNewDeadline().getTime().toString(), 
+				parser.parseCommand("edit 666 to 09/08/2014").getNewDeadline().getTime().toString());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("edit 666 to 09082014").getNewDeadline());
+				parser.parseCommand("edit 666 to 9 aug").getNewDeadline());
 		
 	
 	}
