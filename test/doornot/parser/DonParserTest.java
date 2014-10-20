@@ -291,7 +291,9 @@ public class DonParserTest {
 				parser.parseCommand("e \"hihihi\" to \"HEHEHE\"").getNewName());
 		assertEquals(CommandTest.getName(), 
 				parser.parseCommand("EDIT \"hihihi\" to \"HEHEHE\"").getName());
-		
+		//test invalid
+		assertEquals(CommandType.INVALID_FORMAT, 
+				parser.parseCommand("EDIT \"hihihi to \"HEHEHE\"").getType());
 		// tets edit ID
 		CommandTest.setType(CommandType.EDIT_ID_NAME);
 		CommandTest.setID(666);
@@ -303,6 +305,7 @@ public class DonParserTest {
 				parser.parseCommand("edit 666 to \"hehehe\"").getNewName());
 		assertEquals(CommandTest.getID(), 
 				parser.parseCommand("edit 666 to \"hehehe\"").getID());
+		
 		
 	}
 	

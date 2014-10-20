@@ -53,13 +53,14 @@ import doornot.parser.IDonCommand.CommandType;
 	// allow to
 	private String editDateOrEventReg = "^to\\b";
 	
-	// allow 'to " "'
-	private String editNameReg = "\\bto\\s\".+\"$";
+	// allow "blah" to "blah"
+	private String editNameToNameReg = "^\".+\"\\sto\\s\".+\"$";
 	
-	// allow 'to from DDMMYYYY to DDMMYYYY' and 'to from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
-//	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bto\\sfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
+	// allow id to "blah"
+	private String editIDToNameReg = "^[0-9]+\\sto\\s\".+\"$";
 
-	
+	// to "blah"
+	private String editToNameReg = "\\bto\\s\".+\"$";
 	// Obtain a suitable logger.
 //	 private static Logger logger = Logger. getLogger("Parser");
 	 
@@ -221,31 +222,42 @@ import doornot.parser.IDonCommand.CommandType;
 				}
 			}
 			
-		}else{
-			String taskName = getTaskName(parameters);
-			String newName = getNewName(parameters, editDateOrEventReg);
-			if(isTaskName(taskName)&&isTaskName(newName)){
+		}else if(isRightCommand(parameters, editNameToNameReg)){
+			
+			String[] taskNames = getTaskNameArr(parameters);
+
+			String oldName = taskNames[0];
+			String newName = taskNames[1];
+			
+			if(isGoodName(oldName)&&isGoodName(newName)){
 				dCommand.setType(CommandType.EDIT_NAME);
-				dCommand.setName(extractName(taskName));
-				dCommand.setNewName(extractName(newName));
+				dCommand.setName(oldName);
+				dCommand.setNewName(newName);
 				
-			}else if(isTaskName(newName)){
-				try{
-					int ID = Integer.parseInt(taskName);
-					dCommand.setType(CommandType.EDIT_ID_NAME);
-					dCommand.setID(ID);
-					dCommand.setNewName(extractName(newName));
-				
-				}catch(Exception e){
-					dCommand.setType(CommandType.INVALID_FORMAT);
-				}
 			}else{
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
+			
+		}else if(isRightCommand(parameters, editIDToNameReg)){
+			String newName = getTaskName(parameters);
+			
+			if(isGoodName(newName)){
+				// get rid of to "blah"
+				String id = parameters.replaceFirst(editToNameReg, "").trim();
+				int ID = Integer.parseInt(id);
+				dCommand.setType(CommandType.EDIT_ID_NAME);
+				dCommand.setID(ID);
+				dCommand.setNewName(newName);
+			}else{
+				dCommand.setType(CommandType.INVALID_FORMAT);
+			}	
+			
+		}else{
+			dCommand.setType(CommandType.INVALID_FORMAT);
 		}
-		
 	}
-	
+
+
 	/**
 	 * Creates the mark CommandType 
 	 */
@@ -811,7 +823,16 @@ import doornot.parser.IDonCommand.CommandType;
 		return newName;
 		
 	}
-	
+	/**
+	 * Gets the array of task names being referred to from the parameter
+	 */
+	private String[] getTaskNameArr(String param) {
+		String [] nameArr = new String[2];
+		nameArr  = param.split("\"\\sto\\s\"");
+		nameArr[0] = extractName(nameArr[0].trim()+"\"");
+		nameArr[1] = extractName("\""+nameArr[1].trim());
+		return nameArr;
+	}
 	/**
 	 * Gets the name of task being referred to from the parameter
 	 */
@@ -875,11 +896,9 @@ import doornot.parser.IDonCommand.CommandType;
 	
 	public static void main(String[] args){
 		DonParser p = new DonParser();
-		DonCommand d = p.parseCommand("add \"hello d12\" from 17 aug to 12 nov");
+		DonCommand d = p.parseCommand("ed \"hello d12\" to \" hola\" ");
 		System.out.println(d.getType());
+		System.out.println(d.getName());
 		System.out.println(d.getNewName());
-//		System.out.println(d.getNewDeadline().getTime().toString());
-		System.out.println(d.getNewStartDate().getTime().toString());
-		System.out.println(d.getNewEndDate().getTime().toString());
 	}
 }
