@@ -193,8 +193,8 @@ public class DonParserTest {
 		assertEquals(CommandTest.getName(), 
 				parser.parseCommand("s \"blah95\"").getName());
 		// test invalid
-		assertEquals(CommandType.INVALID_FORMAT, 
-				parser.parseCommand("search \"blah95").getType());
+//		assertEquals(CommandType.INVALID_FORMAT, 
+//				parser.parseCommand("search \"blah95").getType());
 	}
 	
 	@Test
@@ -216,14 +216,18 @@ public class DonParserTest {
 		
 		// test search date
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("s 09082014").getType());
+				parser.parseCommand("s 09/08/2014").getType());
 		assertEquals(CommandTest.getDeadline(), 
-				parser.parseCommand("s 09082014").getDeadline());
+				parser.parseCommand("s 09/08/2014").getDeadline());
+		assertEquals(CommandTest.getDeadline(), 
+				parser.parseCommand("s 9 aug").getDeadline());
 		
 		// test search with time
 		CommandTest.setDeadline(new GregorianCalendar(2014,7,9,11,23));
 		assertEquals(CommandTest.getDeadline(), 
-				parser.parseCommand("s 09082014_1123").getDeadline());
+				parser.parseCommand("s 09/08/2014 11:23").getDeadline());
+		assertEquals(CommandTest.getDeadline(), 
+				parser.parseCommand("s 9 aug 11:23").getDeadline());
 	}
 	
 	@Test
@@ -236,9 +240,11 @@ public class DonParserTest {
 		
 		// test search after date
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("saf 09082014").getType());
+				parser.parseCommand("saf 09/08/2014").getType());
 		assertEquals(CommandTest.getDeadline(), 
-				parser.parseCommand("saf 09082014").getDeadline());
+				parser.parseCommand("saf 09/08/2014").getDeadline());
+		assertEquals(CommandTest.getDeadline(), 
+				parser.parseCommand("saf 9 aug").getDeadline());
 		
 		// test search free
 		CommandTest.setType(CommandType.SEARCH_FREE);

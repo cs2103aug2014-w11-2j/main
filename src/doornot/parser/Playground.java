@@ -22,31 +22,8 @@ public class Playground {
 	
 	}
 		public static void main(String[] args){
-//			String mes = "add \"blah\" at 12 oct";
-//			
-//			String str = mes.replaceFirst("add", "").trim();
-//					
-//			System.out.println(str);		
-//			Pattern pattern = Pattern.compile( "^\".+\"\\sat\\b|^\".+\"\\s@\\b");
-//			Matcher matcher = pattern.matcher(str);
-//			// ensures semi colon not in name
-//			
-//			System.out.println(matcher.find());
-//			System.out.println(matcher.group());
-//			if( matcher.find()){
-//				if(!extractName(param).contains(";")){
-//					return true;
-//				}else{
-//					return false;
-//				}
-//			}else{
-//				return false;
-//			}
-			
-			
-//			Calendar cal = Calendar.getInstance();
-////			System.out.println(cal.getTime().toString());
-//			
+
+					
 			String command = "";
 //
 			Parser parser = new Parser();
@@ -74,9 +51,6 @@ public class Playground {
 //			List<DateGroup> groups = nattyParser.parse(command);
 //			List<Date> dates = null;
 //
-//			
-//			
-//			
 //			
 //			
 //			for(DateGroup group:groups) {

@@ -73,7 +73,11 @@ import doornot.parser.IDonCommand.CommandType;
 
 	// to "blah"
 	private String editToNameReg = "\\bto\\s\".+\"$";
-	 
+	
+	// for id only
+	private String searchIDReg = "^[0-9]+$";
+	
+	
 	@Override
 	public DonCommand parseCommand(String command) {
 		
@@ -335,33 +339,32 @@ import doornot.parser.IDonCommand.CommandType;
 	 */
 	private void setSearchCommand(){
 		String parameters = removeFirstWord(userCommand);
-
+		
 		if(parameters.isEmpty()){
 			dCommand.setType(CommandType.SEARCH_ALL);
+			
 		}else if(parameters.equalsIgnoreCase("free")){
 			dCommand.setType(CommandType.SEARCH_FREE);
+			
 		}else if(parameters.equalsIgnoreCase("undone")){
 			dCommand.setType(CommandType.SEARCH_UNDONE);
+			
 		}else{
 			if(isTaskName(parameters)){
 				dCommand.setType(CommandType.SEARCH_NAME);
 				dCommand.setName(extractName(parameters));
 			}else{
+				
 				//if date
-				if(isRightCommand(parameters, dateReg)){
+				if(isRightCommand(parameters, searchIDReg)){
+					int num = Integer.parseInt(parameters);
+					dCommand.setType(CommandType.SEARCH_ID);
+					dCommand.setID(num);
+				}else{
+					
 					dCommand.setType(CommandType.SEARCH_DATE);
 					setDeadlineForCommand(parameters);
-				}else{
-					try{
-						int num = Integer.parseInt(parameters);
-						dCommand.setType(CommandType.SEARCH_ID);
-						dCommand.setID(num);
-
-
-					}catch(Exception e){
-						dCommand.setType(CommandType.INVALID_FORMAT);
-					}
-				}	
+				}
 			}
 		}
 	}
@@ -371,15 +374,8 @@ import doornot.parser.IDonCommand.CommandType;
 	private void setSearchAfterCommand(){
 		String parameters = removeFirstWord(userCommand);
 
-		//if date
-		if(isRightCommand(parameters, dateReg)){
 			dCommand.setType(CommandType.SEARCH_AFTDATE);
 			setDeadlineForCommand(parameters);
-		}else{
-
-			dCommand.setType(CommandType.INVALID_FORMAT);
-
-		}	
 
 	}
 	/**
