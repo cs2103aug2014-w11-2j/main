@@ -928,13 +928,5 @@ import doornot.parser.IDonCommand.CommandType;
 			super(); 
 			}
 	}
-	
-	public static void main(String[] args){
-		DonParser p = new DonParser();
-		DonCommand d = p.parseCommand("ed \"666\" to from 12/11/2014 9 am to 13/11/2014 4pm");
-		System.out.println(d.getType());
-		System.out.println(d.getName());
-		System.out.println(d.getNewStartDate().getTime().toString());
-		System.out.println(d.getNewEndDate().getTime().toString());
-	}
+
 }
