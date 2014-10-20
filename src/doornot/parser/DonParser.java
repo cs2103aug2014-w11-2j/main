@@ -1,11 +1,15 @@
 package doornot.parser;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.logging.Level;
 //import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.joestelmach.natty.*;
 
 import doornot.parser.IDonCommand.CommandType;
 /**
@@ -23,32 +27,49 @@ public class DonParser implements IDonParser{
 	private String userCommand;
 	private DonCommand dCommand;
 	
+	// for natty parser
+	private Parser nattyParser = new Parser();
+	private List<DateGroup> groups;
+	private List<Date> dates = null;
 	
 	//List of all the allowed types 
 	
 	//date in DDMMYYYY_hhmm format
-	private String dateTimeReg = "[0-9]{8}_[0-9]{4}";
+//	private String dateTimeReg = "[0-9]{8}_[0-9]{4}";
 	
-	//date in DDMMYYYY format
-	private String dateReg = "[0-9]{8}";
+	//date in DD/MM/YYYY format
+	private String dateReg = "\\b[0-9]{2}/[0-9]{2}/[0-9]{4}\\b";
+	private String dateNoYearReg = "\\b[0-9]{2}/[0-9]{2}\\b";
 	
 	//name must be between " "
-	private String taskNameReg = "^\".+\"$";
+	private String taskNameReg = "\".+\"";
 	
 	//allow 'at DDMMYYYY' and '@ DDMMYYYY' and 'at DDMMYYYY_hhmm' and '@ DDMMYYYY_hhmm'
-	private String addTaskReg = "\\bat\\s[0-9]{8}$|@\\s[0-9]{8}$|\\bat\\s[0-9]{8}_[0-9]{4}$|@\\s[0-9]{8}_[0-9]{4}$";
+//	private String addTaskReg = "^at\\s[0-9]{8}$|^@\\s[0-9]{8}$|\\bat\\s[0-9]{8}_[0-9]{4}$|@\\s[0-9]{8}_[0-9]{4}$";
+	
+	// allow "blah" at or "blah" @
+	private String addTaskReg = "^\".+\"\\sat\\b|^\".+\"\\s@\\b";
+	// check for DD/MM/YYYY or DD/MM
+//	private String addTaskDateReg = "^at\\s[0-9]{2}/[0-9]{2}/[0-9]{4}|^@\\s[0-9]{2}/[0-9]{2}/[0-9]{4}|^at\\s[0-9]{2}/[0-9]{2}|^@\\s[0-9]{2}/[0-9]{2}";
 	
 	// allow 'from DDMMYYYY to DDMMYYYY' and 'from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
-	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
+//	private String addEventReg = "\\bfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
+	
+	// allow from
+	private String addEventReg = "^from\\b";
 	
 	// allow 'to DDMMYYYY' and 'to DDMMYYYY_hhmm'
-	private String editDateReg = "\\bto\\s[0-9]{8}$|\\bto\\s[0-9]{8}_[0-9]{4}$";
+//	private String editDateReg = "\\bto\\s[0-9]{8}$|\\bto\\s[0-9]{8}_[0-9]{4}$";
+	
+	// allow to
+	private String editDateOrEventReg = "^to\\b";
 	
 	// allow 'to " "'
 	private String editNameReg = "\\bto\\s\".+\"$";
 	
 	// allow 'to from DDMMYYYY to DDMMYYYY' and 'to from DDMMYYYY_hhmm to DDMMYYYY_hhmm'
-	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bto\\sfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
+//	private String editEventReg = "\\bto\\sfrom\\s[0-9]{8}\\sto\\s[0-9]{8}$|\\bto\\sfrom\\s[0-9]{8}_[0-9]{4}\\sto\\s[0-9]{8}_[0-9]{4}$";
+
 	
 	// Obtain a suitable logger.
 //	 private static Logger logger = Logger. getLogger("Parser");
@@ -113,13 +134,19 @@ public class DonParser implements IDonParser{
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
 
+		// is it "blah" at ...
 		if(isRightCommand(parameters, addTaskReg)){
-			String taskName = getTaskName(parameters, addTaskReg);
-			if(isTaskName(taskName)){
+			
+			// get blah
+			String taskName = getTaskName(parameters);
+			
+			if(isGoodName(taskName)){
 				dCommand.setType(CommandType.ADD_TASK);
-				dCommand.setNewName(extractName(taskName));
-	
-				setDeadlineForCommand(parameters);
+				dCommand.setNewName(taskName);
+				
+				// get rid of "blah" at
+				String date = parameters.replaceFirst("", addTaskReg);
+				setNewDeadlineForCommand(date);
 				
 			}else{
 //				logger.log(Level.WARNING, "Add task name invalid" );
@@ -439,8 +466,8 @@ public class DonParser implements IDonParser{
 		Calendar calCheck =  new GregorianCalendar();
 		
 		int day = Integer.parseInt(dateTime.substring(0,2));
-		int month = Integer.parseInt(dateTime.substring(2,4))-1;
-		int year = Integer.parseInt(dateTime.substring(4,8));
+		int month = Integer.parseInt(dateTime.substring(3,5))-1;
+		int year = Integer.parseInt(dateTime.substring(6,10));
 		int hour = Integer.parseInt(dateTime.substring(9,11));
 		int min = Integer.parseInt(dateTime.substring(11,13));
 		
@@ -457,21 +484,205 @@ public class DonParser implements IDonParser{
 		}
 		
 	}
-	
-	private void setDeadlineForCommand(String parameters) {
-		if(rightDate(getEndDate(parameters))){
-		
-			if((dCommand.getType()==CommandType.SEARCH_DATE)
-					||(dCommand.getType()==CommandType.SEARCH_AFTDATE)){
-				dCommand.setDeadline(getEndDate(parameters));
-			}else{
-				dCommand.setNewDeadline(getEndDate(parameters));
-			}
+	/**
+	 * Checks if the date follows the dd/mm/yyyy format
+	 * @param parameters
+	 * @return
+	 */
+	private boolean isFormalDate(String param) {
+		// if dd/mm/yyyy
+		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
+		if(matcher.find()){
+			return true;
 		}else{
-			dCommand = new DonCommand();
-			dCommand.setType(CommandType.INVALID_DATE);
+			// if dd/mm
+			Pattern pattern2 = Pattern.compile(dateNoYearReg, Pattern.CASE_INSENSITIVE);
+			Matcher matcher2 = pattern2.matcher(param);
+			if(matcher2.find()){
+				return true;
+			}else{
+				return false;
+			}
 		}
 	}
+	/**
+	 * Checks if the date follows the dd/mm/yyyy format
+	 * @param parameters
+	 * @return
+	 */
+	private Calendar getFormalDate(String param) {
+		// if dd/mm/yyyy
+		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
+		Calendar cal;
+		if(matcher.find()){
+			cal = createFormalDate(matcher.group());
+		}else{
+			cal = createFormalNoYearDate(matcher.group());
+		}
+		return cal;
+	}
+	
+
+	private Calendar createFormalDate(String date) {
+		Calendar calCheck =  new GregorianCalendar();
+		
+		int day = Integer.parseInt(date.substring(0,2));
+		int month = Integer.parseInt(date.substring(3,5))-1;
+		int year = Integer.parseInt(date.substring(6,10));
+		
+		calCheck.set(Calendar.YEAR, year);
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
+			//create an error date ref
+			return new GregorianCalendar(0,0,0);
+		}else{
+			return new GregorianCalendar(year,month,day);
+		}
+	}
+	
+	private Calendar createFormalNoYearDate(String date) {
+		Calendar calCheck =  new GregorianCalendar();
+		
+		int day = Integer.parseInt(date.substring(0,2));
+		int month = Integer.parseInt(date.substring(3,5))-1;
+		
+		calCheck.set(Calendar.MONTH, month);
+		calCheck.set(Calendar.DAY_OF_MONTH, 1);
+		
+		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
+			//create an error date ref
+			return new GregorianCalendar(0,0,0);
+		}else{
+			return new GregorianCalendar(calCheck.get(Calendar.YEAR), month,day);
+		}
+	}
+	/**
+	 * Sets new deadlines for dCommand
+	 * @param parameters
+	 */
+	private void setNewDeadlineForCommand(String parameters) {
+
+		if(isFormalDate(parameters)){
+			Calendar date = getFormalDate(parameters);
+			
+			try{
+				Date time = getTimeFromParser(parameters);
+				if(isTimeMentioned()){
+					dCommand.setNewDeadline(createDateTimeNatty(date, time));
+				}else{
+					dCommand.setNewDeadline(date);
+				}
+				
+			}catch(Exception e){
+				dCommand = new DonCommand();
+				dCommand.setType(CommandType.INVALID_DATE);
+			}
+			
+		}else{
+			try{
+				Date date = getTimeFromParser(parameters);
+				Calendar cal = new GregorianCalendar();
+				cal.setTime(date);
+				
+				if(isTimeMentioned()){	
+					
+					dCommand.setNewDeadline(cal);
+				}else{
+					
+					dCommand.setNewDeadline(createDateNatty(cal));
+				}
+			}catch(Exception e){
+				dCommand = new DonCommand();
+				dCommand.setType(CommandType.INVALID_DATE);
+			}
+
+
+		}
+	}
+	
+	private Calendar createDateNatty(Calendar dateCal) {
+		
+		Calendar newCal = new GregorianCalendar();
+		newCal.set(Calendar.YEAR, dateCal.get(Calendar.YEAR));
+		newCal.set(Calendar.MONTH, dateCal.get(Calendar.MONTH));
+		newCal.set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH));
+		return newCal;
+	}
+	
+	private Calendar createDateTimeNatty(Calendar date, Date time) {
+		
+		Calendar timeCal = new GregorianCalendar();
+		timeCal.setTime(time);
+		date.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
+		date.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
+		return date;
+	}
+
+	/**
+	 * check if time is mentioned
+	 * @return
+	 */
+	private boolean isTimeMentioned() {
+		return !(groups.get(0).isTimeInferred());
+	}
+	
+	/**
+	 * Gets date from parser
+	 * @param parameters
+	 * @return
+	 */
+	private Date getTimeFromParser(String parameters) {
+		groups = nattyParser.parse(parameters);
+		return groups.get(0).getDates().get(0);
+	}
+
+	/**
+	 * Sets deadlines for dCommand
+	 * @param parameters
+	 */
+	private void setDeadlineForCommand(String parameters) {
+
+		if(isFormalDate(parameters)){
+			Calendar date = getFormalDate(parameters);
+			
+			try{
+				Date time = getTimeFromParser(parameters);
+				if(isTimeMentioned()){
+					dCommand.setDeadline(createDateTimeNatty(date, time));
+				}else{
+					dCommand.setDeadline(date);
+				}
+				
+			}catch(Exception e){
+				dCommand = new DonCommand();
+				dCommand.setType(CommandType.INVALID_DATE);
+			}
+			
+		}else{
+			try{
+				Date date = getTimeFromParser(parameters);
+				Calendar cal = new GregorianCalendar();
+				cal.setTime(date);
+				
+				if(isTimeMentioned()){	
+					
+					dCommand.setDeadline(cal);
+				}else{
+					
+					dCommand.setDeadline(createDateNatty(cal));
+				}
+			}catch(Exception e){
+				dCommand = new DonCommand();
+				dCommand.setType(CommandType.INVALID_DATE);
+			}
+
+
+		}
+	}	
 	
 	private void setStartAndEndForCommand(String parameters) {
 		if(rightDate(getEndDate(parameters)) && rightDate(getStartDate(parameters))){
@@ -482,7 +693,7 @@ public class DonParser implements IDonParser{
 			dCommand.setType(CommandType.INVALID_DATE);
 		}
 	}
-	
+
 	/**
 	 * Checks whether it's an error date (0,0,0) is used to represent error dates
 	 * @param Date
@@ -511,10 +722,25 @@ public class DonParser implements IDonParser{
 	/**
 	 * Gets the name of task being referred to from the parameter
 	 */
-	private String getTaskName(String param, String regex){
-		return param.split(regex)[0].trim();
+	private String getTaskName(String param){
+		Pattern pattern = Pattern.compile(taskNameReg);
+		Matcher matcher = pattern.matcher(param);
+		matcher.find();
+		return extractName(matcher.group());
 	}
+	/**
+	 * Checks if the task name does not contain ;
+	 */
+	private boolean isGoodName(String name) {
+		// ensures semi colon not in name
+		if(!name.contains(";")){
+			return true;
+		}else{
+			return false;
+		}
 
+	}
+	
 	private static String removeFirstWord(String userCommand) {
 		return userCommand.replaceFirst(getFirstWord(userCommand), "").trim();
 	}
