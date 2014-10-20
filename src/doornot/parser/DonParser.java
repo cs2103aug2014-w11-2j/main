@@ -19,7 +19,7 @@ import doornot.parser.IDonCommand.CommandType;
  */
 
 //@author A0115503W
-public class DonParser implements IDonParser{
+ public class DonParser implements IDonParser{
 
 	public DonParser() {
 
@@ -48,7 +48,7 @@ public class DonParser implements IDonParser{
 //	private String addTaskReg = "^at\\s[0-9]{8}$|^@\\s[0-9]{8}$|\\bat\\s[0-9]{8}_[0-9]{4}$|@\\s[0-9]{8}_[0-9]{4}$";
 	
 	// allow "blah" at or "blah" @
-	private String addTaskReg = "^\".+\"\\sat\\b|^\".+\"\\s@\\b";
+	private String addTaskReg = "^\".+\"\\sat\\b|^\".+\"\\s@";
 	// check for DD/MM/YYYY or DD/MM
 //	private String addTaskDateReg = "^at\\s[0-9]{2}/[0-9]{2}/[0-9]{4}|^@\\s[0-9]{2}/[0-9]{2}/[0-9]{4}|^at\\s[0-9]{2}/[0-9]{2}|^@\\s[0-9]{2}/[0-9]{2}";
 	
@@ -145,7 +145,7 @@ public class DonParser implements IDonParser{
 				dCommand.setNewName(taskName);
 				
 				// get rid of "blah" at
-				String date = parameters.replaceFirst("", addTaskReg);
+				String date = parameters.replaceFirst(addTaskReg, "").trim();
 				setNewDeadlineForCommand(date);
 				
 			}else{
@@ -155,7 +155,7 @@ public class DonParser implements IDonParser{
 
 		}else if(isRightCommand(parameters, addEventReg)){
 			
-			String taskName = getTaskName(parameters, addEventReg);
+			String taskName = getTaskName(parameters);
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.ADD_EVENT);
 				dCommand.setNewName(extractName(taskName));
@@ -184,8 +184,8 @@ public class DonParser implements IDonParser{
 	private void setEditCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		if(isRightCommand(parameters, editEventReg)){
-			String taskName = getTaskName(parameters, editEventReg);
+		if(isRightCommand(parameters, editDateOrEventReg)){
+			String taskName = getTaskName(parameters);
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_EVENT);
 				dCommand.setName(extractName(taskName));
@@ -204,8 +204,8 @@ public class DonParser implements IDonParser{
 					dCommand.setType(CommandType.INVALID_FORMAT);
 				}
 			}
-		}else if(isRightCommand(parameters, editDateReg)){
-			String taskName = getTaskName(parameters, editDateReg);
+		}else if(isRightCommand(parameters, editDateOrEventReg)){
+			String taskName = getTaskName(parameters);
 			if(isTaskName(taskName)){
 				dCommand.setType(CommandType.EDIT_DATE);
 				dCommand.setName(extractName(taskName));
@@ -224,8 +224,8 @@ public class DonParser implements IDonParser{
 			}
 			
 		}else{
-			String taskName = getTaskName(parameters, editNameReg);
-			String newName = getNewName(parameters, editNameReg);
+			String taskName = getTaskName(parameters);
+			String newName = getNewName(parameters, editDateOrEventReg);
 			if(isTaskName(taskName)&&isTaskName(newName)){
 				dCommand.setType(CommandType.EDIT_NAME);
 				dCommand.setName(extractName(taskName));
@@ -388,7 +388,7 @@ public class DonParser implements IDonParser{
 	 * Gets the start date from the parameter
 	 */
 	private Calendar getStartDate(String param) {
-		Pattern pattern = Pattern.compile(dateTimeReg, Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(param);
 		
 		if(matcher.find()){ //if matches time
@@ -408,7 +408,7 @@ public class DonParser implements IDonParser{
 	 * Gets the end date from the parameter
 	 */
 	private Calendar getEndDate(String param) {
-		Pattern pattern = Pattern.compile(dateTimeReg, Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(param);
 		if(matcher.find()){ //first match
 			String dateTime = matcher.group();
@@ -510,8 +510,9 @@ public class DonParser implements IDonParser{
 	 * Checks if the date follows the dd/mm/yyyy format
 	 * @param parameters
 	 * @return
+	 * @throws WrongDateException 
 	 */
-	private Calendar getFormalDate(String param) {
+	private Calendar getFormalDate(String param) throws WrongDateException {
 		// if dd/mm/yyyy
 		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(param);
@@ -519,13 +520,15 @@ public class DonParser implements IDonParser{
 		if(matcher.find()){
 			cal = createFormalDate(matcher.group());
 		}else{
-			cal = createFormalNoYearDate(matcher.group());
+			Pattern pattern2 = Pattern.compile(dateNoYearReg, Pattern.CASE_INSENSITIVE);
+			Matcher matcher2 = pattern2.matcher(param);
+			cal = createFormalNoYearDate(matcher2.group());
 		}
 		return cal;
 	}
 	
 
-	private Calendar createFormalDate(String date) {
+	private Calendar createFormalDate(String date) throws WrongDateException {
 		Calendar calCheck =  new GregorianCalendar();
 		
 		int day = Integer.parseInt(date.substring(0,2));
@@ -538,13 +541,13 @@ public class DonParser implements IDonParser{
 		
 		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
 			//create an error date ref
-			return new GregorianCalendar(0,0,0);
+			throw new WrongDateException();
 		}else{
 			return new GregorianCalendar(year,month,day);
 		}
 	}
 	
-	private Calendar createFormalNoYearDate(String date) {
+	private Calendar createFormalNoYearDate(String date) throws WrongDateException {
 		Calendar calCheck =  new GregorianCalendar();
 		
 		int day = Integer.parseInt(date.substring(0,2));
@@ -555,7 +558,7 @@ public class DonParser implements IDonParser{
 		
 		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
 			//create an error date ref
-			return new GregorianCalendar(0,0,0);
+			throw new WrongDateException();
 		}else{
 			return new GregorianCalendar(calCheck.get(Calendar.YEAR), month,day);
 		}
@@ -567,9 +570,10 @@ public class DonParser implements IDonParser{
 	private void setNewDeadlineForCommand(String parameters) {
 
 		if(isFormalDate(parameters)){
-			Calendar date = getFormalDate(parameters);
+			
 			
 			try{
+				Calendar date = getFormalDate(parameters);
 				Date time = getTimeFromParser(parameters);
 				if(isTimeMentioned()){
 					dCommand.setNewDeadline(createDateTimeNatty(date, time));
@@ -647,9 +651,10 @@ public class DonParser implements IDonParser{
 	private void setDeadlineForCommand(String parameters) {
 
 		if(isFormalDate(parameters)){
-			Calendar date = getFormalDate(parameters);
+			
 			
 			try{
+				Calendar date = getFormalDate(parameters);
 				Date time = getTimeFromParser(parameters);
 				if(isTimeMentioned()){
 					dCommand.setDeadline(createDateTimeNatty(date, time));
@@ -772,5 +777,19 @@ public class DonParser implements IDonParser{
 	private String extractName(String param){
 		return param.substring(1, param.length()-1);
 	}
-
+	
+	public class WrongDateException extends Exception{
+		
+		public WrongDateException() {
+			super(); 
+			}
+	}
+	
+	public static void main(String[] args){
+		DonParser p = new DonParser();
+		DonCommand d = p.parseCommand("add \"hello d12\" @ 12/11/1994");
+		System.out.println(d.getType());
+		System.out.println(d.getNewName());
+		System.out.println(d.getNewDeadline().getTime().toString());
+	}
 }

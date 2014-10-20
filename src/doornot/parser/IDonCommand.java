@@ -129,6 +129,12 @@ public interface IDonCommand {
 	public Calendar getNewDeadline();
 	
 	/**
+	 * check if user set time
+	 * @return whether user has set time
+	 */
+	public boolean hasUserSetTime();
+	
+	/**
 	 * Sets the commandType for this command
 	 * @param type
 	 */
@@ -176,6 +182,10 @@ public interface IDonCommand {
 	 */
 	public void setNewDeadline(Calendar newDeadline);
 	
-	
+	/**
+	 * Checks if time was set by user
+	 * @param the boolean
+	 */
+	public void setHasUserSetTime(boolean bool);
 	
 }

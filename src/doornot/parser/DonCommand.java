@@ -17,7 +17,7 @@ public class DonCommand implements IDonCommand{
 	private Calendar taskNewDeadline;
 	private Calendar taskNewStartDate;
 	private Calendar taskNewEndDate;
-	
+	private boolean userSetTime;
 	
 	
 	public DonCommand() {
@@ -65,6 +65,12 @@ public class DonCommand implements IDonCommand{
 	}
 	
 	@Override
+	public void setHasUserSetTime(boolean bool) {
+		userSetTime = bool;
+
+	}
+	
+	@Override
 	public CommandType getType() {
 		
 		return commandType;
@@ -106,6 +112,11 @@ public class DonCommand implements IDonCommand{
 		return taskNewDeadline;
 	}
 
+	@Override
+	public boolean hasUserSetTime() {
+		return userSetTime;
+	}
+	
 	@Override
 	public GeneralCommandType getGeneralType() {
 		if(getType()==CommandType.ADD_EVENT 

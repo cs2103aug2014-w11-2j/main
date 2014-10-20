@@ -30,10 +30,10 @@ public class DonParserTest {
 		CommandTest.setNewName("hihihi");
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9));
 		
-		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09092014").getType());
-		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09092014").getNewName());
+		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09/09/2014").getType());
+		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09/09/2014").getNewName());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi 12345678 \" @ 09092014").getNewDeadline());
+				parser.parseCommand("add \"hihihi 12345678 \" @ 09/09/2014").getNewDeadline());
 		
 		assertEquals(CommandType.INVALID_DATE, parser.parseCommand("a \"hihihi 12345678 \" at 12132014").getType());
 		
