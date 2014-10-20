@@ -170,7 +170,7 @@ public class DonLogic implements IDonLogic {
 			response = findTaskRange(null, Calendar.getInstance(), FIND_INCOMPLETE);
 
 		} else if (commandType == IDonCommand.CommandType.TODAY) {
-			response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
+			response = getTasksToday();
 
 		} else if (commandType == IDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
@@ -212,7 +212,6 @@ public class DonLogic implements IDonLogic {
 			response = undoLastAction();
 
 		} else if (genCommandType == IDonCommand.GeneralCommandType.HELP) {
-			// TODO allow commands to be passed in
 			response = getHelp(commandType);
 
 		} else if (commandType == IDonCommand.CommandType.INVALID_FORMAT) {
@@ -238,6 +237,12 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
+	private IDonResponse getTasksToday() {
+		IDonResponse response;
+		response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
+		return response;
+	}
+
 	@Override
 	public IDonResponse saveToDrive() {
 		boolean saveSuccess = donStorage.saveToDisk();
@@ -254,8 +259,7 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public IDonResponse initialize() {
-		// TODO Auto-generated method stub
-		return null;
+		return getTasksToday();
 	}
 
 	/**
@@ -1212,6 +1216,85 @@ public class DonLogic implements IDonLogic {
 			}
 		}
 		return resultList;
+	}
+	
+	/**
+	 * Add a label to a task with the given id
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabel(int id, String labelName) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.contains(labelName)) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
+				response.addMessage(String.format("The label '%1$s' already exists", labelName));
+				log.fine(String.format("The label '%1$s' already exists", labelName));
+			} else {
+				task.addLabel(labelName);
+				response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
+				response.addTask(task);
+			}
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			//TODO change commandtype to label commands
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * Removes a label from a task with the given id
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabel(int id, String labelName) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(id);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
+			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
+		} else {
+			IDonTask unchangedTask = task.clone();
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.remove(labelName)) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
+				response.addMessage(String.format("The label '%1$s' has been removed", labelName));
+				log.fine(String.format("The label '%1$s' has been removed", labelName));
+				response.addTask(task);
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_NOT_FOUND);
+				response.addMessage(String.format("The label '%1$s' does not exist", labelName));
+				log.fine(String.format("The label '%1$s' does not exist", labelName));
+			}
+
+			// Add edit action to history
+			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
+			affectedTasks.add(unchangedTask);
+			//TODO change commandtype to label commands
+			actionPast.push(new DonAction(
+					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
+			actionFuture.clear();
+		}
+		
+		return response;
 	}
 
 	/**
