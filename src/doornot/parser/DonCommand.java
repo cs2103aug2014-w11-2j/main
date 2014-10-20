@@ -17,7 +17,8 @@ public class DonCommand implements IDonCommand{
 	private Calendar taskNewDeadline;
 	private Calendar taskNewStartDate;
 	private Calendar taskNewEndDate;
-	private boolean userSetTime;
+	//default no time set
+	private boolean userSetTime = false;
 	
 	
 	public DonCommand() {

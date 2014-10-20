@@ -576,6 +576,7 @@ import doornot.parser.IDonCommand.CommandType;
 				Calendar date = getFormalDate(parameters);
 				Date time = getTimeFromParser(parameters);
 				if(isTimeMentioned()){
+					dCommand.setHasUserSetTime(true);
 					dCommand.setNewDeadline(createDateTimeNatty(date, time));
 				}else{
 					dCommand.setNewDeadline(date);
@@ -593,7 +594,7 @@ import doornot.parser.IDonCommand.CommandType;
 				cal.setTime(date);
 				
 				if(isTimeMentioned()){	
-					
+					dCommand.setHasUserSetTime(true);
 					dCommand.setNewDeadline(cal);
 				}else{
 					
@@ -610,11 +611,11 @@ import doornot.parser.IDonCommand.CommandType;
 	
 	private Calendar createDateNatty(Calendar dateCal) {
 		
-		Calendar newCal = new GregorianCalendar();
-		newCal.set(Calendar.YEAR, dateCal.get(Calendar.YEAR));
-		newCal.set(Calendar.MONTH, dateCal.get(Calendar.MONTH));
-		newCal.set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH));
-		return newCal;
+		int year = dateCal.get(Calendar.YEAR);
+		int month = dateCal.get(Calendar.MONTH);
+		int day = dateCal.get(Calendar.DAY_OF_MONTH);
+
+		return new GregorianCalendar(year, month, day);
 	}
 	
 	private Calendar createDateTimeNatty(Calendar date, Date time) {
@@ -657,6 +658,7 @@ import doornot.parser.IDonCommand.CommandType;
 				Calendar date = getFormalDate(parameters);
 				Date time = getTimeFromParser(parameters);
 				if(isTimeMentioned()){
+					dCommand.setHasUserSetTime(true);
 					dCommand.setDeadline(createDateTimeNatty(date, time));
 				}else{
 					dCommand.setDeadline(date);
@@ -674,7 +676,7 @@ import doornot.parser.IDonCommand.CommandType;
 				cal.setTime(date);
 				
 				if(isTimeMentioned()){	
-					
+					dCommand.setHasUserSetTime(true);
 					dCommand.setDeadline(cal);
 				}else{
 					
@@ -787,7 +789,7 @@ import doornot.parser.IDonCommand.CommandType;
 	
 	public static void main(String[] args){
 		DonParser p = new DonParser();
-		DonCommand d = p.parseCommand("add \"hello d12\" @ 12/11/1994");
+		DonCommand d = p.parseCommand("add \"hello d12\" @ 12 feb");
 		System.out.println(d.getType());
 		System.out.println(d.getNewName());
 		System.out.println(d.getNewDeadline().getTime().toString());
