@@ -43,8 +43,10 @@ public class DonParserTest {
 		
 		// test hours
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
+		assertEquals(CommandTest.getNewDeadline().getTime().toString(), 
+				parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24").getNewDeadline().getTime().toString());
 		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24").getNewDeadline());
+				parser.parseCommand("add \"hihihi\" @ 09/09 13:24").getNewDeadline());
 		assertEquals(CommandTest.getNewDeadline(), 
 				parser.parseCommand("add \"hihihi\" @ 9 sep 1.24 pm").getNewDeadline());
 		// test invalid
@@ -68,34 +70,43 @@ public class DonParserTest {
 		
 		
 		assertEquals(CommandTest.getType(),
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getType());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 to 09/08/2014").getType());
 		assertEquals(CommandTest.getNewName(), 
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewName());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 to 09/08/2014").getNewName());
 		assertEquals(CommandTest.getNewStartDate(), 
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewStartDate());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 to 09/08/2014").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014").getNewEndDate());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 to 09/08/2014").getNewEndDate());
 		
+		assertEquals(CommandTest.getNewStartDate().getTime().toString(), 
+				parser.parseCommand("add \"hihihi\" from 7 aug to 9 aug").getNewStartDate().getTime().toString());
+		assertEquals(CommandTest.getNewEndDate().getTime().toString(), 
+				parser.parseCommand("add \"hihihi\" from 7 aug to 9 aug").getNewEndDate().getTime().toString());
 		
 		// test time
 		CommandTest.setNewStartDate(new GregorianCalendar(2014,7,7,13,24));
 		CommandTest.setNewEndDate(new GregorianCalendar(2014,7,9,15,54));
 		assertEquals(CommandTest.getNewStartDate(), 
-				parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014_1554").getNewStartDate());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 1.24 pm to 09/08/2014 15:54").getNewStartDate());
 		assertEquals(CommandTest.getNewEndDate(), 
-				parser.parseCommand("add \"hihihi 12345678 \" from 07082014_1324 to 09082014_1554").getNewEndDate());
+				parser.parseCommand("add \"hihihi\" from 07/08/2014 1.24 pm to 09/08/2014 15:54").getNewEndDate());
+		
+		assertEquals(CommandTest.getNewStartDate(), 
+				parser.parseCommand("add \"hihihi\" from 7 aug 1.24 pm to 9 aug 3.54 pm").getNewStartDate());
+		assertEquals(CommandTest.getNewEndDate(), 
+				parser.parseCommand("add \"hihihi\" from 7 aug 1.24 pm to 9 aug 3.54 pm").getNewEndDate());
 		
 		// test invalid 
-		assertEquals(CommandType.INVALID_FORMAT, 
+		assertEquals(CommandType.INVALID_DATE, 
 				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014_1554").getType());
-		assertEquals(CommandType.INVALID_FORMAT, 
+		assertEquals(CommandType.INVALID_DATE, 
 				parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014").getType());
 		
 		assertEquals(CommandType.INVALID_FORMAT,
 				parser.parseCommand("add \"hihihi\" fro 07082014 to 09082014").getType());
-		assertEquals(CommandType.INVALID_FORMAT,
+		assertEquals(CommandType.INVALID_DATE,
 				parser.parseCommand("add \"hihihi\" from 0702014 to 0908204").getType());
-		assertEquals(CommandType.INVALID_FORMAT,
+		assertEquals(CommandType.INVALID_DATE,
 				parser.parseCommand("add \"hihihi\" from 0702014 2 0908204").getType());
 		assertEquals(CommandType.INVALID_FORMAT,
 				parser.parseCommand("add \"hihihi from 0702014 2 0908204").getType());
