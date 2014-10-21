@@ -28,6 +28,7 @@ public interface IDonCommand {
 		SEARCH_DATE, 
 		SEARCH_ID,
 		
+		SEARCH_LABEL,
 		SEARCH_FREE,
 		SEARCH_UNDONE,
 		SEARCH_ALL,
@@ -50,6 +51,8 @@ public interface IDonCommand {
 		
 		LABEL_ID,
 		LABEL_NAME,
+		DELABEL_ID,
+		DELABEL_NAME,
 		
 		UNDO,
 		REDO,

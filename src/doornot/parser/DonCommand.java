@@ -156,9 +156,15 @@ public class DonCommand implements IDonCommand{
 				|| getType()==CommandType.SEARCH_ALL
 				|| getType()==CommandType.SEARCH_FREE
 				|| getType()==CommandType.SEARCH_AFTDATE
+				|| getType()==CommandType.SEARCH_LABEL
 				|| getType()==CommandType.TODAY
 				|| getType()==CommandType.OVERDUE) {
 			return GeneralCommandType.SEARCH;
+		} else if(getType()==CommandType.LABEL_ID
+				|| getType()==CommandType.LABEL_NAME
+				|| getType()==CommandType.DELABEL_ID
+				|| getType()==CommandType.DELABEL_NAME) {
+			return GeneralCommandType.LABEL;
 		} else if(getType()==CommandType.HELP_ADD
 					|| getType()==CommandType.HELP_EDIT
 					|| getType()==CommandType.HELP_SEARCH

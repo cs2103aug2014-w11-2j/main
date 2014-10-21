@@ -28,7 +28,7 @@ import doornot.parser.IDonCommand.CommandType;
 	// for natty parser
 	private Parser nattyParser = new Parser();
 	private List<DateGroup> groups;
-	private List<Date> dates = null;
+
 	
 	//List of all the allowed types 
 	
@@ -89,6 +89,9 @@ import doornot.parser.IDonCommand.CommandType;
 	// for that space between the names
 	private String labelNameSpaceReg = "\"\\s\"";
 	
+	// allow only name
+	private String labelNameAloneReg = "^\".+\"$";
+	
 	@Override
 	public DonCommand parseCommand(String command) {
 		
@@ -119,6 +122,10 @@ import doornot.parser.IDonCommand.CommandType;
 			setMarkCommand();
 		}else if(commandWord.equalsIgnoreCase("label")){
 			setLabelCommand();
+		}else if(commandWord.equalsIgnoreCase("delabel")){
+			setDelabelCommand();
+		}else if(commandWord.equalsIgnoreCase("slabel") || commandWord.equalsIgnoreCase("sl")){
+			setSlabelCommand();
 		}else if(commandWord.equalsIgnoreCase("sud")){
 			dCommand.setType(CommandType.SEARCH_UNDONE);
 		}else if(commandWord.equalsIgnoreCase("today")){
@@ -385,8 +392,57 @@ import doornot.parser.IDonCommand.CommandType;
 	private void setSearchAfterCommand(){
 		String parameters = removeFirstWord(userCommand);
 
-			dCommand.setType(CommandType.SEARCH_AFTDATE);
-			setDeadlineForCommand(parameters);
+		dCommand.setType(CommandType.SEARCH_AFTDATE);
+		setDeadlineForCommand(parameters);
+
+	}
+	/**
+	 * Creates the search label CommandType 
+	 */
+	private void setSlabelCommand(){
+		String parameters = removeFirstWord(userCommand);
+		if(isRightCommand(parameters, labelNameAloneReg)){
+			dCommand.setType(CommandType.SEARCH_LABEL);
+			dCommand.setLabel(extractName(parameters));
+		}else{
+			dCommand.setType(CommandType.INVALID_FORMAT);
+		}
+
+	}
+	/**
+	 * Creates the remove label CommandType 
+	 */
+	private void setDelabelCommand(){
+		String parameters = removeFirstWord(userCommand);
+		
+		if(isRightCommand(parameters, labelIDReg)){
+
+			String idStr = getID(parameters);
+			int ID = Integer.parseInt(idStr);
+
+			// get rid of xxx
+			String labelName = parameters.replaceFirst(getIDReg, "").trim();
+			dCommand.setType(CommandType.DELABEL_ID);
+			dCommand.setID(ID);
+			dCommand.setLabel(extractName(labelName));
+
+		}else if(isRightCommand(parameters, labelNameReg)){
+			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
+
+			String taskName = names[0];
+			String labelName = names[1];
+
+			if(isGoodName(taskName)&&isGoodName(labelName)){
+				dCommand.setType(CommandType.DELABEL_NAME);
+				dCommand.setName(taskName);
+				dCommand.setLabel(labelName);
+
+			}else{
+				dCommand.setType(CommandType.INVALID_FORMAT);
+			}
+		}else{
+			dCommand.setType(CommandType.INVALID_FORMAT);
+		}
 
 	}
 	/**
@@ -466,106 +522,7 @@ import doornot.parser.IDonCommand.CommandType;
 		return matcher.find();
 	}
 	
-	/**
-	 * Gets the start date from the parameter
-	 */
-	private Calendar getStartDate(String param) {
-		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		
-		if(matcher.find()){ //if matches time
-			String dateTime = matcher.group();
-			return createDateTime(dateTime);
-		}else{//match date
-			pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-			matcher = pattern.matcher(param);
-			matcher.find();
-			String date = matcher.group();
-			return createDate(date);
-		}
-		
-	}
-	
-	/**
-	 * Gets the end date from the parameter
-	 */
-	private Calendar getEndDate(String param) {
-		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		if(matcher.find()){ //first match
-			String dateTime = matcher.group();
-			if(matcher.find()){ //has second match
-				dateTime = matcher.group();
-				return createDateTime(dateTime);
-			}else{ //no second match
-				return createDateTime(dateTime);
-			}
-		}else{
-			pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-			matcher = pattern.matcher(param);
-			matcher.find();
-			String date = matcher.group();
-			if(matcher.find()){ //has second match
-				date = matcher.group();
-				return createDate(date);
-			}else{ //no second match
-				return createDate(date);
-			}
-		}
-		
-	}
-	
-	/**
-	 * Creates date using the date string
-	 * @param String date
-	 * @return Calendar date
-	 */
-	private Calendar createDate(String date) {
-		Calendar calCheck =  new GregorianCalendar();
-		
-		int day = Integer.parseInt(date.substring(0,2));
-		int month = Integer.parseInt(date.substring(2,4))-1;
-		int year = Integer.parseInt(date.substring(4,8));
-		
-		calCheck.set(Calendar.YEAR, year);
-		calCheck.set(Calendar.MONTH, month);
-		calCheck.set(Calendar.DAY_OF_MONTH, 1);
-		
-		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)){
-			//create an error date ref
-			return new GregorianCalendar(0,0,0);
-		}else{
-			return new GregorianCalendar(year,month,day);
-		}
-		
-		
-	}
-	
-	/**
-	 * Creates date and time using the date string
-	 */
-	private Calendar createDateTime(String dateTime) {
-		Calendar calCheck =  new GregorianCalendar();
-		
-		int day = Integer.parseInt(dateTime.substring(0,2));
-		int month = Integer.parseInt(dateTime.substring(3,5))-1;
-		int year = Integer.parseInt(dateTime.substring(6,10));
-		int hour = Integer.parseInt(dateTime.substring(9,11));
-		int min = Integer.parseInt(dateTime.substring(11,13));
-		
-		calCheck.set(Calendar.YEAR, year);
-		calCheck.set(Calendar.MONTH, month);
-		calCheck.set(Calendar.DAY_OF_MONTH, 1);
-		
-		if((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH)) || (month>=12)
-				||(hour>=24) ||(min>=60)){
-			//create an error date ref
-			return new GregorianCalendar(0,0,0);
-		}else{
-			return new GregorianCalendar(year,month,day, hour, min);
-		}
-		
-	}
+
 	/**
 	 * Checks if the date follows the dd/mm/yyyy format
 	 * @param parameters
@@ -871,19 +828,6 @@ import doornot.parser.IDonCommand.CommandType;
 		
 	}
 
-	/**
-	 * Gets the new name from the parameter
-	 */
-	private String getNewName(String param, String regex) {
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		String[] split = matcher.group().split("^to\\s");
-		String newName = split[split.length-1];
-		
-		return newName;
-		
-	}
 	/**
 	 * Gets the id string
 	 * @param param

@@ -281,6 +281,7 @@ public class DonParserTest {
 		assertEquals(CommandTest.getType(),
 				parser.parseCommand("overdue").getType());
 		
+		
 	}
 	@Test
 	public void testEditName(){
@@ -485,6 +486,52 @@ public class DonParserTest {
 		assertEquals(CommandTest.getID(), 
 				parser.parseCommand("label 666 \"projects\"").getID());
 		
+
+	}
+	@Test
+	public void testDelabel(){
+		// test delabel 
+		CommandTest.setType(CommandType.DELABEL_NAME);
+		CommandTest.setName("hihihi");
+		CommandTest.setLabel("projects");
+
+		assertEquals(CommandTest.getType(), 
+				parser.parseCommand("delabel \"hihihi\" \"projects\"").getType());
+		assertEquals(CommandTest.getLabel(), 
+				parser.parseCommand("delabel \"hihihi\" \"projects\"").getLabel());
+		assertEquals(CommandTest.getName(), 
+				parser.parseCommand("delabel \"hihihi\" \"projects\"").getName());
+
+		//test invalid
+		assertEquals(CommandType.INVALID_FORMAT, 
+				parser.parseCommand("delabel \"hihihi\" \"projects").getType());
+
+		// tets delabel ID
+		CommandTest.setType(CommandType.DELABEL_ID);
+		CommandTest.setID(666);
+		CommandTest.setLabel("projects");
+
+		assertEquals(CommandTest.getType(), 
+				parser.parseCommand("delabel 666 \"projects\"").getType());
+		assertEquals(CommandTest.getLabel(), 
+				parser.parseCommand("delabel 666 \"projects\"").getLabel());
+		assertEquals(CommandTest.getID(), 
+				parser.parseCommand("delabel 666 \"projects\"").getID());
 		
+	}
+	@Test
+	public void testSearchLabel(){
+		CommandTest.setType(CommandType.SEARCH_LABEL);
+		CommandTest.setLabel("projects");
+		
+		// test search label
+		assertEquals(CommandTest.getType(),
+				parser.parseCommand("sl \"projects\"").getType());
+		assertEquals(CommandTest.getLabel(), 
+				parser.parseCommand("slabel \"projects\"").getLabel());
+		
+		// test invalid
+		assertEquals(CommandType.INVALID_FORMAT, 
+				parser.parseCommand("sl \"projects").getType());
 	}
 }
