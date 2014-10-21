@@ -221,7 +221,14 @@ public class DonLogic implements IDonLogic {
 			response = createInvalidDateResponse();
 
 		} else if(commandType == IDonCommand.CommandType.REDO) {
+			
 			response = redoAction();
+		} else if(commandType == IDonCommand.CommandType.LABEL_ID) {
+			
+			response = addLabel(dCommand.getID(), dCommand.getLabel());
+		} else if(commandType == IDonCommand.CommandType.LABEL_NAME) {
+			
+			response = addLabel(dCommand.getName(), dCommand.getLabel());
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
@@ -1258,6 +1265,36 @@ public class DonLogic implements IDonLogic {
 	}
 	
 	/**
+	 * Add a label to a task with the given name
+	 * If more than 1 task has the name, it will not add the label
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabel(String title, String labelName) {
+		IDonResponse response = new DonResponse();
+		
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = addLabel(task.getID(), labelName);
+		}
+		
+		return response;
+	}
+	
+	/**
 	 * Removes a label from a task with the given id
 	 * @param id the task's id to search for and add a label to
 	 * @param labelName the name of the label to add
@@ -1292,6 +1329,35 @@ public class DonLogic implements IDonLogic {
 			actionPast.push(new DonAction(
 					IDonCommand.CommandType.EDIT_ID_NAME, IDonCommand.GeneralCommandType.EDIT, affectedTasks));
 			actionFuture.clear();
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * Removes a label from a task with the given name
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabel(String title, String labelName) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = removeLabel(task.getID(), labelName);
 		}
 		
 		return response;
