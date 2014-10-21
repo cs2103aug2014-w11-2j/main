@@ -47,7 +47,7 @@ public class DonLogicTester {
 	public void testAddDeadlineTask() {
 		
 		IDonResponse response = logic
-				.runCommand("add \"Finish homework\" at 21122014_2030");
+				.runCommand("add \"Finish homework\" at 21/12/2014 2030");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -66,7 +66,7 @@ public class DonLogicTester {
 	public void testAddDurationTask() {
 		
 		IDonResponse response = logic
-				.runCommand("add \"Finish homework\" from 21122014_2030 to 21122014_2356");
+				.runCommand("add \"Finish homework\" from 21/12/2014 2030 to 21/12/2014 2356");
 		IDonTask task = response.getTasks().get(0);
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				response.getResponseType());
@@ -93,8 +93,7 @@ public class DonLogicTester {
 	 */
 
 	@Test
-	public void testDeleteTaskWithID() {
-		
+	public void testDeleteTaskWithID() {	
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -111,7 +110,6 @@ public class DonLogicTester {
 	
 	@Test
 	public void testDeleteTaskWithName() {
-		
 		IDonResponse addResponse = logic.runCommand("add \"Finish homework\"");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
@@ -160,18 +158,18 @@ public class DonLogicTester {
 	@Test
 	public void testSearchWithDate() {
 		
-		IDonResponse addResponse = logic.runCommand("add \"Do homework\" @ 26012015");
+		IDonResponse addResponse = logic.runCommand("add \"Do homework\" @ 26/01/2015");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask addedTask = addResponse.getTasks().get(0);
 		
-		IDonResponse addResponse2 = logic.runCommand("add \"Complete walk\" @ 26012015");
+		IDonResponse addResponse2 = logic.runCommand("add \"Complete walk\" @ 26/01/2015");
 		IDonTask addedTask2 = addResponse2.getTasks().get(0);
 		
-		IDonResponse addResponse3 = logic.runCommand("add \"Complete walk\" @ 27012015");
+		IDonResponse addResponse3 = logic.runCommand("add \"Complete walk\" @ 27/01/2015");
 		IDonTask addedTask3 = addResponse3.getTasks().get(0);
 		
-		IDonResponse searchResponse = logic.runCommand("search 26012015");
+		IDonResponse searchResponse = logic.runCommand("search 26/01/2015");
 		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
 				searchResponse.getResponseType());
 		
@@ -202,12 +200,12 @@ public class DonLogicTester {
 	public void testEditDeadlineWithID() {
 		
 		IDonResponse addResponse = logic
-				.runCommand("add \"Finish homework\" @ 10052014_0810");
+				.runCommand("add \"Finish homework\" @ 10/05/2014 0810");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
 		IDonResponse editResponse = logic.runCommand("edit "
-				+ changedTask.getID() + " to 21052014_1020");
+				+ changedTask.getID() + " to 21/05/2014 1020");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 		Calendar date = changedTask.getStartDate();
@@ -222,12 +220,12 @@ public class DonLogicTester {
 	public void testEditDatesWithID() {
 		
 		IDonResponse addResponse = logic
-				.runCommand("add \"Finish homework\" from 10052014_0810 to 10052014_0850");
+				.runCommand("add \"Finish homework\" from 10/05/2014 0810 to 10/05/2014 0850");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
 		IDonTask changedTask = addResponse.getTasks().get(0);
 		IDonResponse editResponse = logic.runCommand("edit "
-				+ changedTask.getID() + " to from 21052014_1020 to 21052014_1140");
+				+ changedTask.getID() + " to from 21/05/2014 1020 to 21/05/2014 1140");
 		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
 				editResponse.getResponseType());
 		Calendar startDate = changedTask.getStartDate();

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
@@ -40,9 +39,10 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
-	private static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d was found.";
-	private static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' was found.";
-	private static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in %1$s were found.";
+	private static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
+	private static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
+	private static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
+	private static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	private static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
 	private static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
 	private static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
@@ -155,7 +155,7 @@ public class DonLogic implements IDonLogic {
 			//If given search date has a time, will search after the given time.
 			//If given search does not include a time, will search from the day after
 			Calendar givenDate = dCommand.getDeadline();
-			if (givenDate.get(Calendar.HOUR_OF_DAY) == 0 && givenDate.get(Calendar.MINUTE) == 0) {
+			if (!dCommand.hasUserSetTime()) {
 				givenDate = CalHelper.getDayAfter(givenDate);
 			}
 			response = findTaskRange(givenDate, null, FIND_INCOMPLETE);
@@ -221,7 +221,14 @@ public class DonLogic implements IDonLogic {
 			response = createInvalidDateResponse();
 
 		} else if(commandType == IDonCommand.CommandType.REDO) {
+			
 			response = redoAction();
+		} else if(commandType == IDonCommand.CommandType.LABEL_ID) {
+			
+			response = addLabel(dCommand.getID(), dCommand.getLabel());
+		} else if(commandType == IDonCommand.CommandType.LABEL_NAME) {
+			
+			response = addLabel(dCommand.getName(), dCommand.getLabel());
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
@@ -1258,6 +1265,36 @@ public class DonLogic implements IDonLogic {
 	}
 	
 	/**
+	 * Add a label to a task with the given name
+	 * If more than 1 task has the name, it will not add the label
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabel(String title, String labelName) {
+		IDonResponse response = new DonResponse();
+		
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = addLabel(task.getID(), labelName);
+		}
+		
+		return response;
+	}
+	
+	/**
 	 * Removes a label from a task with the given id
 	 * @param id the task's id to search for and add a label to
 	 * @param labelName the name of the label to add
@@ -1296,6 +1333,60 @@ public class DonLogic implements IDonLogic {
 		
 		return response;
 	}
+	
+	/**
+	 * Removes a label from a task with the given name
+	 * @param id the task's id to search for and add a label to
+	 * @param labelName the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabel(String title, String labelName) {
+		IDonResponse response = new DonResponse();
+
+		IDonResponse searchResponse = findTask(title);
+
+		if (searchResponse.getTasks().size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					title));
+			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
+			response.copyTasks(searchResponse);
+		} else if (!searchResponse.hasTasks()) {
+			// No task with the name found, return the response of the search
+			response = searchResponse;
+		} else {
+			// 1 task was found
+			IDonTask task = searchResponse.getTasks().get(0);
+			response = removeLabel(task.getID(), labelName);
+		}
+		
+		return response;
+	}
+	
+	private IDonResponse findLabel(String labelName) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		
+		for (IDonTask task : taskList) {
+			List<String> labels = task.getLabels();
+			for (String label : labels) {
+				if (label.equalsIgnoreCase(labelName)) {
+					response.addTask(task);
+					break;
+				}
+			}
+		}
+		if (!response.hasTasks()) {
+			// No task with given label found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_LABEL_FAILED, labelName));
+			log.fine(String.format(MSG_SEARCH_LABEL_FAILED, labelName));
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+		}
+		
+		return response;
+	}
 
 	/**
 	 * Show the user help information
@@ -1316,28 +1407,28 @@ public class DonLogic implements IDonLogic {
 			// Help for add
 			response.addMessage("add / a: Adds a task to the todo list");
 			response.addMessage("Command format: add \"Task title\"");
-			response.addMessage("Command format: add \"Task title\" @ DDMMYYYY_HHmm");
-			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
-			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("Command format: add \"Task title\" @ DD/MM/YYYY HHmm");
+			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
-			response.addMessage("add \"Submit CS9842 assignment\" @ 18112014 <-- Adds a task with a deadline at 18th of November 2014");
-			response.addMessage("add \"Talk by person\" from 05082015_1500 to 05082015_1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
+			response.addMessage("add \"Submit CS9842 assignment\" @ 18/11/2014 <-- Adds a task with a deadline at 18th of November 2014");
+			response.addMessage("add \"Talk by person\" from 05/08/2015 1500 to 05/08/2015 1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
 		} else if (commandType == IDonCommand.CommandType.HELP_EDIT) {
 			// Help for edit
 			response.addMessage("edit / ed / e: Edits a task in the todo list");
 			response.addMessage("Command format: edit Task_id to \"New task title\"");
 			response.addMessage("Command format: edit \"Part of old Task title\" to \"New task title\"");
-			response.addMessage("Command format: edit Task_id to DDMMYYYY_HHmm");
-			response.addMessage("Command format: edit \"Part of old Task title\" to DDMMYYYY_HHmm");
-			response.addMessage("Command format: edit Task_id to from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
-			response.addMessage("Command format: edit \"Part of old Task title\" to from DDMMYYYY_HHmm to DDMMYYYY_HHmm");
+			response.addMessage("Command format: edit Task_id to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit \"Part of old Task title\" to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit \"Part of old Task title\" to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
 			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
-			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
-			response.addMessage("edit \"Do work\" to 17012015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
-			response.addMessage("edit 14 to from 02052015 to 03052015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
+			response.addMessage("edit \"Do work\" to 17/01/2015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
+			response.addMessage("edit 14 to from 02/05/2015 to 03/05/2015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
 		} else if (commandType == IDonCommand.CommandType.HELP_DELETE) {
 			// Help for delete
 			response.addMessage("del / d: Delete a task in the todo list");
@@ -1352,12 +1443,12 @@ public class DonLogic implements IDonLogic {
 			response.addMessage("search / s: Finds a task with the given ID, title or date");
 			response.addMessage("Command format: search Task_id");
 			response.addMessage("Command format: search \"Part of Task title\"");
-			response.addMessage("Command format: search 22012016");
-			response.addMessage("All dates can either be with time (DDMMYYYY_HHmm) or without (DDMMYYYY)");
+			response.addMessage("Command format: search 22/01/2016");
+			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
-			response.addMessage("search 22012016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
+			response.addMessage("search 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
 		} else if (commandType == IDonCommand.CommandType.HELP_UNDO || commandType == IDonCommand.CommandType.HELP_REDO) {
 			//Help for undo
 			response.addMessage("undo : Undoes the previous action");
