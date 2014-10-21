@@ -61,7 +61,10 @@ import doornot.parser.IDonCommand.CommandType;
 		
 	// allow "blah" to from
 	private String editNameToEventReg = "^\".+\"\\sto\\sfrom\\b";
-		
+	
+	// for " to "
+	private String editNameSpaceReg = "\"\\sto\\s\"";
+	
 	// allow id to from
 	private String editIDToEventReg = "^[0-9]+\\sto\\sfrom\\b";
 	
@@ -77,6 +80,14 @@ import doornot.parser.IDonCommand.CommandType;
 	// for id only
 	private String searchIDReg = "^[0-9]+$";
 	
+	// allow xx "BLAH" 
+	private String labelIDReg = "^[0-9]+\\s\".+\"$";
+	
+	// allow "blah" "BLAH" 
+	private String labelNameReg = "^\".+\"\\s\".+\"$";
+	
+	// for that space between the names
+	private String labelNameSpaceReg = "\"\\s\"";
 	
 	@Override
 	public DonCommand parseCommand(String command) {
@@ -106,6 +117,8 @@ import doornot.parser.IDonCommand.CommandType;
 			setDeleteCommand();
 		}else if(commandWord.equalsIgnoreCase("m") || commandWord.equalsIgnoreCase("mark")){
 			setMarkCommand();
+		}else if(commandWord.equalsIgnoreCase("label")){
+			setLabelCommand();
 		}else if(commandWord.equalsIgnoreCase("sud")){
 			dCommand.setType(CommandType.SEARCH_UNDONE);
 		}else if(commandWord.equalsIgnoreCase("today")){
@@ -126,8 +139,6 @@ import doornot.parser.IDonCommand.CommandType;
 		}
 		
 	}
-
-
 
 	/**
 	 * Creates the add CommandType 
@@ -199,7 +210,7 @@ import doornot.parser.IDonCommand.CommandType;
 		
 		if(isRightCommand(parameters, editNameToNameReg)){
 			
-			String[] taskNames = getTaskNameArr(parameters);
+			String[] taskNames = getTaskNameArr(parameters, editNameSpaceReg);
 
 			String oldName = taskNames[0];
 			String newName = taskNames[1];
@@ -378,6 +389,43 @@ import doornot.parser.IDonCommand.CommandType;
 			setDeadlineForCommand(parameters);
 
 	}
+	/**
+	 * Creates the label CommandType
+	 */
+	private void setLabelCommand() {
+		String parameters = removeFirstWord(userCommand);
+		
+		if(isRightCommand(parameters, labelIDReg)){
+			
+			String idStr = getID(parameters);
+			int ID = Integer.parseInt(idStr);
+			
+			// get rid of xxx
+			String labelName = parameters.replaceFirst(getIDReg, "").trim();
+			dCommand.setType(CommandType.LABEL_ID);
+			dCommand.setID(ID);
+			dCommand.setLabel(extractName(labelName));
+			
+		}else if(isRightCommand(parameters, labelNameReg)){
+			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
+
+			String taskName = names[0];
+			String labelName = names[1];
+			
+			if(isGoodName(taskName)&&isGoodName(labelName)){
+				dCommand.setType(CommandType.LABEL_NAME);
+				dCommand.setName(taskName);
+				dCommand.setLabel(labelName);
+				
+			}else{
+				dCommand.setType(CommandType.INVALID_FORMAT);
+			}
+		}else{
+			dCommand.setType(CommandType.INVALID_FORMAT);
+		}
+		
+	}
+	
 	/**
 	 * Set the help command types
 	 */
@@ -647,7 +695,7 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setHasUserSetTime(true);
 					dCommand.setNewDeadline(createDateTimeNatty(date, time));
 				}else{
-					dCommand.setNewDeadline(date);
+					dCommand.setNewDeadline(createDateNatty(date));
 				}
 				
 			}catch(Exception e){
@@ -683,7 +731,7 @@ import doornot.parser.IDonCommand.CommandType;
 		int month = dateCal.get(Calendar.MONTH);
 		int day = dateCal.get(Calendar.DAY_OF_MONTH);
 
-		return new GregorianCalendar(year, month, day);
+		return new GregorianCalendar(year, month, day, 23, 59);
 	}
 	
 	private Calendar createDateTimeNatty(Calendar date, Date time) {
@@ -742,7 +790,7 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setHasUserSetTime(true);
 					dCommand.setDeadline(createDateTimeNatty(date, time));
 				}else{
-					dCommand.setDeadline(date);
+					dCommand.setDeadline(createDateNatty(date));
 				}
 				
 			}catch(Exception e){
@@ -785,8 +833,8 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setNewStartDate(createDateTimeNatty(dates[0], timings[0]));
 					dCommand.setNewEndDate(createDateTimeNatty(dates[1], timings[1]));
 				}else{
-					dCommand.setNewStartDate(dates[0]);
-					dCommand.setNewEndDate(dates[1]);
+					dCommand.setNewStartDate(createDateNatty(dates[0]));
+					dCommand.setNewEndDate(createDateNatty(dates[1]));
 				}
 				
 			}catch(Exception e){
@@ -824,17 +872,6 @@ import doornot.parser.IDonCommand.CommandType;
 	}
 
 	/**
-	 * Checks whether it's an error date (0,0,0) is used to represent error dates
-	 * @param Date
-	 * @return
-	 */
-	private boolean rightDate(Calendar Date) {
-		
-		Calendar cal = new GregorianCalendar(0,0,0);
-		return !(cal.equals(Date));
-	}
-
-	/**
 	 * Gets the new name from the parameter
 	 */
 	private String getNewName(String param, String regex) {
@@ -861,9 +898,9 @@ import doornot.parser.IDonCommand.CommandType;
 	/**
 	 * Gets the array of task names being referred to from the parameter
 	 */
-	private String[] getTaskNameArr(String param) {
+	private String[] getTaskNameArr(String param, String regex) {
 		String [] nameArr = new String[2];
-		nameArr  = param.split("\"\\sto\\s\"");
+		nameArr  = param.split(regex);
 		nameArr[0] = extractName(nameArr[0].trim()+"\"");
 		nameArr[1] = extractName("\""+nameArr[1].trim());
 		return nameArr;

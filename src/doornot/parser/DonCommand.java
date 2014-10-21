@@ -17,6 +17,7 @@ public class DonCommand implements IDonCommand{
 	private Calendar taskNewDeadline;
 	private Calendar taskNewStartDate;
 	private Calendar taskNewEndDate;
+	private String taskLabel;
 	//default no time set
 	private boolean userSetTime = false;
 	
@@ -66,6 +67,12 @@ public class DonCommand implements IDonCommand{
 	}
 	
 	@Override
+	public void setLabel(String label) {
+		taskLabel = label;
+		
+	}
+	
+	@Override
 	public void setHasUserSetTime(boolean bool) {
 		userSetTime = bool;
 
@@ -112,7 +119,12 @@ public class DonCommand implements IDonCommand{
 	public Calendar getNewDeadline() {
 		return taskNewDeadline;
 	}
-
+	
+	@Override
+	public String getLabel() {
+		return taskLabel;
+	}
+	
 	@Override
 	public boolean hasUserSetTime() {
 		return userSetTime;
