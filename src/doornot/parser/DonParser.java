@@ -404,7 +404,7 @@ import doornot.parser.IDonCommand.CommandType;
 			String labelName = parameters.replaceFirst(getIDReg, "").trim();
 			dCommand.setType(CommandType.LABEL_ID);
 			dCommand.setID(ID);
-			dCommand.setLabel(labelName);
+			dCommand.setLabel(extractName(labelName));
 			
 		}else if(isRightCommand(parameters, labelNameReg)){
 			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);

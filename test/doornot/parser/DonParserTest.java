@@ -455,5 +455,36 @@ public class DonParserTest {
 		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("help adds").getType());
 	}
 
-
+	@Test
+	public void testLabel(){
+		
+		// test label 
+		CommandTest.setType(CommandType.LABEL_NAME);
+		CommandTest.setName("hihihi");
+		CommandTest.setLabel("projects");
+		
+		assertEquals(CommandTest.getType(), 
+				parser.parseCommand("label \"hihihi\" \"projects\"").getType());
+		assertEquals(CommandTest.getLabel(), 
+				parser.parseCommand("label \"hihihi\" \"projects\"").getLabel());
+		assertEquals(CommandTest.getName(), 
+				parser.parseCommand("label \"hihihi\" \"projects\"").getName());
+		//test invalid
+		assertEquals(CommandType.INVALID_FORMAT, 
+				parser.parseCommand("label \"hihihi\" \"projects").getType());
+		
+		// tets label ID
+		CommandTest.setType(CommandType.LABEL_ID);
+		CommandTest.setID(666);
+		CommandTest.setLabel("projects");
+		
+		assertEquals(CommandTest.getType(), 
+				parser.parseCommand("label 666 \"projects\"").getType());
+		assertEquals(CommandTest.getLabel(), 
+				parser.parseCommand("label 666 \"projects\"").getLabel());
+		assertEquals(CommandTest.getID(), 
+				parser.parseCommand("label 666 \"projects\"").getID());
+		
+		
+	}
 }
