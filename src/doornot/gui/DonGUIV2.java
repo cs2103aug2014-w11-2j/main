@@ -23,6 +23,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import doornot.logic.*;
+import doornot.storage.IDonTask;
 
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
@@ -231,7 +232,7 @@ public class DonGUIV2 {
 	}
 	private void renewList(){
 		//ArrayList<String> arr = new ArrayList<String>();
-		guiTaskList = donLogic.donStorage.getTaskList();
+		guiTaskList = donLogic.getTaskList();
 		sortByDate();
 		//list.setListData(Arrays.copyOf(guiTaskList.toArray(), guiTaskList.size(), IDonTask[].class));
 		parseType();
@@ -387,7 +388,7 @@ public class DonGUIV2 {
 				donLogic.saveToDrive();
 			}
 		});
-		frmDoornot.setTitle("DoOrNot v0.1");
+		frmDoornot.setTitle("DoOrNot v0.2");
 		frmDoornot.setBounds(100, 100, 665, 520);
 		frmDoornot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmDoornot.addWindowListener(new WindowEventHandler());

@@ -518,6 +518,7 @@ public class DonLogic implements IDonLogic {
 				continue;
 			}
 			Calendar taskStart = task.getStartDate();
+			Calendar taskEnd = task.getEndDate();
 			if (startDate == null) {
 				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
 					response.addTask(task);
@@ -527,8 +528,11 @@ public class DonLogic implements IDonLogic {
 					response.addTask(task);
 				}
 			} else {
-				if (CalHelper.dateEqualOrAfter(taskStart, startDate)
-						&& CalHelper.dateEqualOrBefore(taskStart, endDate)) {
+				//If task is between date or is ongoing between the dates
+				if ((CalHelper.dateEqualOrAfter(taskStart, startDate)
+						&& CalHelper.dateEqualOrBefore(taskStart, endDate))
+						|| (CalHelper.dateEqualOrAfter(startDate, taskStart) && CalHelper.dateEqualOrBefore(startDate, taskEnd))
+						|| (CalHelper.dateEqualOrAfter(endDate, taskStart) && CalHelper.dateEqualOrBefore(endDate, taskEnd))) {
 					response.addTask(task);
 				}
 			}
