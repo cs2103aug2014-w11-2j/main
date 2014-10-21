@@ -48,6 +48,9 @@ public interface IDonCommand {
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
 		
+		LABEL_ID,
+		LABEL_NAME,
+		
 		UNDO,
 		REDO,
 		
@@ -60,7 +63,7 @@ public interface IDonCommand {
 	}
 	
 	public static enum GeneralCommandType {
-		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, REDO, HELP, EXIT, INVALID
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID
 	}
 	
 	/**
@@ -129,6 +132,14 @@ public interface IDonCommand {
 	public Calendar getNewDeadline();
 	
 	/**
+	 * Gets the label set for the task
+	 * Used for label commands
+	 * 
+	 * @return new label
+	 */
+	public String getLabel();
+	
+	/**
 	 * check if user set time
 	 * @return whether user has set time
 	 */
@@ -181,6 +192,14 @@ public interface IDonCommand {
 	 * @param newDeadline
 	 */
 	public void setNewDeadline(Calendar newDeadline);
+	
+	/**
+	 * Sets the label set for the task
+	 * Used for label commands
+	 * 
+	 * @param new label
+	 */
+	public void setLabel(String label);
 	
 	/**
 	 * Checks if time was set by user

@@ -647,7 +647,7 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setHasUserSetTime(true);
 					dCommand.setNewDeadline(createDateTimeNatty(date, time));
 				}else{
-					dCommand.setNewDeadline(date);
+					dCommand.setNewDeadline(createDateNatty(date));
 				}
 				
 			}catch(Exception e){
@@ -683,7 +683,7 @@ import doornot.parser.IDonCommand.CommandType;
 		int month = dateCal.get(Calendar.MONTH);
 		int day = dateCal.get(Calendar.DAY_OF_MONTH);
 
-		return new GregorianCalendar(year, month, day);
+		return new GregorianCalendar(year, month, day, 23, 59);
 	}
 	
 	private Calendar createDateTimeNatty(Calendar date, Date time) {
@@ -742,7 +742,7 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setHasUserSetTime(true);
 					dCommand.setDeadline(createDateTimeNatty(date, time));
 				}else{
-					dCommand.setDeadline(date);
+					dCommand.setDeadline(createDateNatty(date));
 				}
 				
 			}catch(Exception e){
@@ -785,8 +785,8 @@ import doornot.parser.IDonCommand.CommandType;
 					dCommand.setNewStartDate(createDateTimeNatty(dates[0], timings[0]));
 					dCommand.setNewEndDate(createDateTimeNatty(dates[1], timings[1]));
 				}else{
-					dCommand.setNewStartDate(dates[0]);
-					dCommand.setNewEndDate(dates[1]);
+					dCommand.setNewStartDate(createDateNatty(dates[0]));
+					dCommand.setNewEndDate(createDateNatty(dates[1]));
 				}
 				
 			}catch(Exception e){
@@ -821,17 +821,6 @@ import doornot.parser.IDonCommand.CommandType;
 		}
 		
 		
-	}
-
-	/**
-	 * Checks whether it's an error date (0,0,0) is used to represent error dates
-	 * @param Date
-	 * @return
-	 */
-	private boolean rightDate(Calendar Date) {
-		
-		Calendar cal = new GregorianCalendar(0,0,0);
-		return !(cal.equals(Date));
 	}
 
 	/**
