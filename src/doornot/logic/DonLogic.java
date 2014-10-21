@@ -221,14 +221,23 @@ public class DonLogic implements IDonLogic {
 			response = createInvalidDateResponse();
 
 		} else if(commandType == IDonCommand.CommandType.REDO) {
-			
 			response = redoAction();
+			
 		} else if(commandType == IDonCommand.CommandType.LABEL_ID) {
-			
 			response = addLabel(dCommand.getID(), dCommand.getLabel());
-		} else if(commandType == IDonCommand.CommandType.LABEL_NAME) {
 			
+		} else if(commandType == IDonCommand.CommandType.LABEL_NAME) {
 			response = addLabel(dCommand.getName(), dCommand.getLabel());
+			
+		} else if(commandType == IDonCommand.CommandType.DELABEL_ID) {
+			response = removeLabel(dCommand.getID(), dCommand.getLabel());
+			
+		} else if(commandType == IDonCommand.CommandType.DELABEL_NAME) {
+			response = removeLabel(dCommand.getName(), dCommand.getLabel());
+			
+		} else if(commandType == IDonCommand.CommandType.SEARCH_LABEL) {
+			response = findLabel(dCommand.getLabel());
+			
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
