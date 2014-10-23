@@ -9,9 +9,11 @@ import java.util.regex.Pattern;
 
 import com.joestelmach.natty.*;
 
+import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
+import doornot.logic.DonCreateCommand;
 /**
  * DonParser parses the commands and creates a DonCommand
  * 
@@ -156,57 +158,59 @@ import doornot.logic.AbstractDonCommand.CommandType;
 		String parameters = removeFirstWord(userCommand);
 		
 		// is it "blah" at ...
-		if(isRightCommand(parameters, addTaskReg)){
+		if (isRightCommand(parameters, addTaskReg)) {
 			
 			// get blah
 			String taskName = getTaskName(parameters);
 			
-			if(isGoodName(taskName)){
+			if (isGoodName(taskName)) {
+				//Floating task
 				dCommand.setType(CommandType.ADD_TASK);
-				
-				dCommand.setNewName(taskName);
 				
 				// get rid of "blah" at
 				String date = parameters.replaceFirst(addTaskReg, "").trim();
-				setNewDeadlineForCommand(date, null);
+				Calendar deadline = Calendar.getInstance();
+				boolean hasSetTime = setNewDeadlineForCommand(date, deadline);
+				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);
 				
-			}else{
+			} else {
 
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 
 		// is it "blah" from
-		}else if(isRightCommand(parameters, addEventReg)){
+		} else if(isRightCommand(parameters, addEventReg)) {
 			
 			// get blah
 			String taskName = getTaskName(parameters);
-			if(isGoodName(taskName)){
+			if (isGoodName(taskName)) {
 				dCommand.setType(CommandType.ADD_EVENT);
-				dCommand.setNewName(taskName);
 				
 				// get rid of "blah" from
 				String date = parameters.replaceFirst(addEventReg, "").trim();
-				setStartAndEndForCommand(date);
+				Calendar startDate = Calendar.getInstance(), endDate = Calendar.getInstance();
+				boolean hasSetTime = setStartAndEndForCommand(date, startDate, endDate);
 				
-			}else{
+				dCommand = new DonCreateCommand(taskName, startDate, endDate, hasSetTime);
+				
+			} else {
 
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 			
 		// is it "blah"
-		}else if(isRightCommand(parameters, addFloatReg)){
+		} else if(isRightCommand(parameters, addFloatReg)) {
 			
 			// get blah
 			String taskName = getTaskName(parameters);
 			
 			if(isGoodName(taskName)){
+				dCommand = new DonCreateCommand(taskName);
 				dCommand.setType(CommandType.ADD_FLOAT);
-				dCommand.setNewName(taskName);
-			}else{
-
+			} else {
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
-		}else{
+		} else {
 			dCommand.setType(CommandType.INVALID_FORMAT);
 		}
 
@@ -218,7 +222,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 	private void setEditCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		if(isRightCommand(parameters, editNameToNameReg)){
+		if (isRightCommand(parameters, editNameToNameReg)) {
 			
 			String[] taskNames = getTaskNameArr(parameters, editNameSpaceReg);
 
@@ -230,29 +234,29 @@ import doornot.logic.AbstractDonCommand.CommandType;
 				dCommand.setName(oldName);
 				dCommand.setNewName(newName);
 				
-			}else{
+			} else {
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 			
-		}else if(isRightCommand(parameters, editIDToNameReg)){
+		} else if(isRightCommand(parameters, editIDToNameReg)) {
 			String newName = getTaskName(parameters);
 			
-			if(isGoodName(newName)){
+			if (isGoodName(newName)) {
 				// get rid of to "blah"
 				String id = parameters.replaceFirst(editToNameReg, "").trim();
 				int ID = Integer.parseInt(id);
 				dCommand.setType(CommandType.EDIT_ID_NAME);
 				dCommand.setID(ID);
 				dCommand.setNewName(newName);
-			}else{
+			} else {
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}	
 			
-		}else if(isRightCommand(parameters, editNameToEventReg)){
+		} else if (isRightCommand(parameters, editNameToEventReg)) {
 			
 			String taskName = getTaskName(parameters);
 			
-			if(isGoodName(taskName)){
+			if (isGoodName(taskName)) {
 				dCommand.setType(CommandType.EDIT_EVENT);
 				dCommand.setName(taskName);
 				
@@ -639,53 +643,48 @@ import doornot.logic.AbstractDonCommand.CommandType;
 	/**
 	 * Sets new deadlines for dCommand
 	 * @param parameters
-	 * @param datelineOut TODO
+	 * @param deadlineOut Deadline to modify
 	 * @return true if user has set time
 	 */
-	private boolean setNewDeadlineForCommand(String parameters, Calendar datelineOut) {
-
-		if(!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")){
-			boolean hasSetTime = false;
-			try{
+	private boolean setNewDeadlineForCommand(String parameters, Calendar deadlineOut) {
+		boolean hasSetTime = false;
+		if (!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")) {
+			
+			try {
 				Calendar date = getFormalDate(parameters);
 				
 				String param = removeFormalDate(parameters, dateReg, dateNoYearReg);
 				Date time = getTimeFromParser(param);
 				
-				if(isTimeMentioned()){
+				if (isTimeMentioned()) {
 					hasSetTime = true;
-					//TODO copy fields from created time
-					datelineOut = createDateTimeNatty(date, time);
-					dCommand.setNewDeadline(createDateTimeNatty(date, time));
-				}else{
-					dCommand.setNewDeadline(createDateNatty(date));
+					CalHelper.copyCalendar(createDateTimeNatty(date, time), deadlineOut);
+				} else {
+					CalHelper.copyCalendar(createDateNatty(date), deadlineOut);
 				}
 				
-			}catch(Exception e){
-				dCommand = new DonCommand();
+			} catch(Exception e) {
 				dCommand.setType(CommandType.INVALID_DATE);
 			}
 			
-		}else{
-			try{
+		} else {
+			try {
 				Date date = getTimeFromParser(parameters);
 				Calendar cal = new GregorianCalendar();
 				cal.setTime(date);
 				
-				if(isTimeMentioned()){	
-					dCommand.setHasUserSetTime(true);
-					dCommand.setNewDeadline(cal);
-				}else{
-					
-					dCommand.setNewDeadline(createDateNatty(cal));
+				if (isTimeMentioned()) {
+					hasSetTime = true;
+					CalHelper.copyCalendar(cal, deadlineOut);
+				} else {
+					CalHelper.copyCalendar(createDateNatty(cal), deadlineOut);
 				}
-			}catch(Exception e){
-				dCommand = new DonCommand();
+			} catch (Exception e) {
 				dCommand.setType(CommandType.INVALID_DATE);
 			}
-
-
 		}
+		
+		return hasSetTime;
 	}
 	
 	private Calendar createDateNatty(Calendar dateCal) {
@@ -735,10 +734,12 @@ import doornot.logic.AbstractDonCommand.CommandType;
 		dates[1] = groups.get(0).getDates().get(1);
 		return dates;
 	}
+	
 	/**
 	 * Sets deadlines for dCommand
 	 * @param parameters
 	 */
+	/*
 	private void setDeadlineForCommand(String parameters) {
 
 		if(!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")){
@@ -781,32 +782,32 @@ import doornot.logic.AbstractDonCommand.CommandType;
 
 
 		}
-	}	
+	}
+	*/
 	
-	private void setStartAndEndForCommand(String parameters) {
-		if(!removeFormalDate(parameters, dateEventReg, dateNoYearEventReg).equals("")){
+	private boolean setStartAndEndForCommand(String parameters, Calendar startDate, Calendar endDate) {
+		boolean hasSetTime = false;
+		if (!removeFormalDate(parameters, dateEventReg, dateNoYearEventReg).equals("")) {
 			
-			try{
+			try {
 				Calendar[] dates = getFormalEventDates(parameters);
-				String param =  removeFormalDate(parameters, dateEventReg, dateNoYearEventReg);
+				String param = removeFormalDate(parameters, dateEventReg, dateNoYearEventReg);
 				Date[] timings = getTimingsFromParser(param);
 				
-				if(isTimeMentioned()){
-					dCommand.setHasUserSetTime(true);
-					dCommand.setNewStartDate(createDateTimeNatty(dates[0], timings[0]));
-					dCommand.setNewEndDate(createDateTimeNatty(dates[1], timings[1]));
-				}else{
-					dCommand.setNewStartDate(createDateNatty(dates[0]));
-					dCommand.setNewEndDate(createDateNatty(dates[1]));
+				if (isTimeMentioned()) {
+					hasSetTime = true;
+					CalHelper.copyCalendar(createDateTimeNatty(dates[0], timings[0]), startDate);
+					CalHelper.copyCalendar(createDateTimeNatty(dates[1], timings[1]), endDate);
+				} else {
+					CalHelper.copyCalendar(createDateNatty(dates[0]), startDate);
+					CalHelper.copyCalendar(createDateNatty(dates[1]), endDate);
 				}
 				
-			}catch(Exception e){
-				dCommand = new DonCommand();
+			} catch(Exception e) {
 				dCommand.setType(CommandType.INVALID_DATE);
 			}
-		}else{
-			try{
-				
+		} else {
+			try {
 				Date[] dates = getTimingsFromParser(parameters);
 				Calendar[] calArr = new Calendar[2];
 				Calendar cal = new GregorianCalendar();
@@ -816,22 +817,20 @@ import doornot.logic.AbstractDonCommand.CommandType;
 				cal2.setTime(dates[1]);
 				calArr[1] = cal2;
 				
-				if(isTimeMentioned()){	
-					dCommand.setHasUserSetTime(true);
-					dCommand.setNewStartDate(calArr[0]);
-					dCommand.setNewEndDate(calArr[1]);
-				}else{
-					
-					dCommand.setNewStartDate(createDateNatty(calArr[0]));
-					dCommand.setNewEndDate(createDateNatty(calArr[1]));
+				if (isTimeMentioned()) {	
+					hasSetTime = true;
+					CalHelper.copyCalendar(calArr[0], startDate);
+					CalHelper.copyCalendar(calArr[1], endDate);
+				} else {
+					CalHelper.copyCalendar(createDateNatty(calArr[0]), startDate);
+					CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
 				}
-			}catch(Exception e){
-				dCommand = new DonCommand();
+			} catch(Exception e) {
 				dCommand.setType(CommandType.INVALID_DATE);
 			}
 		}
 		
-		
+		return hasSetTime;
 	}
 
 	/**
