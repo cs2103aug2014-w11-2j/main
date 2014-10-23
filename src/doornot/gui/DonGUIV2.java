@@ -196,9 +196,10 @@ public class DonGUIV2 {
 		renewList();
 	}
 
-	private String printDate(Calendar cal) {
+	private String printDate(Calendar cal, boolean isTimeUsed) {
 		SimpleDateFormat df = new SimpleDateFormat();
-		df.applyPattern("dd/MM/yyyy HH:mm");
+		if(isTimeUsed) df.applyPattern("dd/MM/yyyy HH:mm");
+		else df.applyPattern("dd/MM/yyyy");
 		return df.format(cal.getTime());
 	}
 
@@ -922,12 +923,12 @@ public class DonGUIV2 {
 				entryText += entry.getTitle();
 			} else if (entry.getType() == IDonTask.TaskType.DEADLINE) {
 				entryText += entry.getTitle();
-				timeText = " (Deadline: " + printDate(entry.getStartDate())
+				timeText = " (Deadline: " + printDate(entry.getStartDate(), entry.isTimeUsed())
 						+ ")";
 			} else {
 				entryText += entry.getTitle();
-				timeText = " (Duration: " + printDate(entry.getStartDate())
-						+ " -- " + printDate(entry.getEndDate()) + ")";
+				timeText = " (Duration: " + printDate(entry.getStartDate(), entry.isTimeUsed())
+						+ " -- " + printDate(entry.getEndDate(), entry.isTimeUsed()) + ")";
 			}
 			if (entry.getStatus()) {
 				entryText += " " + "[Done]";
