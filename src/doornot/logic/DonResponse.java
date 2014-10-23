@@ -80,4 +80,9 @@ public class DonResponse implements IDonResponse {
 		return periods.add(period);
 	}
 
+	@Override
+	public void setTaskList(List<IDonTask> tasks) {
+		this.tasks = tasks;
+	}
+
 }

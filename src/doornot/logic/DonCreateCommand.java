@@ -14,8 +14,6 @@ public class DonCreateCommand extends AbstractDonCommand {
 		FLOATING, DEADLINE, EVENT
 	}
 	
-	private static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
-	private static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
 	
 	private static final int FAILURE = -1;
 	
@@ -165,11 +163,11 @@ public class DonCreateCommand extends AbstractDonCommand {
 		IDonResponse response = null;
 		if(deleteSuccess) {
 			response = createUndoSuccessResponse();
+			executed = false;
 		} else {
 			response = createUndoFailureResponse();
 		}
 		
-		executed = false;		
 		return response;
 	}
 
