@@ -26,7 +26,8 @@ public class DonStorage implements IDonStorage {
 	private static final int POSITION_OF_TASK_END_DATE = 2;
 	private static final int POSITION_OF_TASK_STATUS = 3;
 	private static final int POSITION_OF_TASK_ID = 4;
-	private static final int POSITION_OF_TASK_LABELS = 5;
+	private static final int POSITION_OF_TASK_TIMEUSAGE = 5;
+	private static final int POSITION_OF_TASK_LABELS = 6;
 	private static final int MAX_OF_TASK_ID = 1000;
 	private static final int MIN_OF_TASK_ID = 1;
 
@@ -105,6 +106,7 @@ public class DonStorage implements IDonStorage {
 				for (int i = 0; i < tasks.size(); i++) {
 					String taskTitle, taskStartDate = "null", taskEndDate = "null";
 					String taskStatus = "Undone";
+					String taskTimeUsage = "False";
 					int taskID = 0;
 					List<String> taskLabels = new ArrayList<String>();
 
@@ -121,15 +123,19 @@ public class DonStorage implements IDonStorage {
 						taskStatus = "Done";
 					}
 					taskID = tasks.get(i).getID();
+					if(tasks.get(i).isTimeUsed()){
+						taskTimeUsage = "True";
+					}
 					if (!tasks.get(i).getLabels().isEmpty()) {
 						taskLabels = tasks.get(i).getLabels();
 					} else {
 						taskLabels.add("null");
 					}
+					
 
 					String taskInfo = taskTitle + ";" + taskStartDate + ";"
-							+ taskEndDate + ";" + taskStatus + ";" + taskID
-							+ ";";
+							+ taskEndDate + ";" + taskStatus + ";" + taskID + ";"
+							+ taskTimeUsage + ";";
 
 					for (int j = 0; j < taskLabels.size(); j++) {
 						taskInfo = taskInfo + taskLabels.get(j) + ";";
@@ -193,6 +199,9 @@ public class DonStorage implements IDonStorage {
 				}
 				if (taskInfo[POSITION_OF_TASK_STATUS].equalsIgnoreCase("done")) {
 					task.setStatus(true);
+				}
+				if(taskInfo[POSITION_OF_TASK_TIMEUSAGE].equalsIgnoreCase("True")){
+					task.setTimeUsed(true);
 				}
 
 				if (!taskInfo[POSITION_OF_TASK_LABELS].equalsIgnoreCase("null")) {
