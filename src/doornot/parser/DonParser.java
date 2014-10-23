@@ -13,6 +13,8 @@ import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
+import doornot.logic.DonFindCommand;
+import doornot.logic.DonFindCommand.SearchType;
 import doornot.logic.DonCreateCommand;
 import doornot.logic.DonEditCommand;
 /**
@@ -20,6 +22,7 @@ import doornot.logic.DonEditCommand;
  * 
 
  */
+//TODO remove all unnecessary setType
 
 //@author A0115503W
  public class DonParser implements IDonParser{
@@ -373,30 +376,32 @@ import doornot.logic.DonEditCommand;
 	private void setSearchCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		if(parameters.isEmpty()){
-			dCommand.setType(CommandType.SEARCH_ALL);
+		if (parameters.isEmpty()) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
 			
-		}else if(parameters.equalsIgnoreCase("free")){
-			dCommand.setType(CommandType.SEARCH_FREE);
+		} else if (parameters.equalsIgnoreCase("free")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
 			
-		}else if(parameters.equalsIgnoreCase("undone")){
-			dCommand.setType(CommandType.SEARCH_UNDONE);
+		} else if (parameters.equalsIgnoreCase("undone")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
 			
-		}else{
-			if(isTaskName(parameters)){
-				dCommand.setType(CommandType.SEARCH_NAME);
-				dCommand.setName(extractName(parameters));
-			}else{
+		} else {
+			if (isTaskName(parameters)) {
+				dCommand = new DonFindCommand(extractName(parameters), SearchType.SEARCH_NAME);
+
+			} else {
 				
 				//if date
-				if(isRightCommand(parameters, searchIDReg)){
+				if (isRightCommand(parameters, searchIDReg)){
 					int num = Integer.parseInt(parameters);
+					dCommand = new DonFindCommand(num);
 					dCommand.setType(CommandType.SEARCH_ID);
-					dCommand.setID(num);
-				}else{
+				} else {
 					
+					Calendar searchDate = Calendar.getInstance();
+					boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
+					dCommand = new DonFindCommand(searchDate, hasSetTime, SearchType.SEARCH_DATE);
 					dCommand.setType(CommandType.SEARCH_DATE);
-					setDeadlineForCommand(parameters);
 				}
 			}
 		}
@@ -408,7 +413,9 @@ import doornot.logic.DonEditCommand;
 		String parameters = removeFirstWord(userCommand);
 
 		dCommand.setType(CommandType.SEARCH_AFTDATE);
-		setDeadlineForCommand(parameters);
+		Calendar searchDate = Calendar.getInstance();
+		boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
+		dCommand = new DonFindCommand(searchDate, hasSetTime, SearchType.SEARCH_AFTDATE);
 
 	}
 	/**
@@ -416,10 +423,10 @@ import doornot.logic.DonEditCommand;
 	 */
 	private void setSlabelCommand(){
 		String parameters = removeFirstWord(userCommand);
-		if(isRightCommand(parameters, labelNameAloneReg)){
+		if (isRightCommand(parameters, labelNameAloneReg)){
+			dCommand = new DonFindCommand(extractName(parameters), SearchType.SEARCH_LABEL);
 			dCommand.setType(CommandType.SEARCH_LABEL);
-			dCommand.setLabel(extractName(parameters));
-		}else{
+		} else {
 			dCommand.setType(CommandType.INVALID_FORMAT);
 		}
 

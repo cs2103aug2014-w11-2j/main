@@ -25,6 +25,14 @@ public class DonFindCommand extends AbstractDonCommand {
 	private boolean isTimeUsed;
 
 	/**
+	 * Constructor for find commands without parameters
+	 * @param type
+	 */
+	public DonFindCommand(SearchType type) {
+		this.type = type;
+	}
+	
+	/**
 	 * Search by id of the task
 	 * 
 	 * @param id
