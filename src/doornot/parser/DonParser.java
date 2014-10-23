@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import com.joestelmach.natty.*;
 
+import doornot.logic.AbstractDonCommand;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
 /**
@@ -24,7 +25,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 
 	}
 	private String userCommand;
-	private DonCommand dCommand;
+	private AbstractDonCommand dCommand;
 	
 	// for natty parser
 	private Parser nattyParser = new Parser();
@@ -94,9 +95,9 @@ import doornot.logic.AbstractDonCommand.CommandType;
 	private String labelNameAloneReg = "^\".+\"$";
 	
 	@Override
-	public DonCommand parseCommand(String command) {
+	public AbstractDonCommand parseCommand(String command) {
 		
-		dCommand = new DonCommand();
+		dCommand = null;//new AbstractDonCommand();
 		userCommand = command;
 		setDonCommand();
 		return dCommand;
@@ -153,7 +154,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 	 */
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
-
+		
 		// is it "blah" at ...
 		if(isRightCommand(parameters, addTaskReg)){
 			
@@ -162,11 +163,12 @@ import doornot.logic.AbstractDonCommand.CommandType;
 			
 			if(isGoodName(taskName)){
 				dCommand.setType(CommandType.ADD_TASK);
+				
 				dCommand.setNewName(taskName);
 				
 				// get rid of "blah" at
 				String date = parameters.replaceFirst(addTaskReg, "").trim();
-				setNewDeadlineForCommand(date);
+				setNewDeadlineForCommand(date, null);
 				
 			}else{
 
@@ -284,7 +286,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 				
 				// get rid of "blah" to
 				String date = parameters.replaceFirst(editNameToDateReg, "").trim();
-				setNewDeadlineForCommand(date);
+				setNewDeadlineForCommand(date, null);
 				
 			}else{
 				
@@ -301,7 +303,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 			
 			// get rid of xxx to
 			String date = parameters.replaceFirst(editIDToDateReg, "").trim();
-			setNewDeadlineForCommand(date);
+			setNewDeadlineForCommand(date, null);
 			
 		}else{
 			dCommand.setType(CommandType.INVALID_FORMAT);
@@ -637,12 +639,13 @@ import doornot.logic.AbstractDonCommand.CommandType;
 	/**
 	 * Sets new deadlines for dCommand
 	 * @param parameters
+	 * @param datelineOut TODO
+	 * @return true if user has set time
 	 */
-	private void setNewDeadlineForCommand(String parameters) {
+	private boolean setNewDeadlineForCommand(String parameters, Calendar datelineOut) {
 
 		if(!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")){
-			
-			
+			boolean hasSetTime = false;
 			try{
 				Calendar date = getFormalDate(parameters);
 				
@@ -650,7 +653,9 @@ import doornot.logic.AbstractDonCommand.CommandType;
 				Date time = getTimeFromParser(param);
 				
 				if(isTimeMentioned()){
-					dCommand.setHasUserSetTime(true);
+					hasSetTime = true;
+					//TODO copy fields from created time
+					datelineOut = createDateTimeNatty(date, time);
 					dCommand.setNewDeadline(createDateTimeNatty(date, time));
 				}else{
 					dCommand.setNewDeadline(createDateNatty(date));

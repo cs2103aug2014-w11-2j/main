@@ -1,6 +1,6 @@
 package doornot.parser;
 
-import doornot.logic.DonCommand;
+import doornot.logic.AbstractDonCommand;
 
 /**
  * Interface for Parsing commands and creating a DonCommand
@@ -16,7 +16,7 @@ public interface IDonParser {
 	 * @param command string from user
 	 * @return DonCommand
 	 */
-	public DonCommand parseCommand(String command);
+	public AbstractDonCommand parseCommand(String command);
 	
 	/**
 	 * Creates the respective dCommand according to the user input.

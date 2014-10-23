@@ -79,18 +79,13 @@ public class DonCommand extends AbstractDonCommand {
 
 	}
 	
-
 	public CommandType getType() {
-		
 		return commandType;
 	}
-	
 
 	public int getID() {
 		return taskID;
 	}
-	
-	
 
 	public String getName() {
 		return taskName;
