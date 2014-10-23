@@ -1,4 +1,7 @@
 package doornot.parser;
+
+import doornot.logic.DonCommand;
+
 /**
  * Interface for Parsing commands and creating a DonCommand
  * 

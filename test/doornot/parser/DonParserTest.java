@@ -6,7 +6,8 @@ import java.util.GregorianCalendar;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import doornot.parser.IDonCommand.CommandType;
+import doornot.logic.DonCommand;
+import doornot.logic.AbstractDonCommand.CommandType;
 /**
  * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand

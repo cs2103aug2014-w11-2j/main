@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 
 import com.joestelmach.natty.*;
 
-import doornot.parser.IDonCommand.CommandType;
+import doornot.logic.DonCommand;
+import doornot.logic.AbstractDonCommand.CommandType;
 /**
  * DonParser parses the commands and creates a DonCommand
  * 
