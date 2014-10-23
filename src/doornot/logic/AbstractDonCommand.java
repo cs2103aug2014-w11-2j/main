@@ -2,6 +2,7 @@ package doornot.logic;
 
 import java.util.Calendar;
 
+import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 /**
  * Interface for DonCommand, a class for keeping track of what type of command and its parameters
@@ -10,9 +11,20 @@ import doornot.storage.IDonStorage;
 //@author A0115503W
 public abstract class AbstractDonCommand {
 	
-	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
-	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
+	protected static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
+	protected static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
+	protected static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
+	protected static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
+	protected static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
+	protected static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
+	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
+	protected static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
+	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
 	
+	protected static final String PHRASE_END_DATE = "End date";
+	protected static final String PHRASE_START_DATE = "Start date";
+	
+	//TODO Should only contain types denoting validity and global commands like undo/redo
 	public static enum CommandType {
 		ADD_FLOAT, 
 		ADD_TASK, 
@@ -95,6 +107,12 @@ public abstract class AbstractDonCommand {
 		return response;
 	}
 	
+	protected IDonResponse createSearchFailedResponse(String searchString) {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(ResponseType.SEARCH_EMPTY);
+		response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, searchString));
+		return response;
+	}
 	
 	public void setType(CommandType type){
 		commandType = type;

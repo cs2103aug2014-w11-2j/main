@@ -14,6 +14,7 @@ import doornot.logic.AbstractDonCommand;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
 import doornot.logic.DonCreateCommand;
+import doornot.logic.DonEditCommand;
 /**
  * DonParser parses the commands and creates a DonCommand
  * 
@@ -230,9 +231,8 @@ import doornot.logic.DonCreateCommand;
 			String newName = taskNames[1];
 			
 			if(isGoodName(oldName)&&isGoodName(newName)){
+				dCommand = new DonEditCommand(oldName, newName);
 				dCommand.setType(CommandType.EDIT_NAME);
-				dCommand.setName(oldName);
-				dCommand.setNewName(newName);
 				
 			} else {
 				dCommand.setType(CommandType.INVALID_FORMAT);
@@ -245,9 +245,9 @@ import doornot.logic.DonCreateCommand;
 				// get rid of to "blah"
 				String id = parameters.replaceFirst(editToNameReg, "").trim();
 				int ID = Integer.parseInt(id);
+				dCommand = new DonEditCommand(ID, newName);
 				dCommand.setType(CommandType.EDIT_ID_NAME);
-				dCommand.setID(ID);
-				dCommand.setNewName(newName);
+
 			} else {
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}	
@@ -257,59 +257,67 @@ import doornot.logic.DonCreateCommand;
 			String taskName = getTaskName(parameters);
 			
 			if (isGoodName(taskName)) {
-				dCommand.setType(CommandType.EDIT_EVENT);
-				dCommand.setName(taskName);
 				
 				// get rid of "blah" to from
 				String date = parameters.replaceFirst(editNameToEventReg, "").trim();
-				setStartAndEndForCommand(date);
+				Calendar startDate = Calendar.getInstance(), endDate = Calendar.getInstance();
+				boolean hasSetTime = setStartAndEndForCommand(date, startDate, endDate);
+				
+				dCommand = new DonEditCommand(taskName, startDate, endDate, hasSetTime);
+				dCommand.setType(CommandType.EDIT_EVENT);
 				
 			}else{
 				
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 			
-		}else if(isRightCommand(parameters, editIDToEventReg)){
+		} else if (isRightCommand(parameters, editIDToEventReg)){
 			
 			String idStr = getID(parameters);
 			int ID = Integer.parseInt(idStr);
-			dCommand.setType(CommandType.EDIT_ID_EVENT);
-			dCommand.setID(ID);
 			// get rid of xxx to from
 			String date = parameters.replaceFirst(editIDToEventReg, "").trim();	
-			setStartAndEndForCommand(date);
+			Calendar startDate = Calendar.getInstance(), endDate = Calendar.getInstance();
+			boolean hasSetTime = setStartAndEndForCommand(date, startDate, endDate);
+			
+			dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);
+			dCommand.setType(CommandType.EDIT_ID_EVENT);
 			
 			
-		}else if(isRightCommand(parameters, editNameToDateReg)){
+		} else if (isRightCommand(parameters, editNameToDateReg)){
 			
 			String taskName = getTaskName(parameters);
 			
-			if(isGoodName(taskName)){
-				dCommand.setType(CommandType.EDIT_DATE);
-				dCommand.setName(taskName);
-				
+			if (isGoodName(taskName)) {
 				// get rid of "blah" to
 				String date = parameters.replaceFirst(editNameToDateReg, "").trim();
-				setNewDeadlineForCommand(date, null);
+				Calendar newDeadline = Calendar.getInstance();
+				boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
 				
-			}else{
+				dCommand = new DonEditCommand(taskName, newDeadline, hasSetTime);
+				dCommand.setType(CommandType.EDIT_DATE);
+				
+			} else {
 				
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 			
-		}else if(isRightCommand(parameters, editIDToDateReg)){
+		} else if (isRightCommand(parameters, editIDToDateReg)) {
 			
 			String idStr = getID(parameters);
 			
 			int ID = Integer.parseInt(idStr);
-			dCommand.setType(CommandType.EDIT_ID_DATE);
-			dCommand.setID(ID);
-			
+
 			// get rid of xxx to
 			String date = parameters.replaceFirst(editIDToDateReg, "").trim();
-			setNewDeadlineForCommand(date, null);
+			Calendar newDeadline = Calendar.getInstance();
+			boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
 			
-		}else{
+			dCommand = new DonEditCommand(ID, newDeadline, hasSetTime);
+			dCommand.setType(CommandType.EDIT_ID_DATE);
+			
+			
+		} else {
 			dCommand.setType(CommandType.INVALID_FORMAT);
 		}
 	}

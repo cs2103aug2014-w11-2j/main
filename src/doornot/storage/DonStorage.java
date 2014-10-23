@@ -11,6 +11,10 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
+import doornot.logic.IDonResponse.ResponseType;
+
 /**
  * DonStorage - Class for handling the storage of the program
  * (save/read/retrieve of tasks)
@@ -82,6 +86,27 @@ public class DonStorage implements IDonStorage {
 			return tasks.get(taskIndex);
 		else
 			return null;
+	}
+	
+	/**
+	 * Find tasks with the given name
+	 * 
+	 * @param name
+	 *            the name to search for
+	 * @return the response containing the tasks
+	 */
+	public List<IDonTask> getTaskByName(String name) {
+		assert name!=null;
+		List<IDonTask> foundTasks = new ArrayList<IDonTask>();
+
+		for (IDonTask task : tasks) {
+			// Search for the given name/title without case sensitivity
+			if (task.getTitle().toLowerCase().contains(name.toLowerCase())) {
+				foundTasks.add(task);
+			}
+		}
+
+		return foundTasks;
 	}
 
 	private int searchTask(int ID) {
