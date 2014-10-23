@@ -136,11 +136,11 @@ public class DonLogic implements IDonLogic {
 
 		} else if (commandType == IDonCommand.CommandType.ADD_TASK) {
 			response = createTask(dCommand.getNewName(),
-					dCommand.getNewDeadline());
+					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.ADD_EVENT) {
 			response = createTask(dCommand.getNewName(),
-					dCommand.getNewStartDate(), dCommand.getNewEndDate());
+					dCommand.getNewStartDate(), dCommand.getNewEndDate(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.SEARCH_ID) {
 			response = findTask(dCommand.getID());
@@ -184,11 +184,11 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_DATE) {
 			// TODO: recognize different single date edit type
 			response = editTask(dCommand.getID(), true,
-					dCommand.getNewDeadline());
+					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.EDIT_ID_EVENT) {
 			response = editTask(dCommand.getID(), dCommand.getNewStartDate(),
-					dCommand.getNewEndDate());
+					dCommand.getNewEndDate(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.EDIT_NAME) {
 			response = editTask(dCommand.getName(), dCommand.getNewName());
@@ -196,11 +196,11 @@ public class DonLogic implements IDonLogic {
 		} else if (commandType == IDonCommand.CommandType.EDIT_DATE) {
 			// TODO: recognize different single date edit type
 			response = editTask(dCommand.getName(), true,
-					dCommand.getNewDeadline());
+					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.EDIT_EVENT) {
 			response = editTask(dCommand.getName(), dCommand.getNewStartDate(),
-					dCommand.getNewEndDate());
+					dCommand.getNewEndDate(), dCommand.hasUserSetTime());
 
 		} else if (commandType == IDonCommand.CommandType.MARK_ID) {
 			response = toggleStatus(dCommand.getID());
@@ -237,7 +237,7 @@ public class DonLogic implements IDonLogic {
 			
 		} else if(commandType == IDonCommand.CommandType.SEARCH_LABEL) {
 			response = findLabel(dCommand.getLabel());
-			
+
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
@@ -341,13 +341,15 @@ public class DonLogic implements IDonLogic {
 	 *            the title of the task
 	 * @param deadline
 	 *            the deadline of the task
+	 * @param timeUsed TODO
 	 * @return the response
 	 */
-	private IDonResponse createTask(String title, Calendar deadline) {
+	private IDonResponse createTask(String title, Calendar deadline, boolean timeUsed) {
 		assert title != null && deadline != null; // This method should only be
 													// called when both
 													// parameters are present
 		IDonTask task = new DonTask(title, deadline, donStorage.getNextID());
+		task.setTimeUsed(timeUsed);
 		int addResult = donStorage.addTask(task);
 
 		DonResponse response = new DonResponse();
@@ -380,13 +382,15 @@ public class DonLogic implements IDonLogic {
 	 *            the start date of the task
 	 * @param endDate
 	 *            the end date of the task
+	 * @param timeUsed TODO
 	 * @return the response
 	 */
 	private IDonResponse createTask(String title, Calendar startDate,
-			Calendar endDate) {
+			Calendar endDate, boolean timeUsed) {
 		assert title != null && startDate != null && endDate!=null;
 		IDonTask task = new DonTask(title, startDate, endDate,
 				donStorage.getNextID());
+		task.setTimeUsed(timeUsed);
 		int addResult = donStorage.addTask(task);
 
 		DonResponse response = new DonResponse();
@@ -719,9 +723,10 @@ public class DonLogic implements IDonLogic {
 	 *            This will be ignored for deadline tasks.
 	 * @param newDate
 	 *            the new date to be applied to the task
+	 * @param timeUsed TODO
 	 * @return the success response
 	 */
-	private IDonResponse editTask(int id, boolean isStartDate, Calendar newDate) {
+	private IDonResponse editTask(int id, boolean isStartDate, Calendar newDate, boolean timeUsed) {
 		assert newDate!=null;
 		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
@@ -740,6 +745,7 @@ public class DonLogic implements IDonLogic {
 				dateType = "Deadline";
 				oldDate = task.getStartDate();
 				task.setStartDate(newDate);
+				task.setTimeUsed(timeUsed);
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				if (isStartDate) {
 					dateType = PHRASE_START_DATE;
@@ -750,6 +756,7 @@ public class DonLogic implements IDonLogic {
 					oldDate = task.getEndDate();
 					task.setEndDate(newDate);
 				}
+				task.setTimeUsed(timeUsed);
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
@@ -781,10 +788,11 @@ public class DonLogic implements IDonLogic {
 	 *            This will be ignored for deadline tasks.
 	 * @param newDate
 	 *            the new date to be applied to the task
+	 * @param timeUsed TODO
 	 * @return the response
 	 */
 	private IDonResponse editTask(String title, boolean isStartDate,
-			Calendar newDate) {
+			Calendar newDate, boolean timeUsed) {
 		assert title!=null && newDate!=null;
 		IDonResponse response = new DonResponse();
 
@@ -802,7 +810,7 @@ public class DonLogic implements IDonLogic {
 		} else {
 			// 1 task was found
 			IDonTask task = searchResponse.getTasks().get(0);
-			response = editTask(task.getID(), isStartDate, newDate);
+			response = editTask(task.getID(), isStartDate, newDate, timeUsed);
 		}
 
 		return response;
@@ -817,10 +825,11 @@ public class DonLogic implements IDonLogic {
 	 *            the new start date to be applied to the task
 	 * @param newEndDate
 	 *            the new end date to be applied to the task
+	 * @param timeUsed TODO
 	 * @return the success response
 	 */
 	private IDonResponse editTask(int id, Calendar newStartDate,
-			Calendar newEndDate) {
+			Calendar newEndDate, boolean timeUsed) {
 		assert newStartDate!=null && newEndDate!=null;
 		IDonResponse response = new DonResponse();
 		IDonTask task = donStorage.getTask(id);
@@ -845,6 +854,8 @@ public class DonLogic implements IDonLogic {
 
 				oldEndDate = task.getEndDate();
 				task.setEndDate(newEndDate);
+				
+				task.setTimeUsed(timeUsed);
 
 			}
 
@@ -885,10 +896,11 @@ public class DonLogic implements IDonLogic {
 	 *            the new start date to be applied to the task
 	 * @param newEndDate
 	 *            the new end date to be applied to the task
+	 * @param timeUsed TODO
 	 * @return
 	 */
 	private IDonResponse editTask(String title, Calendar newStartDate,
-			Calendar newEndDate) {
+			Calendar newEndDate, boolean timeUsed) {
 		assert newStartDate!=null && newEndDate!=null;
 		IDonResponse response = new DonResponse();
 		IDonResponse searchResponse = findTask(title);
@@ -905,7 +917,7 @@ public class DonLogic implements IDonLogic {
 		} else {
 			// 1 task was found
 			IDonTask task = searchResponse.getTasks().get(0);
-			response = editTask(task.getID(), newStartDate, newEndDate);
+			response = editTask(task.getID(), newStartDate, newEndDate, timeUsed);
 		}
 
 		return response;

@@ -13,7 +13,7 @@ public class DonTask implements IDonTask {
 
 	private String taskTitle;
 	private Calendar startDate, endDate;
-	private boolean status;
+	private boolean status, timeUsed;
 	private int taskID;
 	private List<String> labels;
 
@@ -24,6 +24,7 @@ public class DonTask implements IDonTask {
 		status = false;
 		taskID = ID;
 		labels = new ArrayList<String>();
+		timeUsed = false;
 	}
 
 	public DonTask(String title, Calendar deadline, int ID) {
@@ -307,6 +308,16 @@ public class DonTask implements IDonTask {
 	@Override
 	public boolean deleteLabel(String labelToDelete) {
 		return labels.remove(labelToDelete);
+	}
+
+	@Override
+	public void setTimeUsed(boolean timeUsed) {
+		this.timeUsed = timeUsed;
+	}
+
+	@Override
+	public boolean isTimeUsed() {
+		return timeUsed;
 	}
 
 }

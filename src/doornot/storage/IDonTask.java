@@ -120,5 +120,17 @@ public interface IDonTask extends Comparable<IDonTask>, Cloneable {
 	 */
 	public boolean deleteLabel(String labelToDelete);
 	
+	/**
+	 * Sets whether the user has set time for the dates in this task
+	 * @param timeUsed true if user has set time, false otherwise
+	 */
+	public void setTimeUsed(boolean timeUsed);
+	
+	/**
+	 * Returns whether time is used in the date fields of the task
+	 * @return true if time is used
+	 */
+	public boolean isTimeUsed();
+	
 	public IDonTask clone();
 }
