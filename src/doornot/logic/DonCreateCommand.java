@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 
+
+import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -147,7 +149,9 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response = createEventTask(donStorage);
 		}
 		
-		executed = true;
+		if (response.getResponseType() == ResponseType.ADD_SUCCESS) {
+			executed = true;
+		}
 		return response;
 	}
 

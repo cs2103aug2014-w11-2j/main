@@ -138,10 +138,7 @@ public class DonLogic implements IDonLogic {
 		AbstractDonCommand.CommandType commandType = dCommand.getType();
 		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
 		IDonResponse response = null;
-		if (commandType == AbstractDonCommand.CommandType.SEARCH_FREE) {
-			response = findFreeTime();
-
-		} else if (commandType == AbstractDonCommand.CommandType.DELETE_ID) {
+		if (commandType == AbstractDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
 
 		} else if (commandType == AbstractDonCommand.CommandType.DELETE) {
