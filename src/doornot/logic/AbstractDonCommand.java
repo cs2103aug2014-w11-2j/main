@@ -10,12 +10,8 @@ import doornot.storage.IDonStorage;
 //@author A0115503W
 public abstract class AbstractDonCommand {
 	
-	private boolean executed = false;
-	
-	public abstract IDonResponse executeCommand(IDonStorage donStorage);
-	
-	public abstract IDonResponse undoCommand(IDonStorage donStorage);
-	
+	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
+	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	
 	public static enum CommandType {
 		ADD_FLOAT, 
@@ -77,5 +73,35 @@ public abstract class AbstractDonCommand {
 		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID
 	}
 	
+	protected CommandType commandType;
+	
+	protected boolean executed = false;
+	
+	public abstract IDonResponse executeCommand(IDonStorage donStorage);
+	
+	public abstract IDonResponse undoCommand(IDonStorage donStorage);
+	
+	protected IDonResponse createUndoFailureResponse() {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
+		response.addMessage(MSG_UNDO_NO_ACTIONS);
+		return response;
+	}
+	
+	protected IDonResponse createUndoSuccessResponse() {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
+		response.addMessage(MSG_UNDO_SUCCESS);
+		return response;
+	}
+	
+	
+	public void setType(CommandType type){
+		commandType = type;
+	}
+	
+	public CommandType getType() {
+		return commandType;
+	}
 	
 }
