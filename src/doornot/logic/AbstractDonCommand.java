@@ -11,6 +11,7 @@ import doornot.storage.IDonStorage;
 //@author A0115503W
 public abstract class AbstractDonCommand {
 	
+	protected static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
 	protected static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
 	protected static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	protected static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
@@ -20,9 +21,17 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	protected static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
+	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
+	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
+	protected static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
+	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
 	
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";
+	
+	protected static final int FIND_INCOMPLETE = 0;
+	protected static final int FIND_COMPLETE = 1;
+	protected static final int FIND_ALL = 2;
 	
 	//TODO Should only contain types denoting validity and global commands like undo/redo
 	public static enum CommandType {

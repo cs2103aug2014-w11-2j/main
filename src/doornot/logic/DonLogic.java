@@ -31,7 +31,7 @@ import doornot.storage.IDonTask.TaskType;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
-	private static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
+	
 	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
 	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
@@ -50,8 +50,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";
 	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
-	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
-	private static final String MSG_FREE_EVERYWHERE = "You are free!";
+	
 
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
 	
@@ -139,76 +138,14 @@ public class DonLogic implements IDonLogic {
 		AbstractDonCommand.CommandType commandType = dCommand.getType();
 		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
 		IDonResponse response = null;
-		if (commandType == AbstractDonCommand.CommandType.ADD_FLOAT) {
-			response = createTask(dCommand.getNewName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.ADD_TASK) {
-			response = createTask(dCommand.getNewName(),
-					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
-
-		} else if (commandType == AbstractDonCommand.CommandType.ADD_EVENT) {
-			response = createTask(dCommand.getNewName(),
-					dCommand.getNewStartDate(), dCommand.getNewEndDate(), dCommand.hasUserSetTime());
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_ID) {
-			response = findTask(dCommand.getID());
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_NAME) {
-			response = findTask(dCommand.getName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_DATE) {
-			response = findTask(dCommand.getDeadline());
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_AFTDATE) {
-			//If given search date has a time, will search after the given time.
-			//If given search does not include a time, will search from the day after
-			Calendar givenDate = dCommand.getDeadline();
-			if (!dCommand.hasUserSetTime()) {
-				givenDate = CalHelper.getDayAfter(givenDate);
-			}
-			response = findTaskRange(givenDate, null, FIND_INCOMPLETE);
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_FREE) {
+		if (commandType == AbstractDonCommand.CommandType.SEARCH_FREE) {
 			response = findFreeTime();
-
-		} else if (commandType == AbstractDonCommand.CommandType.SEARCH_UNDONE) {
-			response = findUndone();
-
-		} else if (commandType == AbstractDonCommand.CommandType.OVERDUE) {
-			response = findTaskRange(null, Calendar.getInstance(), FIND_INCOMPLETE);
-
-		} else if (commandType == AbstractDonCommand.CommandType.TODAY) {
-			response = getTasksToday();
 
 		} else if (commandType == AbstractDonCommand.CommandType.DELETE_ID) {
 			response = deleteTask(dCommand.getID());
 
 		} else if (commandType == AbstractDonCommand.CommandType.DELETE) {
 			response = deleteTask(dCommand.getName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_ID_NAME) {
-			response = editTask(dCommand.getID(), dCommand.getNewName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_ID_DATE) {
-			// TODO: recognize different single date edit type
-			response = editTask(dCommand.getID(), true,
-					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_ID_EVENT) {
-			response = editTask(dCommand.getID(), dCommand.getNewStartDate(),
-					dCommand.getNewEndDate(), dCommand.hasUserSetTime());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_NAME) {
-			response = editTask(dCommand.getName(), dCommand.getNewName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_DATE) {
-			// TODO: recognize different single date edit type
-			response = editTask(dCommand.getName(), true,
-					dCommand.getNewDeadline(), dCommand.hasUserSetTime());
-
-		} else if (commandType == AbstractDonCommand.CommandType.EDIT_EVENT) {
-			response = editTask(dCommand.getName(), dCommand.getNewStartDate(),
-					dCommand.getNewEndDate(), dCommand.hasUserSetTime());
 
 		} else if (commandType == AbstractDonCommand.CommandType.MARK_ID) {
 			response = toggleStatus(dCommand.getID());
@@ -747,126 +684,11 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	/**
-	 * Find free time in the user's schedule based on existing task and events.
-	 * For dates with no time stated, it is assumed that the user means that the
-	 * whole day is taken up.
-	 * 
-	 * @return
-	 */
-	private IDonResponse findFreeTime() {
-		IDonResponse response = new DonResponse();
-		// Get all tasks with deadlines or events that end after today
-		List<IDonTask> taskList = getTaskByType(IDonTask.TaskType.DEADLINE,
-				false, false);
-		taskList.addAll(getTaskByType(IDonTask.TaskType.DURATION, false, false));
-		Collections.sort(taskList);
-
-		if (taskList.size() <= 0) {
-			response.addMessage(MSG_FREE_EVERYWHERE);
-			log.fine(MSG_FREE_EVERYWHERE);
-			return response;
-		}
-
-		// TODO handle the case where there are no tasks
-		// Find free period between now and the start time of the earliest task
-		// if possible
-		Calendar now = Calendar.getInstance();
-		if (taskList.get(0).getStartDate().after(now)) {
-			DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
-			response.addPeriod(free);
-			log.fine(free.toString());
-		}
-
-		for (int i = 0; i < taskList.size() - 1; i++) {
-			IDonTask currentTask = taskList.get(i);
-			IDonTask nextTask = taskList.get(i + 1);
-			// Check if there is a free period between the end time
-			// and the start time of the next event
-			if (currentTask.getType() == IDonTask.TaskType.DEADLINE) {
-				// A deadline task has no end date
-				// If the user did not specify a time in the deadline
-				// 0000hr on the given day will be used as the deadline
-				if (currentTask.getStartDate().compareTo(
-						nextTask.getStartDate()) < 0) {
-					// There is a free period
-					DonPeriod free = new DonPeriod(currentTask.getStartDate(),
-							nextTask.getStartDate());
-					response.addPeriod(free);
-					log.fine(free.toString());
-				}
-			} else {
-				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
-					// There is a free period
-					DonPeriod free = new DonPeriod(currentTask.getEndDate(),
-							nextTask.getStartDate());
-					response.addPeriod(free);
-					log.fine(free.toString());
-				}
-			}
-		}
-
-		return response;
-	}
 	
-	/**
-	 * Find all undone/incomplete tasks
-	 * @return the response containing incomplete tasks
-	 */
-	private IDonResponse findUndone() {
-		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			if (!task.getStatus()) {
-				response.addTask(task.clone());
-			}
-		}
-		if(response.hasTasks()) {
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
-		} else {
-			response.addMessage(MSG_NO_UNDONE_TASKS);
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-		}
-		return response;
-	}
+	
+	
 
-	/**
-	 * Returns a list of tasks by the given task type
-	 * 
-	 * @param type
-	 *            the type of the task
-	 * @param allowOverdue
-	 *            true if overdue tasks are allowed.
-	 * @param allowFinished
-	 *            true if completed tasks are allowed
-	 * @return the list of tasks
-	 */
-	private List<IDonTask> getTaskByType(IDonTask.TaskType type,
-			boolean allowOverdue, boolean allowFinished) {
-		List<IDonTask> taskList = donStorage.getTaskList();
-		List<IDonTask> resultList = new ArrayList<IDonTask>();
-		Calendar now = Calendar.getInstance();
-		for (IDonTask task : taskList) {
-			if (task.getType() == type) {
-				if (type == IDonTask.TaskType.DEADLINE) {
-					if ((!allowOverdue && task.getStartDate().before(now))
-							|| (!allowFinished && task.getStatus())) {
-						// is overdue or finished
-						continue;
-					}
-				} else if (type == IDonTask.TaskType.DURATION) {
-					if ((!allowOverdue && task.getEndDate().before(now))
-							|| (!allowFinished && task.getStatus())) {
-						// is overdue or finished
-						continue;
-					}
-				}
-				// Clone the task to prevent the original from being edited.
-				resultList.add(task.clone());
-			}
-		}
-		return resultList;
-	}
+	
 	
 	/**
 	 * Add a label to a task with the given id
@@ -1006,30 +828,7 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 	
-	private IDonResponse findLabel(String labelName) {
-		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		
-		for (IDonTask task : taskList) {
-			List<String> labels = task.getLabels();
-			for (String label : labels) {
-				if (label.equalsIgnoreCase(labelName)) {
-					response.addTask(task);
-					break;
-				}
-			}
-		}
-		if (!response.hasTasks()) {
-			// No task with given label found
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_LABEL_FAILED, labelName));
-			log.fine(String.format(MSG_SEARCH_LABEL_FAILED, labelName));
-		} else {
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
-		}
-		
-		return response;
-	}
+	
 
 	/**
 	 * Show the user help information
