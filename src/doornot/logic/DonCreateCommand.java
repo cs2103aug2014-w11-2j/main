@@ -5,6 +5,8 @@ import java.util.Calendar;
 
 
 
+
+import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
@@ -28,6 +30,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 	public DonCreateCommand(String title) {
 		type = AddType.FLOATING;
 		taskTitle = title;
+		generalCommandType = GeneralCommandType.ADD;
 	}
 
 	public DonCreateCommand(String title, Calendar deadline, boolean timeUsed) {
@@ -35,6 +38,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 		taskTitle = title;
 		startDate = deadline;
 		this.timeUsed = timeUsed;
+		generalCommandType = GeneralCommandType.ADD;
 	}
 	
 	public DonCreateCommand(String title, Calendar startDate, Calendar endDate, boolean timeUsed) {
@@ -43,6 +47,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.timeUsed = timeUsed;
+		generalCommandType = GeneralCommandType.ADD;
 	}
 	
 	/**

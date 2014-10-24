@@ -102,6 +102,8 @@ public abstract class AbstractDonCommand {
 	
 	protected CommandType commandType;
 	
+	protected GeneralCommandType generalCommandType;
+	
 	protected boolean executed = false;
 	
 	public abstract IDonResponse executeCommand(IDonStorage donStorage);
@@ -135,6 +137,10 @@ public abstract class AbstractDonCommand {
 	
 	public CommandType getType() {
 		return commandType;
+	}
+	
+	public GeneralCommandType getGeneralType() {
+		return generalCommandType;
 	}
 	
 }

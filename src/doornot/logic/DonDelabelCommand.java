@@ -2,6 +2,7 @@ package doornot.logic;
 
 import java.util.List;
 
+import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -20,12 +21,14 @@ public class DonDelabelCommand extends DonEditCommand {
 		searchID = id;
 		newLabel = label;
 		type = DelabelType.LABEL_ID;
+		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
 	public DonDelabelCommand(String title, String label) {
 		searchTitle = title;
 		newLabel = label;
 		type = DelabelType.LABEL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
 	/**

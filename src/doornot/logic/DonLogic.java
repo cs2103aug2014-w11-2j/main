@@ -177,12 +177,6 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	private IDonResponse getTasksToday() {
-		IDonResponse response;
-		response = findTaskRange(CalHelper.getTodayStart(), CalHelper.getTodayEnd(), FIND_INCOMPLETE);
-		return response;
-	}
-
 	@Override
 	public IDonResponse saveToDrive() {
 		boolean saveSuccess = donStorage.saveToDisk();
@@ -199,7 +193,7 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public IDonResponse initialize() {
-		return getTasksToday();
+		return donParser.parseCommand("today").executeCommand(donStorage);
 	}
 
 	/**
@@ -228,99 +222,7 @@ public class DonLogic implements IDonLogic {
 
 	
 
-	/**
-	 * Find tasks with the given name
-	 * 
-	 * @param name
-	 *            the name to search for
-	 * @return the response containing the tasks
-	 */
-	private IDonResponse findTask(String name) {
-		assert name!=null;
-		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			// Search for the given name/title without case sensitivity
-			if (task.getTitle().toLowerCase().contains(name.toLowerCase())) {
-				response.addTask(task);
-			}
-		}
-		if (response.getTasks().size() > 0) {
-			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			log.fine("Search success");
-		} else {
-			response.setResponseType(ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, name));
-			log.fine(String.format(MSG_SEARCH_TITLE_FAILED, name));
-		}
-		return response;
-	}
-
-
-	/**
-	 * Find tasks that begin within the given range of time. Either parameter
-	 * can be null to search for tasks before or after a date. For example if
-	 * startDate is null and endDate is set to 09102014, the method will return
-	 * all tasks from before 9th of October 2014. If startDate is 09102014 and
-	 * endDate is null, all tasks beginning after 9th of October 2014 will be
-	 * returned.
-	 * 
-	 * @param startDate
-	 *            the date to start searching from (inclusive)
-	 * @param endDate
-	 *            the latest possible start date of a task (inclusive)
-	 * @param completeType
-	 *            0 if the tasks found must be incomplete, 1 if it must be
-	 *            completed 2 if it can be complete or incomplete
-	 * @return the response containing the tasks
-	 */
-	private IDonResponse findTaskRange(Calendar startDate, Calendar endDate,
-			int completeType) {
-		assert !(startDate==null && endDate==null);
-		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-
-		for (IDonTask task : taskList) {
-			if (task.getType() == TaskType.FLOATING) {
-				// Floating tasks have no date.
-				continue;
-			}
-			// Ignore tasks that do not match the completion status to search
-			// for
-			if ((task.getStatus() && completeType == FIND_INCOMPLETE)
-					|| (!task.getStatus() && completeType == FIND_COMPLETE)) {
-				continue;
-			}
-			Calendar taskStart = task.getStartDate();
-			Calendar taskEnd = task.getEndDate();
-			if (startDate == null) {
-				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
-					response.addTask(task);
-				}
-			} else if (endDate == null) {
-				if (CalHelper.dateEqualOrAfter(taskStart, startDate)) {
-					response.addTask(task);
-				}
-			} else {
-				//If task is between date or is ongoing between the dates
-				if ((CalHelper.dateEqualOrAfter(taskStart, startDate)
-						&& CalHelper.dateEqualOrBefore(taskStart, endDate))
-						|| (CalHelper.dateEqualOrAfter(startDate, taskStart) && CalHelper.dateEqualOrBefore(startDate, taskEnd))
-						|| (CalHelper.dateEqualOrAfter(endDate, taskStart) && CalHelper.dateEqualOrBefore(endDate, taskEnd))) {
-					response.addTask(task);
-				}
-			}
-
-		}
-		if (response.getTasks().size() > 0) {
-			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			log.fine("Search success");
-		} else {
-			response.setResponseType(ResponseType.SEARCH_EMPTY);
-			log.fine("Search empty");
-		}
-		return response;
-	}
+	
 
 	/**
 	 * Find tasks given the ID
@@ -494,81 +396,7 @@ public class DonLogic implements IDonLogic {
 	
 	
 
-	/**
-	 * Show the user help information
-	 * 
-	 * @return response containing help messages
-	 */
-	private IDonResponse getHelp(AbstractDonCommand.CommandType commandType) {
-		// TODO: decide the format of the help
-		IDonResponse response = new DonResponse();
-		response.setResponseType(IDonResponse.ResponseType.HELP);
-
-		if (commandType == AbstractDonCommand.CommandType.HELP_GENERAL) {
-			// Give info on all commands available
-			response.addMessage("Welcome to DoOrNot. These are the available commands:");
-			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m");
-			response.addMessage("Type help command name to learn how to use the command!");
-		} else if (commandType == AbstractDonCommand.CommandType.HELP_ADD) {
-			// Help for add
-			response.addMessage("add / a: Adds a task to the todo list");
-			response.addMessage("Command format: add \"Task title\"");
-			response.addMessage("Command format: add \"Task title\" @ DD/MM/YYYY HHmm");
-			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DD/MM/YYYY HHmm");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
-			response.addMessage("Examples:");
-			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
-			response.addMessage("add \"Submit CS9842 assignment\" @ 18/11/2014 <-- Adds a task with a deadline at 18th of November 2014");
-			response.addMessage("add \"Talk by person\" from 05/08/2015 1500 to 05/08/2015 1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
-		} else if (commandType == AbstractDonCommand.CommandType.HELP_EDIT) {
-			// Help for edit
-			response.addMessage("edit / ed / e: Edits a task in the todo list");
-			response.addMessage("Command format: edit Task_id to \"New task title\"");
-			response.addMessage("Command format: edit \"Part of old Task title\" to \"New task title\"");
-			response.addMessage("Command format: edit Task_id to DD/MM/YYYY HHmm");
-			response.addMessage("Command format: edit \"Part of old Task title\" to DD/MM/YYYY HHmm");
-			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
-			response.addMessage("Command format: edit \"Part of old Task title\" to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
-			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
-			response.addMessage("Examples:");
-			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
-			response.addMessage("edit \"Do work\" to 17/01/2015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
-			response.addMessage("edit 14 to from 02/05/2015 to 03/05/2015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
-		} else if (commandType == AbstractDonCommand.CommandType.HELP_DELETE) {
-			// Help for delete
-			response.addMessage("del / d: Delete a task in the todo list");
-			response.addMessage("Command format: del Task_id");
-			response.addMessage("Command format: del \"Part of Task title\"");
-			response.addMessage("If multiple tasks are found with the given title, nothing will be deleted.");
-			response.addMessage("Examples:");
-			response.addMessage("del 22 <-- Deletes task 22");
-			response.addMessage("del \"Do work\" <-- Deletes the task containing \"Do work\" in the title");
-		} else if (commandType == AbstractDonCommand.CommandType.HELP_SEARCH) {
-			// Help for search
-			response.addMessage("search / s: Finds a task with the given ID, title or date");
-			response.addMessage("Command format: search Task_id");
-			response.addMessage("Command format: search \"Part of Task title\"");
-			response.addMessage("Command format: search 22/01/2016");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
-			response.addMessage("Examples:");
-			response.addMessage("search 22 <-- Searches for task 22");
-			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
-			response.addMessage("search 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
-		} else if (commandType == AbstractDonCommand.CommandType.HELP_UNDO || commandType == AbstractDonCommand.CommandType.HELP_REDO) {
-			//Help for undo
-			response.addMessage("undo : Undoes the previous action");
-			response.addMessage("redo : Performs the last undone action");
-			response.addMessage("Command format: undo/redo");
-			response.addMessage("Examples:");
-			response.addMessage("undo");
-			response.addMessage("redo");
-			response.addMessage("(What were you expecting?)");
-
-		}
-
-		return response;
-	}
+	
 
 	/****
 	 * Date helper methods

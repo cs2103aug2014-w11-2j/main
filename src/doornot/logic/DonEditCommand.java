@@ -3,6 +3,7 @@ package doornot.logic;
 import java.util.Calendar;
 import java.util.List;
 
+import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -23,7 +24,7 @@ public class DonEditCommand extends AbstractDonCommand {
 	protected IDonTask unchangedTask;
 	
 	protected DonEditCommand() {
-		
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -38,6 +39,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		type = EditType.ID_NAME;
 		searchID = id;
 		this.newTitle = newTitle;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -52,6 +54,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		type = EditType.NAME_NAME;
 		searchTitle = title;
 		this.newTitle = newTitle;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -67,6 +70,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		searchID = id;
 		this.newDeadline = newDeadline;
 		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -82,6 +86,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		searchTitle = title;
 		this.newDeadline = newDeadline;
 		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -101,6 +106,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		this.newStartDate = newStartDate;
 		this.newEndDate = newEndDate;
 		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
@@ -120,6 +126,7 @@ public class DonEditCommand extends AbstractDonCommand {
 		this.newStartDate = newStartDate;
 		this.newEndDate = newEndDate;
 		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
 	}
 
 	/**
