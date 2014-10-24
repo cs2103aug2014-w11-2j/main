@@ -16,6 +16,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 import doornot.logic.DonDeleteCommand;
 import doornot.logic.DonFindCommand;
 import doornot.logic.DonFindCommand.SearchType;
+import doornot.logic.DonAddLabelCommand;
 import doornot.logic.DonCreateCommand;
 import doornot.logic.DonEditCommand;
 import doornot.logic.DonMarkCommand;
@@ -482,9 +483,9 @@ import doornot.logic.DonMarkCommand;
 			
 			// get rid of xxx
 			String labelName = parameters.replaceFirst(getIDReg, "").trim();
+			dCommand = new DonAddLabelCommand(ID, extractName(labelName));
 			dCommand.setType(CommandType.LABEL_ID);
-			dCommand.setID(ID);
-			dCommand.setLabel(extractName(labelName));
+
 			
 		}else if(isRightCommand(parameters, labelNameReg)){
 			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
@@ -493,9 +494,8 @@ import doornot.logic.DonMarkCommand;
 			String labelName = names[1];
 			
 			if(isGoodName(taskName)&&isGoodName(labelName)){
+				dCommand = new DonAddLabelCommand(taskName, labelName);
 				dCommand.setType(CommandType.LABEL_NAME);
-				dCommand.setName(taskName);
-				dCommand.setLabel(labelName);
 				
 			}else{
 				dCommand.setType(CommandType.INVALID_FORMAT);

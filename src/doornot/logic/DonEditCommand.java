@@ -1,13 +1,11 @@
 package doornot.logic;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
-import doornot.storage.IDonTask.TaskType;
 
 public class DonEditCommand extends AbstractDonCommand {
 
@@ -17,12 +15,16 @@ public class DonEditCommand extends AbstractDonCommand {
 
 	private EditType type;
 
-	private int searchID;
-	private String searchTitle;
+	protected int searchID;
+	protected String searchTitle;
 	private String newTitle;
 	private Calendar newDeadline, newStartDate, newEndDate;
 	private boolean isTimeUsed, isStartDate = true;
-	private IDonTask unchangedTask;
+	protected IDonTask unchangedTask;
+	
+	protected DonEditCommand() {
+		
+	}
 
 	/**
 	 * Edit title by ID

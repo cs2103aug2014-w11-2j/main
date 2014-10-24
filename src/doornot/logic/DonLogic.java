@@ -47,14 +47,12 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
 	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";
-	private static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	
 
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
 	
-	private static final String PHRASE_COMPLETE = "complete";
-	private static final String PHRASE_INCOMPLETE = "incomplete";
+	
 
 	private static final int FIND_INCOMPLETE = 0;
 	private static final int FIND_COMPLETE = 1;
@@ -137,19 +135,7 @@ public class DonLogic implements IDonLogic {
 		AbstractDonCommand.CommandType commandType = dCommand.getType();
 		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
 		IDonResponse response = null;
-		if (commandType == AbstractDonCommand.CommandType.DELETE_ID) {
-			response = deleteTask(dCommand.getID());
-
-		} else if (commandType == AbstractDonCommand.CommandType.DELETE) {
-			response = deleteTask(dCommand.getName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.MARK_ID) {
-			response = toggleStatus(dCommand.getID());
-
-		} else if (commandType == AbstractDonCommand.CommandType.MARK) {
-			response = toggleStatus(dCommand.getName());
-
-		} else if (commandType == AbstractDonCommand.CommandType.UNDO) {
+		if (commandType == AbstractDonCommand.CommandType.UNDO) {
 			response = undoLastAction();
 
 		} else if (genCommandType == AbstractDonCommand.GeneralCommandType.HELP) {
@@ -176,9 +162,6 @@ public class DonLogic implements IDonLogic {
 		} else if(commandType == AbstractDonCommand.CommandType.DELABEL_NAME) {
 			response = removeLabel(dCommand.getName(), dCommand.getLabel());
 			
-		} else if(commandType == AbstractDonCommand.CommandType.SEARCH_LABEL) {
-			response = findLabel(dCommand.getLabel());
-
 		} else {
 			// No relevant action could be executed
 			response = new DonResponse();
@@ -506,71 +489,7 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	/**
-	 * Toggles the "done" status of the task with the given ID
-	 * 
-	 * @param id
-	 *            the id of the task to change
-	 * @return the response
-	 */
-	private IDonResponse toggleStatus(int id) {
-		IDonResponse response = new DonResponse();
-		IDonTask task = donStorage.getTask(id);
-		if (task == null) {
-			// No task with ID found
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
-			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
-		} else {
-			IDonTask unchangedTask = task.clone();
-			boolean taskCompleted = !task.getStatus();
-			task.setStatus(taskCompleted);
-
-			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
-			response.addTask(task);
-			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, id,
-					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
-			log.fine(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, id,
-					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
-			// Add edit action to history
-			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
-			affectedTasks.add(unchangedTask);
-			actionPast.push(new DonAction(AbstractDonCommand.CommandType.MARK_ID, AbstractDonCommand.GeneralCommandType.MARK,
-					affectedTasks));
-			actionFuture.clear();
-		}
-		return response;
-	}
-
-	/**
-	 * Toggles the "done" status of the task containing the given title
-	 * 
-	 * @param title
-	 *            the title of the task to change
-	 * @return the response
-	 */
-	private IDonResponse toggleStatus(String title) {
-		assert title!=null;
-		IDonResponse response = new DonResponse();
-		IDonResponse searchResponse = findTask(title);
-
-		if (searchResponse.getTasks().size() > 1) {
-			response.setResponseType(ResponseType.EDIT_FAILURE);
-			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
-					title));
-			log.fine(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK, title));
-			response.copyTasks(searchResponse);
-		} else if (!searchResponse.hasTasks()) {
-			// No task with the name found, return the response of the search
-			response = searchResponse;
-		} else {
-			// 1 task was found
-			IDonTask task = searchResponse.getTasks().get(0);
-			response = toggleStatus(task.getID());
-		}
-
-		return response;
-	}
+	
 
 	
 	

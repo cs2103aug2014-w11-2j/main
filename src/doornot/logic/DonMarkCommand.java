@@ -1,22 +1,18 @@
 package doornot.logic;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 
-public class DonMarkCommand extends AbstractDonCommand {
+public class DonMarkCommand extends DonEditCommand {
 
 	public enum MarkType {
 		MARK_ID,
 		MARK_STRING
 	}
 	private MarkType type;
-	private int searchID;
-	private String searchString;
-	private IDonTask unchangedTask;
 	
 	/**
 	 * Mark a task with the given id
@@ -32,7 +28,7 @@ public class DonMarkCommand extends AbstractDonCommand {
 	 * @param string the title of the task
 	 */
 	public DonMarkCommand(String string) {
-		searchString = string;
+		searchTitle = string;
 		type = MarkType.MARK_STRING;
 	}
 	
@@ -73,21 +69,21 @@ public class DonMarkCommand extends AbstractDonCommand {
 	 * @return the response
 	 */
 	private IDonResponse toggleStatusByTitle(IDonStorage donStorage) {
-		assert searchString!=null;
+		assert searchTitle!=null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> foundTasks = donStorage.getTaskByName(searchString);
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
-					searchString));
+					searchTitle));
 			response.setTaskList(foundTasks);
 		} else if (foundTasks.isEmpty()) {
 			// No task with the name found, return the response of the search
-			response = createSearchFailedResponse(searchString);
+			response = createSearchFailedResponse(searchTitle);
 		} else {
 			// 1 task was found
-			IDonTask task = foundTasks.get(0);
+			searchID = foundTasks.get(0).getID();
 			response = toggleStatusByID(donStorage);
 		}
 
@@ -105,26 +101,6 @@ public class DonMarkCommand extends AbstractDonCommand {
 		
 		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {
 			executed = true;
-		}
-		
-		return response;
-	}
-
-	@Override
-	public IDonResponse undoCommand(IDonStorage donStorage) {
-		IDonResponse response = null;
-		if (!executed) {
-			return null;
-		}
-		
-		IDonTask changedTask = donStorage.getTask(searchID);
-		if (changedTask == null) {
-			// Could not find for some reason.
-			response = createUndoFailureResponse();
-		} else {
-			changedTask.copyTaskDetails(unchangedTask);
-			response = createUndoSuccessResponse();
-			executed = false;
 		}
 		
 		return response;
