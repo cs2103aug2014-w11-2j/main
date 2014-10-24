@@ -88,7 +88,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			response = createSearchFailedResponse(searchTitle);
 		} else {
 			// 1 task was found
-			IDonTask task = foundList.get(0);
+			searchID = foundList.get(0).getID();
 			response = deleteTaskByID(donStorage);
 		}
 
@@ -112,8 +112,17 @@ public class DonDeleteCommand extends AbstractDonCommand {
 
 	@Override
 	public IDonResponse undoCommand(IDonStorage donStorage) {
-		// TODO Auto-generated method stub
-		return null;
+		//Perform an add
+		assert deletedTask!=null;
+		int id = donStorage.addTask(deletedTask);
+		IDonResponse response = null;
+		if(id != -1) {
+			response = createUndoSuccessResponse();
+			executed = false;
+		} else {
+			response = createUndoFailureResponse();
+		}
+		return response;
 	}
 
 }

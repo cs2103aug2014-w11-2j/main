@@ -41,8 +41,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
 	private static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
 	private static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
-	private static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
-	private static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
+	
 	
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
@@ -274,49 +273,6 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	/**
-	 * Find tasks starting/occurring on a given date
-	 * 
-	 * @param date
-	 *            the date to search for
-	 * @return the response containing the tasks
-	 */
-	private IDonResponse findTask(Calendar date) {
-		assert date!=null;
-		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			// Search for the given name/title without case sensitivity
-			TaskType taskType = task.getType();
-			if (taskType == TaskType.FLOATING) {
-				// Floating tasks have no date.
-				continue;
-			}
-			Calendar taskDate = task.getStartDate();
-			Calendar taskEndDate = task.getEndDate();
-			// If the date falls within the start and end date of an event, the
-			// event is returned as well
-			if (CalHelper.isSameDay(taskDate, date)
-					|| (taskType == TaskType.DURATION && CalHelper.isBetweenDates(date,
-							taskDate, taskEndDate))) {
-				response.addTask(task);
-			}
-		}
-		if (response.getTasks().size() > 0) {
-			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			log.fine("Search success");
-		} else {
-			response.setResponseType(ResponseType.SEARCH_EMPTY);
-			String dateString = date.get(Calendar.DATE)
-					+ " "
-					+ date.getDisplayName(Calendar.MONTH, Calendar.LONG,
-							Locale.ENGLISH) + " " + date.get(Calendar.YEAR);
-			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
-					dateString));
-			log.fine(String.format(MSG_SEARCH_DATE_FAILED, dateString));
-		}
-		return response;
-	}
 
 	/**
 	 * Find tasks that begin within the given range of time. Either parameter
@@ -406,72 +362,7 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	/**
-	 * Deletes the task with the given ID
-	 * 
-	 * @param id
-	 *            the id of the task to delete
-	 * @return the response containing the deletion status
-	 */
-	private IDonResponse deleteTask(int id) {
-		DonResponse response = new DonResponse();
-		IDonTask task = donStorage.getTask(id);
-		if (task == null) {
-			// No task with ID found
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
-		} else {
-			boolean deleteStatus = donStorage.removeTask(id);
-			if (deleteStatus) {
-				// Deleted
-				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
-				response.addMessage(MSG_DELETE_SUCCESS);
-				response.addTask(task);
-
-				// Add delete action to history
-				ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
-				affectedTasks.add(task.clone());
-				actionPast.push(new DonAction(
-						AbstractDonCommand.CommandType.DELETE, AbstractDonCommand.GeneralCommandType.DELETE, affectedTasks));
-				actionFuture.clear();
-			} else {
-				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
-				response.addMessage(MSG_DELETE_FAILED);
-			}
-		}
-		return response;
-	}
-
-	/**
-	 * Deletes the task with the given title. If more than 1 task is found, the
-	 * search results will be returned and nothing will be deleted.
-	 * 
-	 * @param title
-	 *            the title of the task to search for to delete
-	 * @return the response containing the deletion status
-	 */
-	private IDonResponse deleteTask(String title) {
-		assert title!=null;
-		IDonResponse response = new DonResponse();
-
-		IDonResponse searchResponse = findTask(title);
-
-		if (searchResponse.getTasks().size() > 1) {
-			response.setResponseType(ResponseType.DEL_FAILURE);
-			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
-					title));
-			response.copyTasks(searchResponse);
-		} else if (!searchResponse.hasTasks()) {
-			// No task with the name found, return the response of the search
-			response = searchResponse;
-		} else {
-			// 1 task was found
-			IDonTask task = searchResponse.getTasks().get(0);
-			response = deleteTask(task.getID());
-		}
-
-		return response;
-	}
+	
 
 	
 

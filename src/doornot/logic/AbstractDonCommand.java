@@ -27,9 +27,12 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	protected static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
+	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";
+	protected static final String PHRASE_COMPLETE = "complete";
+	protected static final String PHRASE_INCOMPLETE = "incomplete";
 	
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;

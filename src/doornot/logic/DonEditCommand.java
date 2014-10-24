@@ -367,7 +367,6 @@ public class DonEditCommand extends AbstractDonCommand {
 			response = editStartEndByTitle(donStorage);
 		}
 
-		// TODO check for validity before setting executed
 		if (response.getResponseType() == ResponseType.EDIT_SUCCESS) {
 			executed = true;
 		}

@@ -13,10 +13,12 @@ import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
+import doornot.logic.DonDeleteCommand;
 import doornot.logic.DonFindCommand;
 import doornot.logic.DonFindCommand.SearchType;
 import doornot.logic.DonCreateCommand;
 import doornot.logic.DonEditCommand;
+import doornot.logic.DonMarkCommand;
 /**
  * DonParser parses the commands and creates a DonCommand
  * 
@@ -333,13 +335,13 @@ import doornot.logic.DonEditCommand;
 		String parameters = removeFirstWord(userCommand);
 		
 		if(isTaskName(parameters)){
+			dCommand = new DonMarkCommand(extractName(parameters));
 			dCommand.setType(CommandType.MARK);
-			dCommand.setName(extractName(parameters));
 		}else{
 			try{
 				int ID = Integer.parseInt(parameters);
+				dCommand = new DonMarkCommand(ID);
 				dCommand.setType(CommandType.MARK_ID);
-				dCommand.setID(ID);
 			
 			}catch(Exception e){
 				dCommand.setType(CommandType.INVALID_FORMAT);
@@ -354,16 +356,16 @@ import doornot.logic.DonEditCommand;
 	private void setDeleteCommand(){
 		String parameters = removeFirstWord(userCommand);
 		
-		if(isTaskName(parameters)){
+		if (isTaskName(parameters)) {
+			dCommand = new DonDeleteCommand(extractName(parameters));
 			dCommand.setType(CommandType.DELETE);
-			dCommand.setName(extractName(parameters));
-		}else{
-			try{
+		} else {
+			try {
 				int ID = Integer.parseInt(parameters);
+				dCommand = new DonDeleteCommand(ID);
 				dCommand.setType(CommandType.DELETE_ID);
-				dCommand.setID(ID);
 			
-			}catch(Exception e){
+			} catch(Exception e) {
 				dCommand.setType(CommandType.INVALID_FORMAT);
 			}
 		}
