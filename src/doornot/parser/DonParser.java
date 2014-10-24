@@ -11,8 +11,8 @@ import com.joestelmach.natty.*;
 
 import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand;
-import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
+import doornot.logic.DonDelabelCommand;
 import doornot.logic.DonDeleteCommand;
 import doornot.logic.DonFindCommand;
 import doornot.logic.DonFindCommand.SearchType;
@@ -106,7 +106,7 @@ import doornot.logic.DonMarkCommand;
 	@Override
 	public AbstractDonCommand parseCommand(String command) {
 		
-		dCommand = null;//new AbstractDonCommand();
+		dCommand = null;
 		userCommand = command;
 		setDonCommand();
 		return dCommand;
@@ -138,10 +138,13 @@ import doornot.logic.DonMarkCommand;
 		}else if(commandWord.equalsIgnoreCase("slabel") || commandWord.equalsIgnoreCase("sl")){
 			setSlabelCommand();
 		}else if(commandWord.equalsIgnoreCase("sud")){
-			dCommand.setType(CommandType.SEARCH_UNDONE);
+			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
+			//dCommand.setType(CommandType.SEARCH_UNDONE);
 		}else if(commandWord.equalsIgnoreCase("today")){
-			dCommand.setType(CommandType.TODAY);
+			dCommand = new DonFindCommand(SearchType.TODAY);
+			//dCommand.setType(CommandType.TODAY);
 		}else if(commandWord.equalsIgnoreCase("od") || commandWord.equalsIgnoreCase("overdue")){
+			dCommand = new DonFindCommand(SearchType.OVERDUE);
 			dCommand.setType(CommandType.OVERDUE);
 		}else if(commandWord.equalsIgnoreCase("undo")){
 			dCommand.setType(CommandType.UNDO);
@@ -172,14 +175,12 @@ import doornot.logic.DonMarkCommand;
 			
 			if (isGoodName(taskName)) {
 				//Floating task
-				dCommand.setType(CommandType.ADD_TASK);
-				
 				// get rid of "blah" at
 				String date = parameters.replaceFirst(addTaskReg, "").trim();
 				Calendar deadline = Calendar.getInstance();
 				boolean hasSetTime = setNewDeadlineForCommand(date, deadline);
 				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);
-				
+				dCommand.setType(CommandType.ADD_TASK);
 			} else {
 
 				dCommand.setType(CommandType.INVALID_FORMAT);
@@ -191,15 +192,13 @@ import doornot.logic.DonMarkCommand;
 			// get blah
 			String taskName = getTaskName(parameters);
 			if (isGoodName(taskName)) {
-				dCommand.setType(CommandType.ADD_EVENT);
-				
 				// get rid of "blah" from
 				String date = parameters.replaceFirst(addEventReg, "").trim();
 				Calendar startDate = Calendar.getInstance(), endDate = Calendar.getInstance();
 				boolean hasSetTime = setStartAndEndForCommand(date, startDate, endDate);
 				
 				dCommand = new DonCreateCommand(taskName, startDate, endDate, hasSetTime);
-				
+				dCommand.setType(CommandType.ADD_EVENT);
 			} else {
 
 				dCommand.setType(CommandType.INVALID_FORMAT);
@@ -447,9 +446,8 @@ import doornot.logic.DonMarkCommand;
 
 			// get rid of xxx
 			String labelName = parameters.replaceFirst(getIDReg, "").trim();
+			dCommand = new DonDelabelCommand(ID, extractName(labelName));
 			dCommand.setType(CommandType.DELABEL_ID);
-			dCommand.setID(ID);
-			dCommand.setLabel(extractName(labelName));
 
 		}else if(isRightCommand(parameters, labelNameReg)){
 			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
@@ -458,9 +456,8 @@ import doornot.logic.DonMarkCommand;
 			String labelName = names[1];
 
 			if(isGoodName(taskName)&&isGoodName(labelName)){
+				dCommand = new DonDelabelCommand(taskName, labelName);
 				dCommand.setType(CommandType.DELABEL_NAME);
-				dCommand.setName(taskName);
-				dCommand.setLabel(labelName);
 
 			}else{
 				dCommand.setType(CommandType.INVALID_FORMAT);

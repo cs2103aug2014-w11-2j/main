@@ -1,6 +1,5 @@
 package doornot.logic;
 
-import java.util.Calendar;
 
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
@@ -28,6 +27,8 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
 	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
+	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
+	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
 	
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";

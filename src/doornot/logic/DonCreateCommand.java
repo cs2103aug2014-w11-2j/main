@@ -97,11 +97,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-
-			// Add add action to history
-			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
-			affectedTasks.add(task.clone());
-
+			response.addTask(task);
 		}
 		return response;
 	}
@@ -129,10 +125,6 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
 			response.addTask(task);
-
-			// Add add action to history
-			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
-			affectedTasks.add(task.clone());
 
 		}
 		return response;
