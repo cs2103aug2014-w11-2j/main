@@ -71,9 +71,6 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
 			response.addTask(task);
-			// Add add action to history
-			ArrayList<IDonTask> affectedTasks = new ArrayList<IDonTask>();
-			affectedTasks.add(task.clone());
 			createdTask = task.clone();
 		}
 		return response;
@@ -103,6 +100,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
 			response.addTask(task);
+			createdTask = task.clone();
 		}
 		return response;
 	}
@@ -130,15 +128,32 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
 			response.addTask(task);
-
+			createdTask = task.clone();
+		}
+		return response;
+	}
+	
+	private IDonResponse recreateTask(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		int taskID = donStorage.addTask(createdTask);
+		if(taskID != -1) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
+			response.addTask(createdTask);
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
 		}
 		return response;
 	}
 	
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
+		assert !executed;
 		IDonResponse response = null;
-		if (type == AddType.FLOATING) {
+		if (createdTask != null) {
+			//The task has previously been created. Execute is being run in the context
+			//of a redo. Simply readd the createdTask
+			response = recreateTask(donStorage);
+		} else if (type == AddType.FLOATING) {
 			response = createFloatingTask(donStorage);
 		} else if (type == AddType.DEADLINE) {
 			response = createDeadlineTask(donStorage);

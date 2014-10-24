@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import doornot.CalHelper;
+import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
@@ -38,25 +39,14 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	
 	private static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
-	private static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
-	private static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
-	private static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	
 	
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
-	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";
-	private static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
-	
+	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";	
 
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
-	
-	
-
-	private static final int FIND_INCOMPLETE = 0;
-	private static final int FIND_COMPLETE = 1;
-	private static final int FIND_ALL = 2;
 
 	private IDonStorage donStorage;
 	private IDonParser donParser;
@@ -127,10 +117,27 @@ public class DonLogic implements IDonLogic {
 		}
 		AbstractDonCommand dCommand = donParser.parseCommand(command);
 		
-		//TODO only add if the command has been successful (do a check)
-		commandPast.add(dCommand);
+		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
+		IDonResponse response = null;
+		if (genCommandType == GeneralCommandType.UNDO) {
+			response = undoLastAction();
+		} else if (genCommandType == GeneralCommandType.REDO) {
+			response = redoAction();
+		} else if (genCommandType == GeneralCommandType.INVALID) {
+			//TODO might have to split it into different invalids within GeneralCommandType
+			response = createInvalidFormatResponse();
+		} else {
+			response = dCommand.executeCommand(donStorage);
+			if(dCommand.hasExecuted()) {
+				commandPast.add(dCommand);
+				commandFuture.clear(); //If a change has been made, the redo stack needs to be cleared
+			}
+		}
 		
-		IDonResponse response = dCommand.executeCommand(donStorage);
+		//TODO only add if the command has been successful (do a check)
+		
+		
+		
 		/*
 		AbstractDonCommand.CommandType commandType = dCommand.getType();
 		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
@@ -220,9 +227,6 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-	
-
-	
 
 	/**
 	 * Find tasks given the ID
@@ -258,66 +262,24 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse undoLastAction() {
 		IDonResponse response = new DonResponse();
-		if (actionPast.size() <= 0) {
+		
+		if(commandPast.size()<=0) {
 			response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 			response.addMessage(MSG_UNDO_NO_ACTIONS);
 			log.fine(MSG_UNDO_NO_ACTIONS);
 		} else {
-			DonAction lastAction = actionPast.pop();
-			int changesReversed = 0;
-			AbstractDonCommand.GeneralCommandType generalActionType = lastAction.getGeneralType();
-			if (generalActionType == AbstractDonCommand.GeneralCommandType.ADD) {
-				// Perform a delete (reverse of Add)
-				for (IDonTask addedTask : lastAction.getAffectedTasks()) {
-					int id = addedTask.getID();
-					boolean deleteSuccess = donStorage.removeTask(id);
-					if (deleteSuccess) {
-						changesReversed++;
-					} else {
-						response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
-						response.addMessage(MSG_UNDO_NO_ACTIONS);
-						log.fine(MSG_UNDO_NO_ACTIONS);
-						return response;
-					}
-				}
-
-			} else if (generalActionType == AbstractDonCommand.GeneralCommandType.DELETE) {
-				// Perform an add (reverse of Delete)
-				for (IDonTask removedTask : lastAction.getAffectedTasks()) {
-					int id = donStorage.addTask(removedTask);
-					if (id != -1) {
-						changesReversed++;
-					}
-				}
-			} else if (generalActionType == AbstractDonCommand.GeneralCommandType.EDIT
-					|| generalActionType == AbstractDonCommand.GeneralCommandType.MARK) {
-				// Replace the edited tasks with their previous properties
-				List<IDonTask> redoTaskList = new ArrayList<IDonTask>();
-				for (IDonTask editedTask : lastAction.getAffectedTasks()) {
-					int id = editedTask.getID();
-					IDonResponse searchResponse = findTask(id);
-					//Clone the tasks which will have undo applied on them for redo to work
-					IDonTask affectedTask = searchResponse.getTasks().get(0);
-					redoTaskList.add(affectedTask.clone());
-					affectedTask.copyTaskDetails(editedTask);
-					changesReversed++;
-					
-				}
-				lastAction = new DonAction(lastAction.getActionType(), lastAction.getGeneralType(), redoTaskList);
-			} else {
-				response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
-				response.addMessage(MSG_UNDO_NO_ACTIONS);
-				log.fine(MSG_UNDO_NO_ACTIONS);
-				return response;
+			AbstractDonCommand lastCommand = commandPast.pop();
+			assert lastCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
+			IDonResponse undoResponse = lastCommand.undoCommand(donStorage);
+			if(!lastCommand.hasExecuted()) {
+				//Command undone
+				commandFuture.add(lastCommand);
+				
+				response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
+				response.addMessage(String.format(MSG_UNDO_SUCCESS, 1));
 			}
-			//Add undone action to the future stack for redo to use
-			actionFuture.add(lastAction); 
-
-			response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-			response.addMessage(String
-					.format(MSG_UNDO_SUCCESS, changesReversed));
-			log.fine(String.format(MSG_UNDO_SUCCESS, changesReversed));
 		}
+
 		return response;
 	}
 	
@@ -328,11 +290,23 @@ public class DonLogic implements IDonLogic {
 	 */
 	private IDonResponse redoAction() {
 		IDonResponse response = new DonResponse();
-		if (actionFuture.size() <= 0) {
+		
+		if (commandFuture.size() <= 0) {
 			response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
 			response.addMessage(MSG_REDO_NO_ACTIONS);
 			log.fine(MSG_REDO_NO_ACTIONS);
 		} else {
+			AbstractDonCommand nextCommand = commandFuture.pop();
+			assert !nextCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
+			IDonResponse redoResponse = nextCommand.executeCommand(donStorage);
+			if(nextCommand.hasExecuted()) {
+				//Command redone
+				commandPast.add(nextCommand);
+				
+				response.setResponseType(IDonResponse.ResponseType.REDO_SUCCESS);
+				response.addMessage(String.format(MSG_REDO_SUCCESS, 1));
+			}
+			/*
 			DonAction nextAction = actionFuture.pop();
 			int changesReversed = 0;
 			AbstractDonCommand.GeneralCommandType generalActionType = nextAction.getGeneralType();
@@ -387,6 +361,7 @@ public class DonLogic implements IDonLogic {
 			response.addMessage(String
 					.format(MSG_REDO_SUCCESS, changesReversed));
 			log.fine(String.format(MSG_REDO_SUCCESS, changesReversed));
+			*/
 		}
 		return response;
 	}

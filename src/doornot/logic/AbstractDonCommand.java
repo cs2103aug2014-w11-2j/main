@@ -104,7 +104,7 @@ public abstract class AbstractDonCommand {
 	
 	protected GeneralCommandType generalCommandType;
 	
-	protected boolean executed = false;
+	protected boolean executed = false; //Set to true when execution has finished to allow undo to take place
 	
 	public abstract IDonResponse executeCommand(IDonStorage donStorage);
 	
@@ -141,6 +141,10 @@ public abstract class AbstractDonCommand {
 	
 	public GeneralCommandType getGeneralType() {
 		return generalCommandType;
+	}
+	
+	public boolean hasExecuted() {
+		return executed;
 	}
 	
 }

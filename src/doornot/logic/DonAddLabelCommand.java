@@ -19,12 +19,14 @@ public class DonAddLabelCommand extends DonEditCommand {
 		searchID = id;
 		newLabel = label;
 		type = AddLabelType.LABEL_ID;
+		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
 	public DonAddLabelCommand(String title, String label) {
 		searchTitle = title;
 		newLabel = label;
 		type = AddLabelType.LABEL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
 	/**
