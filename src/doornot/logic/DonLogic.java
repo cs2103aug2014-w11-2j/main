@@ -1,11 +1,7 @@
 package doornot.logic;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Stack;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -13,16 +9,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
-import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
-import doornot.storage.IDonTask.TaskType;
+
 
 /**
  * DonLogic - Class for handling the logic of the program
@@ -37,10 +31,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
-	
-	private static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
-	
-	
+
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
@@ -53,7 +44,6 @@ public class DonLogic implements IDonLogic {
 
 	//actionPast contains the actions to undo, actionFuture to redo
 	//If a new action that performs modifications is made, actionFuture has to be cleared.
-	private Stack<DonAction> actionPast, actionFuture;
 	private Stack<AbstractDonCommand> commandPast, commandFuture;
 
 	private final static Logger log = Logger
@@ -62,8 +52,6 @@ public class DonLogic implements IDonLogic {
 	public DonLogic() {
 		donStorage = new DonStorage();
 		donParser = new DonParser();
-		actionPast = new Stack<DonAction>();
-		actionFuture = new Stack<DonAction>();
 		
 		commandPast = new Stack<AbstractDonCommand>();
 		commandFuture = new Stack<AbstractDonCommand>();
@@ -81,8 +69,6 @@ public class DonLogic implements IDonLogic {
 	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
 		donStorage = storage;
 		donParser = parser;
-		actionPast = new Stack<DonAction>();
-		actionFuture = new Stack<DonAction>();
 		
 		commandPast = new Stack<AbstractDonCommand>();
 		commandFuture = new Stack<AbstractDonCommand>();
@@ -123,7 +109,7 @@ public class DonLogic implements IDonLogic {
 			response = undoLastAction();
 		} else if (genCommandType == GeneralCommandType.REDO) {
 			response = redoAction();
-		} else if (genCommandType == GeneralCommandType.INVALID) {
+		} else if (genCommandType == GeneralCommandType.INVALID_FORMAT) {
 			//TODO might have to split it into different invalids within GeneralCommandType
 			response = createInvalidFormatResponse();
 		} else {
@@ -227,34 +213,6 @@ public class DonLogic implements IDonLogic {
 		return response;
 	}
 
-
-	/**
-	 * Find tasks given the ID
-	 * 
-	 * @param id
-	 *            the id to search for
-	 * @return the response containing the tasks
-	 */
-	private IDonResponse findTask(int id) {
-		IDonResponse response = new DonResponse();
-		IDonTask task = donStorage.getTask(id);
-		if (task == null) {
-			// No task with given ID found
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, id));
-			log.fine(String.format(MSG_SEARCH_ID_FAILED, id));
-		} else {
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
-			log.fine("Search success");
-			response.addTask(task);
-		}
-		return response;
-	}
-
-	
-
-	
-
 	/**
 	 * Undoes the last action
 	 * 
@@ -270,7 +228,7 @@ public class DonLogic implements IDonLogic {
 		} else {
 			AbstractDonCommand lastCommand = commandPast.pop();
 			assert lastCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
-			IDonResponse undoResponse = lastCommand.undoCommand(donStorage);
+			lastCommand.undoCommand(donStorage);
 			if(!lastCommand.hasExecuted()) {
 				//Command undone
 				commandFuture.add(lastCommand);
@@ -298,7 +256,7 @@ public class DonLogic implements IDonLogic {
 		} else {
 			AbstractDonCommand nextCommand = commandFuture.pop();
 			assert !nextCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
-			IDonResponse redoResponse = nextCommand.executeCommand(donStorage);
+			nextCommand.executeCommand(donStorage);
 			if(nextCommand.hasExecuted()) {
 				//Command redone
 				commandPast.add(nextCommand);
@@ -306,107 +264,11 @@ public class DonLogic implements IDonLogic {
 				response.setResponseType(IDonResponse.ResponseType.REDO_SUCCESS);
 				response.addMessage(String.format(MSG_REDO_SUCCESS, 1));
 			}
-			/*
-			DonAction nextAction = actionFuture.pop();
-			int changesReversed = 0;
-			AbstractDonCommand.GeneralCommandType generalActionType = nextAction.getGeneralType();
-			if (generalActionType == AbstractDonCommand.GeneralCommandType.ADD) {
-				// Perform an add
-				for (IDonTask addedTask : nextAction.getAffectedTasks()) {
-					int id = donStorage.addTask(addedTask);
-					if (id != -1) {
-						changesReversed++;
-					}
-				}
 
-			} else if (generalActionType == AbstractDonCommand.GeneralCommandType.DELETE) {
-				// Perform a delete
-				for (IDonTask deletedTask : nextAction.getAffectedTasks()) {
-					int id = deletedTask.getID();
-					boolean deleteSuccess = donStorage.removeTask(id);
-					if (deleteSuccess) {
-						changesReversed++;
-					} else {
-						response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
-						response.addMessage(MSG_REDO_NO_ACTIONS);
-						log.fine(MSG_REDO_NO_ACTIONS);
-						return response;
-					}
-				}
-			} else if (generalActionType == AbstractDonCommand.GeneralCommandType.EDIT
-					|| generalActionType == AbstractDonCommand.GeneralCommandType.MARK) {
-				// Replace the edited tasks with their previous properties
-				List<IDonTask> undoTaskList = new ArrayList<IDonTask>();
-				for (IDonTask editedTask : nextAction.getAffectedTasks()) {
-					int id = editedTask.getID();
-					IDonResponse searchResponse = findTask(id);
-					//Clone the tasks which will have redo applied on them for undo to work
-					IDonTask affectedTask = searchResponse.getTasks().get(0);
-					undoTaskList.add(affectedTask.clone());
-					affectedTask.copyTaskDetails(editedTask);
-					changesReversed++;
-					
-				}
-				nextAction = new DonAction(nextAction.getActionType(), nextAction.getGeneralType(), undoTaskList);
-			} else {
-				response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
-				response.addMessage(MSG_REDO_NO_ACTIONS);
-				log.fine(MSG_REDO_NO_ACTIONS);
-				return response;
-			}
-			//Add redone action to the future stack for undo to use
-			actionPast.add(nextAction); 
-
-			response.setResponseType(IDonResponse.ResponseType.REDO_SUCCESS);
-			response.addMessage(String
-					.format(MSG_REDO_SUCCESS, changesReversed));
-			log.fine(String.format(MSG_REDO_SUCCESS, changesReversed));
-			*/
 		}
 		return response;
 	}
 
-	
-	
-	
-	
-
-	
-
-	/****
-	 * Date helper methods
-	 ****/
-
-	
-	
-
-	/**
-	 * Keeps track of an action performed the user for use with the undo command
-	 */
-	private class DonAction {
-		private AbstractDonCommand.GeneralCommandType generalType;
-		private AbstractDonCommand.CommandType actionType;
-		private List<IDonTask> affectedTasks;
-
-		public DonAction(AbstractDonCommand.CommandType type, AbstractDonCommand.GeneralCommandType genType, List<IDonTask> tasks) {
-			actionType = type;
-			generalType = genType;
-			affectedTasks = tasks;
-		}
-
-		public AbstractDonCommand.CommandType getActionType() {
-			return actionType;
-		}
-		
-		public AbstractDonCommand.GeneralCommandType getGeneralType() {
-			return generalType;
-		}
-
-		public List<IDonTask> getAffectedTasks() {
-			return affectedTasks;
-		}
-
-	}
 
 	@Override
 	public List<IDonTask> getTaskList() {

@@ -1,13 +1,17 @@
 package doornot.parser;
 import static org.junit.Assert.*;
 
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import doornot.CalHelper;
+import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.DonCommand;
 import doornot.logic.AbstractDonCommand.CommandType;
+import doornot.logic.DonCreateCommand;
 /**
  * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand
@@ -16,7 +20,7 @@ import doornot.logic.AbstractDonCommand.CommandType;
 public class DonParserTest {
 
 	private static DonParser parser;
-	private DonCommand CommandTest = new DonCommand();
+	//private AbstractDonCommand CommandTest = new AbstractDonCommand();
 	@BeforeClass
 	public static void init(){
 		parser = new DonParser();
@@ -26,36 +30,40 @@ public class DonParserTest {
 	public void testAddTask(){
 
 		// test add task
+		/*
 		CommandTest.setType(CommandType.ADD_TASK);
 		CommandTest.setNewName("hihihi");
 		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,23,59));
+		*/
 		
-		assertEquals(CommandTest.getType(), parser.parseCommand("a \"hihihi 12345678 \" at 09/09/2014").getType());
-		assertEquals(CommandTest.getNewName(), parser.parseCommand("add \"hihihi\" at 09/09/2014").getNewName());
-		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi 12345678 \" @ 09/09/2014").getNewDeadline());
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a \"hihihi 12345678 \" at 09/09/2014");
+		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add \"hihihi 12345678 \" @ 9th september");
+		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24");
+		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 9 sep 1.24 pm");
 		
-		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi 12345678 \" @ 9th september").getNewDeadline());
+		assertEquals(GeneralCommandType.ADD, create1.getGeneralType());
+		assertEquals("hihihi 12345678 ", create1.getTaskTitle());
+
+		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create1.getStartDate()));
 		
-		assertEquals(CommandType.INVALID_DATE, parser.parseCommand("a \"hihihi 12345678 \" at 12/13/2014").getType());
+		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create2.getStartDate()));
+		
+		assertEquals(GeneralCommandType.INVALID_DATE, parser.parseCommand("a \"hihihi 12345678 \" at 12/13/2014").getGeneralType());
 		
 		
 		// test hours
-		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
-		assertEquals(CommandTest.getNewDeadline().getTime().toString(), 
-				parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24").getNewDeadline().getTime().toString());
-		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi\" @ 09/09 13:24").getNewDeadline());
-		assertEquals(CommandTest.getNewDeadline(), 
-				parser.parseCommand("add \"hihihi\" @ 9 sep 1.24 pm").getNewDeadline());
+		//CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
+		Calendar septCal = new GregorianCalendar(2014,8,9,13,24);
+		assertEquals(septCal.getTime().toString(), create3.getStartDate().getTime().toString());
+		assertEquals(septCal, create3.getStartDate());
+		assertEquals(septCal, create4.getStartDate());
 		// test invalid
-		assertEquals(CommandType.INVALID_COMMAND, parser.parseCommand("ad \"hihihi\" at 09082014").getType());
-		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a hihihi\" at 09082014").getType());
+		assertEquals(GeneralCommandType.INVALID_COMMAND, parser.parseCommand("ad \"hihihi\" at 09082014").getGeneralType());
+		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("a hihihi\" at 09082014").getGeneralType());
 //		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" 09082014").getType()); //float
 //		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" at 090814").getType()); // parser mistake
 //		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a \"hihihi\" a 09082014").getType()); //float
-		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a \"hihih;i\" at 09082014").getType());
+		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("a \"hihih;i\" at 09082014").getGeneralType());
 		
 		
 	}

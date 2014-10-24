@@ -50,6 +50,18 @@ public class DonCreateCommand extends AbstractDonCommand {
 		generalCommandType = GeneralCommandType.ADD;
 	}
 	
+	public String getTaskTitle() {
+		return taskTitle;
+	}
+	
+	public Calendar getStartDate() {
+		return startDate;
+	}
+	
+	public Calendar getEndDate() {
+		return endDate;
+	}
+	
 	/**
 	 * Creates a floating task
 	 * 

@@ -97,7 +97,7 @@ public abstract class AbstractDonCommand {
 	}
 	
 	public static enum GeneralCommandType {
-		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
 	}
 	
 	protected CommandType commandType;
@@ -134,10 +134,11 @@ public abstract class AbstractDonCommand {
 	public void setType(CommandType type){
 		commandType = type;
 	}
-	
+	/*
 	public CommandType getType() {
 		return commandType;
 	}
+	*/
 	
 	public GeneralCommandType getGeneralType() {
 		return generalCommandType;
