@@ -29,6 +29,14 @@ public class DonAddLabelCommand extends DonEditCommand {
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
+	public AddLabelType getAddLabelType() {
+		return type;
+	}
+	
+	public String getNewLabel() {
+		return newLabel;
+	}
+	
 	/**
 	 * Add a label to a task with the given id
 	 * @param id the task's id to search for and add a label to

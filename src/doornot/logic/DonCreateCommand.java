@@ -1,12 +1,7 @@
 package doornot.logic;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 
-
-
-
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
@@ -14,7 +9,7 @@ import doornot.storage.IDonTask;
 
 public class DonCreateCommand extends AbstractDonCommand {
 	
-	enum AddType {
+	public enum AddType {
 		FLOATING, DEADLINE, EVENT
 	}
 	
@@ -60,6 +55,10 @@ public class DonCreateCommand extends AbstractDonCommand {
 	
 	public Calendar getEndDate() {
 		return endDate;
+	}
+	
+	public AddType getType() {
+		return type;
 	}
 	
 	/**

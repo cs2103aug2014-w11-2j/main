@@ -1,9 +1,7 @@
 package doornot.logic;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -34,6 +32,18 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		searchTitle = title;
 		type = DeleteType.DELETE_TITLE;
 		generalCommandType = GeneralCommandType.DELETE;
+	}
+	
+	public DeleteType getType() {
+		return type;
+	}
+	
+	public int getSearchID() {
+		return searchID;
+	}
+	
+	public String getSearchTitle() {
+		return searchTitle;
 	}
 
 	/**

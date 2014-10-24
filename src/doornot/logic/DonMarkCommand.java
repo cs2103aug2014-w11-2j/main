@@ -2,7 +2,6 @@ package doornot.logic;
 
 import java.util.List;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -33,6 +32,10 @@ public class DonMarkCommand extends DonEditCommand {
 		searchTitle = string;
 		type = MarkType.MARK_STRING;
 		generalCommandType = GeneralCommandType.MARK;
+	}
+	
+	public MarkType getMarkType() {
+		return type;
 	}
 	
 	/**

@@ -29,6 +29,7 @@ public class DonLogic implements IDonLogic {
 	
 	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
 	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
+	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 
@@ -110,8 +111,12 @@ public class DonLogic implements IDonLogic {
 		} else if (genCommandType == GeneralCommandType.REDO) {
 			response = redoAction();
 		} else if (genCommandType == GeneralCommandType.INVALID_FORMAT) {
-			//TODO might have to split it into different invalids within GeneralCommandType
+			
 			response = createInvalidFormatResponse();
+		} else if (genCommandType == GeneralCommandType.INVALID_DATE) {
+			response = createInvalidDateResponse();
+		} else if (genCommandType == GeneralCommandType.INVALID_COMMAND) {
+			response = createInvalidCommandResponse();
 		} else {
 			response = dCommand.executeCommand(donStorage);
 			if(dCommand.hasExecuted()) {
@@ -120,48 +125,6 @@ public class DonLogic implements IDonLogic {
 			}
 		}
 		
-		//TODO only add if the command has been successful (do a check)
-		
-		
-		
-		/*
-		AbstractDonCommand.CommandType commandType = dCommand.getType();
-		AbstractDonCommand.GeneralCommandType genCommandType = dCommand.getGeneralType();
-		IDonResponse response = null;
-		if (commandType == AbstractDonCommand.CommandType.UNDO) {
-			response = undoLastAction();
-
-		} else if (genCommandType == AbstractDonCommand.GeneralCommandType.HELP) {
-			response = getHelp(commandType);
-
-		} else if (commandType == AbstractDonCommand.CommandType.INVALID_FORMAT) {
-			response = createInvalidFormatResponse();
-
-		} else if (commandType == AbstractDonCommand.CommandType.INVALID_DATE) {
-			response = createInvalidDateResponse();
-
-		} else if(commandType == AbstractDonCommand.CommandType.REDO) {
-			response = redoAction();
-			
-		} else if(commandType == AbstractDonCommand.CommandType.LABEL_ID) {
-			response = addLabel(dCommand.getID(), dCommand.getLabel());
-			
-		} else if(commandType == AbstractDonCommand.CommandType.LABEL_NAME) {
-			response = addLabel(dCommand.getName(), dCommand.getLabel());
-			
-		} else if(commandType == AbstractDonCommand.CommandType.DELABEL_ID) {
-			response = removeLabel(dCommand.getID(), dCommand.getLabel());
-			
-		} else if(commandType == AbstractDonCommand.CommandType.DELABEL_NAME) {
-			response = removeLabel(dCommand.getName(), dCommand.getLabel());
-			
-		} else {
-			// No relevant action could be executed
-			response = new DonResponse();
-			response.setResponseType(ResponseType.UNKNOWN_COMMAND);
-			response.addMessage(MSG_UNKNOWN_COMMAND);
-		}
-		*/
 		log.fine(command);
 
 		// Perform a save after every command
@@ -209,6 +172,18 @@ public class DonLogic implements IDonLogic {
 	private IDonResponse createInvalidDateResponse() {
 		IDonResponse response = new DonResponse();
 		response.addMessage(MSG_COMMAND_WRONG_DATE);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+
+	/**
+	 * Creates a response for unrecognized commands
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse createInvalidCommandResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_UNKNOWN_COMMAND);
 		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 		return response;
 	}

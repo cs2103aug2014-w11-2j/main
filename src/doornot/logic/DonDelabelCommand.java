@@ -2,7 +2,6 @@ package doornot.logic;
 
 import java.util.List;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -15,20 +14,28 @@ public class DonDelabelCommand extends DonEditCommand {
 	}
 	
 	private DelabelType type;
-	private String newLabel;
+	private String searchLabel;
 	
 	public DonDelabelCommand(int id, String label) {
 		searchID = id;
-		newLabel = label;
+		searchLabel = label;
 		type = DelabelType.LABEL_ID;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
 	public DonDelabelCommand(String title, String label) {
 		searchTitle = title;
-		newLabel = label;
+		searchLabel = label;
 		type = DelabelType.LABEL_NAME;
 		generalCommandType = GeneralCommandType.LABEL;
+	}
+	
+	public DelabelType getDelabelType() {
+		return type;
+	}
+	
+	public String getSearchLabel() {
+		return searchLabel;
 	}
 	
 	/**
@@ -47,13 +54,13 @@ public class DonDelabelCommand extends DonEditCommand {
 		} else {
 			unchangedTask = task.clone();
 			List<String> currentLabels = task.getLabels();
-			if (currentLabels.remove(newLabel)) {
+			if (currentLabels.remove(searchLabel)) {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
-				response.addMessage(String.format(MSG_LABEL_NAME_REMOVED, newLabel));			
+				response.addMessage(String.format(MSG_LABEL_NAME_REMOVED, searchLabel));			
 				response.addTask(task);
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_NOT_FOUND);
-				response.addMessage(String.format(MSG_LABEL_STRING_DOES_NOT_EXIST, newLabel));
+				response.addMessage(String.format(MSG_LABEL_STRING_DOES_NOT_EXIST, searchLabel));
 			}
 
 		}

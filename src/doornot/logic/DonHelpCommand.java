@@ -1,6 +1,5 @@
 package doornot.logic;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.storage.IDonStorage;
 
 public class DonHelpCommand extends AbstractDonCommand {
@@ -22,6 +21,10 @@ public class DonHelpCommand extends AbstractDonCommand {
 	public DonHelpCommand(HelpType command) {
 		requestedCommand = command;
 		generalCommandType = GeneralCommandType.HELP;
+	}
+	
+	public HelpType getRequestedCommand() {
+		return requestedCommand;
 	}
 	
 	/**

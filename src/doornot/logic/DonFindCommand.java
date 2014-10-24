@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Locale;
 
 import doornot.CalHelper;
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
@@ -84,6 +83,26 @@ public class DonFindCommand extends AbstractDonCommand {
 		}
 		generalCommandType = GeneralCommandType.SEARCH;
 
+	}
+	
+	public SearchType getType() {
+		return type;
+	}
+	
+	public int getSearchID() {
+		return searchID;
+	}
+	
+	public String getSearchTitle() {
+		return searchTitle;
+	}
+	
+	public Calendar getSearchStartDate() {
+		return searchStartDate;
+	}
+	
+	public Calendar getSearchEndDate() {
+		return searchEndDate;
 	}
 
 	/**

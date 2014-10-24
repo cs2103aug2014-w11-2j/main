@@ -11,7 +11,6 @@ import com.joestelmach.natty.*;
 
 import doornot.CalHelper;
 import doornot.logic.AbstractDonCommand;
-import doornot.logic.AbstractDonCommand.CommandType;
 import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.DonDelabelCommand;
 import doornot.logic.DonDeleteCommand;
@@ -189,7 +188,10 @@ public class DonParser implements IDonParser {
 				String date = parameters.replaceFirst(addTaskReg, "").trim();
 				Calendar deadline = Calendar.getInstance();
 				boolean hasSetTime = setNewDeadlineForCommand(date, deadline);
-				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);
+				//if dCommand is not null setNewDeadlineForCommand must have set INVALID_DATE
+				if(dCommand==null) {
+					dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);					
+				}
 				//dCommand.setType(CommandType.ADD_TASK);
 			} else {
 				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
@@ -207,9 +209,10 @@ public class DonParser implements IDonParser {
 						.getInstance();
 				boolean hasSetTime = setStartAndEndForCommand(date, startDate,
 						endDate);
-
-				dCommand = new DonCreateCommand(taskName, startDate, endDate,
+				if(dCommand==null) {
+					dCommand = new DonCreateCommand(taskName, startDate, endDate,
 						hasSetTime);
+				}
 				//dCommand.setType(CommandType.ADD_EVENT);
 			} else {
 				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
@@ -281,9 +284,10 @@ public class DonParser implements IDonParser {
 						.getInstance();
 				boolean hasSetTime = setStartAndEndForCommand(date, startDate,
 						endDate);
-
-				dCommand = new DonEditCommand(taskName, startDate, endDate,
+				if(dCommand==null) {
+					dCommand = new DonEditCommand(taskName, startDate, endDate,
 						hasSetTime);
+				}
 				//dCommand.setType(CommandType.EDIT_EVENT);
 
 			} else {
@@ -300,8 +304,9 @@ public class DonParser implements IDonParser {
 					.getInstance();
 			boolean hasSetTime = setStartAndEndForCommand(date, startDate,
 					endDate);
-
-			dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);
+			if(dCommand==null) {
+				dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);
+			}
 			//dCommand.setType(CommandType.EDIT_ID_EVENT);
 
 		} else if (isRightCommand(parameters, editNameToDateReg)) {
@@ -314,8 +319,9 @@ public class DonParser implements IDonParser {
 						.trim();
 				Calendar newDeadline = Calendar.getInstance();
 				boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
-
-				dCommand = new DonEditCommand(taskName, newDeadline, hasSetTime);
+				if(dCommand==null) {
+					dCommand = new DonEditCommand(taskName, newDeadline, hasSetTime);
+				}
 				//dCommand.setType(CommandType.EDIT_DATE);
 
 			} else {
@@ -332,8 +338,9 @@ public class DonParser implements IDonParser {
 			String date = parameters.replaceFirst(editIDToDateReg, "").trim();
 			Calendar newDeadline = Calendar.getInstance();
 			boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
-
-			dCommand = new DonEditCommand(ID, newDeadline, hasSetTime);
+			if(dCommand==null) {
+				dCommand = new DonEditCommand(ID, newDeadline, hasSetTime);
+			}
 			//dCommand.setType(CommandType.EDIT_ID_DATE);
 
 		} else {
@@ -417,8 +424,10 @@ public class DonParser implements IDonParser {
 					Calendar searchDate = Calendar.getInstance();
 					boolean hasSetTime = setNewDeadlineForCommand(parameters,
 							searchDate);
-					dCommand = new DonFindCommand(searchDate, hasSetTime,
+					if(dCommand==null) {
+						dCommand = new DonFindCommand(searchDate, hasSetTime,
 							SearchType.SEARCH_DATE);
+					}
 					//dCommand.setType(CommandType.SEARCH_DATE);
 				}
 			}
@@ -434,8 +443,10 @@ public class DonParser implements IDonParser {
 		//dCommand.setType(CommandType.SEARCH_AFTDATE);
 		Calendar searchDate = Calendar.getInstance();
 		boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
-		dCommand = new DonFindCommand(searchDate, hasSetTime,
+		if(dCommand==null) {
+			dCommand = new DonFindCommand(searchDate, hasSetTime,
 				SearchType.SEARCH_AFTDATE);
+		}
 
 	}
 

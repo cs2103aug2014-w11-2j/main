@@ -3,14 +3,13 @@ package doornot.logic;
 import java.util.Calendar;
 import java.util.List;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 
 public class DonEditCommand extends AbstractDonCommand {
 
-	enum EditType {
+	public enum EditType {
 		ID_NAME, ID_DATE, ID_EVENT, NAME_NAME, NAME_DATE, NAME_EVENT,
 	}
 
@@ -127,6 +126,34 @@ public class DonEditCommand extends AbstractDonCommand {
 		this.newEndDate = newEndDate;
 		this.isTimeUsed = isTimeUsed;
 		generalCommandType = GeneralCommandType.EDIT;
+	}
+	
+	public String getNewTitle() {
+		return newTitle;
+	}
+	
+	public int getSearchID() {
+		return searchID;
+	}
+	
+	public String getSearchTitle() {
+		return searchTitle;
+	}
+	
+	public Calendar getNewDeadline() {
+		return newDeadline;
+	}
+	
+	public Calendar getNewStartDate() {
+		return newStartDate;
+	}
+	
+	public Calendar getNewEndDate() {
+		return newEndDate;
+	}
+	
+	public EditType getType() {
+		return type;
 	}
 
 	/**

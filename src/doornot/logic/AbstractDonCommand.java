@@ -24,7 +24,6 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
 	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
-	protected static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
 	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
