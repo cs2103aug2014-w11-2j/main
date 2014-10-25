@@ -134,12 +134,79 @@ public class DonGUIV2 {
 	private void sortByDate() {
 		Collections.sort(guiTaskList, new TimeComparator());
 	}
+	
+	private void branchToPage(String cmd){
+		//typeList.clearSelection();
+		switch(cmd){
+			case "c":
+				selectedPage = 7;
+				list.clearSelection();
+				//typeList.setListData(placeholder);
+				break;
+			case "t":
+				selectedPage = 1;
+				typeList.setSelectedIndex(0);
+				break;
+			case "w":
+				selectedPage = 2;
+				typeList.setSelectedIndex(1);
+				break;
+			case "u":
+				selectedPage = 3;
+				typeList.setSelectedIndex(2);
+				break;
+			case "f":
+				selectedPage = 4;
+				typeList.setSelectedIndex(3);
+				break;
+			case "l":
+				selectedPage = 5;
+				typeList.setSelectedIndex(4);
+				break;
+			case "o":
+				if(overdueList != null && overdueList.size() != 0) {
+					selectedPage = 0;
+					typeList.clearSelection();
+				}
+				else {
+					infoPane.setText("No overdue tasks!");
+					infoPane.setVisible(true);
+					countdown = 2000;
+					timer = new Timer(1, al);
+					timer.start();
+					return;
+				}
+				break;
+			case "r":
+				if(searchList != null && searchList.size() != 0) {
+					selectedPage = 6;
+					typeList.clearSelection();
+				}
+				else {
+					infoPane.setText("No search results!");
+					infoPane.setVisible(true);
+					countdown = 2000;
+					timer = new Timer(1, al);
+					timer.start();
+					return;
+				}
+				break;
+			default:
+		}
+		typeList.setCellRenderer(new TypeCellRenderer());
+		setTypeData();
+	}
 
 	private void renew(String cmd) {
 		if (cmd.equals("exit")) {
 			donLogic.saveToDrive();
 			System.exit(0);
 		}
+		if (cmd.equals("c") || cmd.equals("t") || cmd.equals("w") || cmd.equals("u") || 
+			cmd.equals("f") || cmd.equals("l") || cmd.equals("o") || cmd.equals("r")) {
+			branchToPage(cmd);
+			return;
+		} 
 		IDonResponse rp = donLogic.runCommand(cmd);
 		assert rp != null;
 		String fb = "";
@@ -253,7 +320,7 @@ public class DonGUIV2 {
 			searchLabel.setText("Search results: " + searchList.size());
 			lblTaskList.setText("Task List: search results");
 		} else if (selectedPage == 7) {
-			lblTaskList.setText("Output Log");
+			lblTaskList.setText("Output Console");
 			scrollPane_textarea.setVisible(true);
 			textArea.setVisible(true);
 			list.setVisible(false);
