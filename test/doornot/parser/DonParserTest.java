@@ -43,11 +43,7 @@ public class DonParserTest {
 	public void testAddTask(){
 
 		// test add task
-		/*
-		CommandTest.setType(CommandType.ADD_TASK);
-		CommandTest.setNewName("hihihi");
-		CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,23,59));
-		*/
+		
 		
 		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a \"hihihi 12345678 \" at 09/09/2014");
 		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add \"hihihi 12345678 \" @ 9th september");
@@ -65,7 +61,7 @@ public class DonParserTest {
 		
 		
 		// test hours
-		//CommandTest.setNewDeadline(new GregorianCalendar(2014,8,9,13,24));
+		
 		Calendar septCal = new GregorianCalendar(2014,8,9,13,24);
 		assertEquals(septCal.getTime().toString(), create3.getStartDate().getTime().toString());
 		assertEquals(true, CalHelper.relevantEquals(septCal, create3.getStartDate()));
