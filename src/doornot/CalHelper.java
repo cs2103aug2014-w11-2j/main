@@ -1,6 +1,11 @@
 package doornot;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import com.joestelmach.natty.DateGroup;
+import com.joestelmach.natty.Parser;
 
 /**
  * 
@@ -13,7 +18,22 @@ public class CalHelper {
 	/**
 	 * Return today's Calendar object
 	 */
-
+	
+	/**
+	 * Sets the Calendar to the first moment of the given date
+	 * 
+	 * @param cal The date to get the first moment of
+	 * @return the Calendar set to today at 0 hour, 0 minute, 0 second, 0
+	 *         millisecond
+	 */
+	public static Calendar getDayStart(Calendar cal) {
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		return cal;
+	}
+	
 	/**
 	 * Gets the first moment of today
 	 * 
@@ -22,12 +42,25 @@ public class CalHelper {
 	 */
 	public static Calendar getTodayStart() {
 		Calendar ret = Calendar.getInstance();
-		ret.set(Calendar.HOUR_OF_DAY, 0);
-		ret.set(Calendar.MINUTE, 0);
-		ret.set(Calendar.SECOND, 0);
-		ret.set(Calendar.MILLISECOND, 0);
+		getDayStart(ret);
 		return ret;
 	}
+	
+	/**
+	 * Sets the Calendar to the first moment of the given date
+	 * 
+	 * @param cal The date to get the first moment of
+	 * @return the Calendar set to today at 23 hour, 59 minute, 59 second, 999
+	 *         millisecond
+	 */
+	public static Calendar getDayEnd(Calendar cal) {
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
+		cal.set(Calendar.SECOND, 59);
+		cal.set(Calendar.MILLISECOND, 999);
+		return cal;
+	}
+	
 
 	/**
 	 * Gets the last moment of today
@@ -37,10 +70,7 @@ public class CalHelper {
 	 */
 	public static Calendar getTodayEnd() {
 		Calendar ret = Calendar.getInstance();
-		ret.set(Calendar.HOUR_OF_DAY, 23);
-		ret.set(Calendar.MINUTE, 59);
-		ret.set(Calendar.SECOND, 59);
-		ret.set(Calendar.MILLISECOND, 999);
+		getDayEnd(ret);
 		return ret;
 	}
 
@@ -152,6 +182,14 @@ public class CalHelper {
 				&& c1.get(Calendar.DAY_OF_MONTH)==c2.get(Calendar.DAY_OF_MONTH)
 				&& c1.get(Calendar.HOUR_OF_DAY) == c2.get(Calendar.HOUR_OF_DAY)
 				&& c1.get(Calendar.MINUTE) == c2.get(Calendar.MINUTE);
+	}
+	
+	public static Calendar getDaysFromNow(int numDays) {
+		Parser nattyParser = new Parser();
+		List<DateGroup> dateGroup = nattyParser.parse(numDays+" from today");
+		Calendar outCal = new GregorianCalendar();
+		outCal.setTime(dateGroup.get(0).getDates().get(0));
+		return outCal;
 	}
 	
 }

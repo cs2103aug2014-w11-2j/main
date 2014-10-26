@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import com.joestelmach.natty.Parser;
+
 import doornot.CalHelper;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
@@ -15,7 +17,7 @@ import doornot.storage.IDonTask.TaskType;
 public class DonFindCommand extends AbstractDonCommand {
 
 	public enum SearchType {
-		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE;
+		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE;
 	}
 
 	private SearchType type;
@@ -455,6 +457,29 @@ public class DonFindCommand extends AbstractDonCommand {
 
 		return response;
 	}
+	
+	/**
+	 * Get tasks that occur within 7 days
+	 * @param donStorage the storage in which the tasks are located
+	 * @return
+	 */
+	private IDonResponse findSevenDays(IDonStorage donStorage) {
+		Calendar start = CalHelper.getTodayStart();
+		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		IDonResponse response = findTaskRange(donStorage, start, end, FIND_INCOMPLETE);
+		return response;
+	}
+	
+	/**
+	 * Get tasks that occur after 7 days
+	 * @param donStorage the storage in which the tasks are located
+	 * @return
+	 */
+	private IDonResponse findFuture(IDonStorage donStorage) {
+		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		IDonResponse response = findTaskRange(donStorage, start, null, FIND_INCOMPLETE);
+		return response;
+	}
 
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
@@ -481,6 +506,10 @@ public class DonFindCommand extends AbstractDonCommand {
 					FIND_INCOMPLETE);
 		} else if (type == SearchType.TODAY) {
 			response = getTasksToday(donStorage);
+		} else if (type == SearchType.SEVEN_DAYS) {
+			response = findSevenDays(donStorage);
+		} else if (type == SearchType.FUTURE) {
+			response = findFuture(donStorage);
 		}
 		return response;
 	}
