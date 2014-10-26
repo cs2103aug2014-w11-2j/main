@@ -126,4 +126,32 @@ public class CalHelper {
 		}
 		return false;
 	}
+	
+	/**
+	 * Copy calendar day, month, year, hour, minute and second from source to destination date object
+	 * @param sourceDate the Calendar object to get the fields from
+	 * @param destDate the Calendar object to copy the fields to
+	 */
+	public static void copyCalendar(Calendar sourceDate, Calendar destDate) {
+		destDate.set(Calendar.DATE, sourceDate.get(Calendar.DATE));
+		destDate.set(Calendar.MONTH, sourceDate.get(Calendar.MONTH));
+		destDate.set(Calendar.YEAR, sourceDate.get(Calendar.YEAR));
+		
+		destDate.set(Calendar.HOUR_OF_DAY, sourceDate.get(Calendar.HOUR_OF_DAY));
+		destDate.set(Calendar.MINUTE, sourceDate.get(Calendar.MINUTE));
+		destDate.set(Calendar.SECOND, sourceDate.get(Calendar.SECOND));
+	}
+	
+	/**
+	 * Compares the year, month, date, hour, minutes of the 2 calendar objects
+	 * @return
+	 */
+	public static boolean relevantEquals(Calendar c1, Calendar c2) {
+		return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR)
+				&& c1.get(Calendar.MONTH) == c2.get(Calendar.MONTH)
+				&& c1.get(Calendar.DAY_OF_MONTH)==c2.get(Calendar.DAY_OF_MONTH)
+				&& c1.get(Calendar.HOUR_OF_DAY) == c2.get(Calendar.HOUR_OF_DAY)
+				&& c1.get(Calendar.MINUTE) == c2.get(Calendar.MINUTE);
+	}
+	
 }

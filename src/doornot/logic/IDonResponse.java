@@ -76,6 +76,14 @@ public interface IDonResponse {
 	 *            the new type of response
 	 */
 	public void setResponseType(ResponseType type);
+	
+	/**
+	 * Sets the list of tasks of the IDonResponse object directly
+	 * 
+	 * @param task
+	 *            the new task list
+	 */
+	public void setTaskList(List<IDonTask> tasks);
 
 	/**
 	 * Returns whether the response has any messages. This is identical to

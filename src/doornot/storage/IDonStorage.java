@@ -33,6 +33,16 @@ public interface IDonStorage {
 	 * @return Task
 	 */
 	public IDonTask getTask(int ID);
+	
+	/**
+	 * Find tasks with the given name
+	 * 
+	 * @param name
+	 *            the name to search for
+	 * @return the response containing the tasks
+	 */
+	public List<IDonTask> getTaskByName(String name);
+	
 	/**
 	 * Return response
 	 * @return successful

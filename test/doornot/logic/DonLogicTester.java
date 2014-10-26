@@ -392,7 +392,7 @@ public class DonLogicTester {
 		// Undo the edits
 		logic.runCommand("undo");
 		logic.runCommand("undo");
-		
+
 		//Redo the edit
 		IDonResponse redoResponse1 = logic.runCommand("redo");
 		assertEquals(IDonResponse.ResponseType.REDO_SUCCESS,
@@ -442,6 +442,73 @@ public class DonLogicTester {
 				searchResponse.getResponseType());
 		IDonTask editedTask = searchResponse.getTasks().get(0);
 		assertEquals(editedTask, afterEditTask);
+
+	}
+	
+	/*
+	 * Label 
+	 */
+	
+	@Test
+	public void testLabelAdd() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add \"Eat\" @ 21102014");
+		IDonTask task1 = addResponse1.getTasks().get(0);
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		IDonResponse labelResponse1 = logic.runCommand("label "+taskID1+" \"food\"");
+		assertEquals(IDonResponse.ResponseType.LABEL_ADDED,
+				labelResponse1.getResponseType());
+		assertEquals(1, task1.getLabels().size());
+		assertEquals("food", task1.getLabels().get(0));
+		
+		IDonResponse labelResponse2 = logic.runCommand("label \"Ea\" \"good\"");
+		assertEquals(IDonResponse.ResponseType.LABEL_ADDED,
+				labelResponse2.getResponseType());
+		assertEquals(2, task1.getLabels().size());
+		assertEquals(true, task1.getLabels().contains("good"));
+
+	}
+	
+	@Test
+	public void testLabelRemove() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add \"Eat\" @ 21102014");
+		IDonTask task1 = addResponse1.getTasks().get(0);
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		logic.runCommand("label \"Ea\" \"food\"");
+		logic.runCommand("label \"Ea\" \"good\"");
+		
+		IDonResponse delabelResponse1 = logic.runCommand("delabel "+taskID1+" \"food\"");
+		assertEquals(IDonResponse.ResponseType.LABEL_REMOVED,
+				delabelResponse1.getResponseType());
+		assertEquals(false, task1.getLabels().contains("food"));
+		
+		IDonResponse delabelResponse2 = logic.runCommand("delabel \"Ea\" \"good\"");
+		assertEquals(IDonResponse.ResponseType.LABEL_REMOVED,
+				delabelResponse2.getResponseType());
+		assertEquals(false, task1.getLabels().contains("good"));
+
+	}
+	
+	@Test
+	public void testLabelNotFound() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add \"Eat\" @ 21102014");
+		IDonTask task1 = addResponse1.getTasks().get(0);
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		logic.runCommand("label \"Ea\" \"food\"");
+		logic.runCommand("label \"Ea\" \"good\"");
+		
+		IDonResponse delabelResponse1 = logic.runCommand("delabel "+taskID1+" \"mood\"");
+		assertEquals(IDonResponse.ResponseType.LABEL_NOT_FOUND,
+				delabelResponse1.getResponseType());
+		
+		IDonResponse delabelResponse2 = logic.runCommand("delabel \"Eatup\" \"good\"");
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				delabelResponse2.getResponseType());
 
 	}
 }
