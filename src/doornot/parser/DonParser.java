@@ -780,7 +780,27 @@ public class DonParser implements IDonParser {
 	private boolean isTimeMentioned() {
 		return !(groups.get(0).isTimeInferred());
 	}
-
+	/**
+	 * check if it is recurrence. user has "every"
+	 * 
+	 * @return
+	 */
+	private boolean isRecurrence() {
+		return (groups.get(0).isRecurring());
+	}
+	/**
+	 * get end of recurrence
+	 * 
+	 * @return
+	 */
+	private Date getRecurringUntil() {
+//		if(groups.get(0).getRecursUntil() == null){
+//			return 
+//		} else {
+			return groups.get(0).getRecursUntil();
+//		}
+		
+	}
 	/**
 	 * Gets date from parser
 	 * 
