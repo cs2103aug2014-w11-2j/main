@@ -152,6 +152,13 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("od")
 				|| commandWord.equalsIgnoreCase("overdue")) {
 			dCommand = new DonFindCommand(SearchType.OVERDUE);
+		}else if (commandWord.equalsIgnoreCase("tomorrow")
+				|| commandWord.equalsIgnoreCase("tmr")) {
+//			dCommand = new DonFindCommand(SearchType.TOMORROW);
+		}else if (commandWord.equalsIgnoreCase("upcoming")) {
+//			dCommand = new DonFindCommand(SearchType.UPCOMING);
+		}else if (commandWord.equalsIgnoreCase("undone")) {
+//			dCommand = new DonFindCommand(SearchType.UNDONE);
 		} else if (commandWord.equalsIgnoreCase("undo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")) {
