@@ -9,7 +9,7 @@ import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 
 public class DonAddLabelCommand extends DonEditCommand {
-	
+
 	public enum AddLabelType {
 		LABEL_ID, LABEL_NAME
 	}
@@ -57,10 +57,11 @@ public class DonAddLabelCommand extends DonEditCommand {
 			List<String> currentLabels = task.getLabels();
 			if (currentLabels.contains(newLabel)) {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
-				response.addMessage(String.format("The label '%1$s' already exists", newLabel));
+				response.addMessage(String.format(MSG_LABEL_EXISTS, newLabel));
 			} else {
 				task.addLabel(newLabel);
 				response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
+				response.addMessage(String.format(MSG_LABEL_ADDED_ID, newLabel, searchID));
 				response.addTask(task);
 			}
 

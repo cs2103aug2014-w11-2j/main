@@ -31,6 +31,8 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_TOGGLE_STATUS_MULTI_SUCCESS = "%1$d tasks' status toggled.";
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
+	protected static final String MSG_LABEL_EXISTS = "The label '%1$s' already exists";
+	protected static final String MSG_LABEL_ADDED_ID = "Label '%1$s' added to task %2$d";
 	protected static final String MSG_COMMAND_WRONG_FORMAT = "The format of '%1$s' is invalid!";
 	protected static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	protected static final String MSG_UNKNOWN_COMMAND = "The command '%1$s' does not exist!";
