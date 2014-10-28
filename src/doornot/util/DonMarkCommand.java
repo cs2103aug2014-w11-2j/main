@@ -7,6 +7,7 @@ import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.storage.IDonTask.TaskType;
 import doornot.util.AbstractDonCommand.GeneralCommandType;
 import doornot.util.DonDeleteCommand.DeleteType;
 
@@ -91,7 +92,7 @@ public class DonMarkCommand extends DonEditCommand {
 		if (tasks.isEmpty()) {
 			// No overdue task
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
-			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+			response.addMessage(MSG_NO_UNDONE_OVERDUE);
 
 		} else {
 			for(IDonTask task : tasks) {
@@ -101,6 +102,38 @@ public class DonMarkCommand extends DonEditCommand {
 				response.addTask(task);
 			}
 			
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
+		}
+		return response;
+	}
+	
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusFloating(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> tasks = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, true);
+		if (tasks.isEmpty()) {
+			// No overdue task
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_FLOATING);
+
+		} else {
+			int x = tasks.get(0).getID();
+			for(IDonTask task : tasks) {
+				System.out.println(task.getID());
+				unchangedTask.add(task.clone());
+				boolean taskCompleted = !task.getStatus();
+				task.setStatus(taskCompleted);
+				System.out.println(task.getStatus());
+				response.addTask(task);
+			}
+			System.out.println(donStorage.getTask(x).getStatus());
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
 			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
 		}
@@ -145,6 +178,8 @@ public class DonMarkCommand extends DonEditCommand {
 			response = toggleStatusByTitle(donStorage);
 		} else if (type == MarkType.MARK_OVERDUE) {
 			response = toggleStatusOverdue(donStorage);
+		} else if (type == MarkType.MARK_FLOAT) {
+			response = toggleStatusFloating(donStorage);
 		}
 		
 		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {

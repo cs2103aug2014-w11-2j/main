@@ -28,12 +28,14 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
 	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
-	protected static final String MSG_TOGGLE_STATUS_MULTI_SUCCESS = "%$d tasks' status toggled.";
+	protected static final String MSG_TOGGLE_STATUS_MULTI_SUCCESS = "%1$d tasks' status toggled.";
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
 	protected static final String MSG_COMMAND_WRONG_FORMAT = "The format of '%1$s' is invalid!";
 	protected static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
 	protected static final String MSG_UNKNOWN_COMMAND = "The command '%1$s' does not exist!";
+	protected static final String MSG_NO_UNDONE_OVERDUE = "No undone overdue tasks found!";
+	protected static final String MSG_NO_FLOATING = "No floating tasks found!";
 	
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";
@@ -124,10 +126,10 @@ public abstract class AbstractDonCommand {
 		return response;
 	}
 	
-	protected IDonResponse createUndoSuccessResponse() {
+	protected IDonResponse createUndoSuccessResponse(int num) {
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-		response.addMessage(MSG_UNDO_SUCCESS);
+		response.addMessage(String.format(MSG_UNDO_SUCCESS, num));
 		return response;
 	}
 	

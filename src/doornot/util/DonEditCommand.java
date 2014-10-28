@@ -2,6 +2,7 @@ package doornot.util;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.ArrayList;
 
 import doornot.logic.DonResponse;
 import doornot.logic.IDonResponse;
@@ -22,7 +23,7 @@ public class DonEditCommand extends AbstractDonCommand {
 	private String newTitle;
 	private Calendar newDeadline, newStartDate, newEndDate;
 	private boolean isTimeUsed, isStartDate = true;
-	protected List<IDonTask> unchangedTask;
+	protected List<IDonTask> unchangedTask = new ArrayList<IDonTask>();
 	
 	protected DonEditCommand() {
 		generalCommandType = GeneralCommandType.EDIT;
@@ -437,7 +438,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			// Could not find for some reason.
 			response = createUndoFailureResponse();
 		} else {
-			response = createUndoSuccessResponse();
+			response = createUndoSuccessResponse(count);
 			executed = false;
 			unchangedTask.clear();
 		}

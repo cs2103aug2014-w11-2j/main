@@ -204,7 +204,7 @@ public class SearchHelper {
 					}
 				}
 				// Clone the task to prevent the original from being edited.
-				resultList.add(task.clone());
+				resultList.add(task);
 			}
 		}
 		return resultList;
@@ -212,7 +212,7 @@ public class SearchHelper {
 
 	public static List<IDonTask> findOverdue(IDonStorage donStorage) {
 		List<IDonTask> response = findTaskRange(donStorage, null,
-				Calendar.getInstance(), FIND_INCOMPLETE);
+				Calendar.getInstance(), FIND_ALL);
 		List<IDonTask> taskList = new ArrayList<IDonTask>();
 		for (IDonTask task : response) {
 			if ((task.getEndDate() != null

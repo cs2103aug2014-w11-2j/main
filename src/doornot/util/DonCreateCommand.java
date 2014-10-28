@@ -191,7 +191,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 		boolean deleteSuccess = donStorage.removeTask(createdTask.getID());
 		IDonResponse response = null;
 		if(deleteSuccess) {
-			response = createUndoSuccessResponse();
+			response = createUndoSuccessResponse(1);
 			executed = false;
 		} else {
 			response = createUndoFailureResponse();

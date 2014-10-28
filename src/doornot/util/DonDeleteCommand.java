@@ -126,7 +126,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		
 		if (foundList.isEmpty()) {
 			// No overdue tasks
-			response = createSearchFailedResponse(searchTitle);
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_UNDONE_OVERDUE);
 		} else {
 			// >=1 task found
 			boolean success = true;
@@ -158,7 +159,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		
 		if (foundList.isEmpty()) {
 			// No overdue tasks
-			response = createSearchFailedResponse(searchTitle);
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_FLOATING);
 		} else {
 			// >=1 task found
 			boolean success = true;
@@ -218,7 +220,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		if(count!=deletedTasks.size()) {
 			response = createUndoFailureResponse();
 		} else {
-			response = createUndoSuccessResponse();
+			System.out.println(count);
+			response = createUndoSuccessResponse(count);
 			executed = false;
 			deletedTasks.clear();
 		}
