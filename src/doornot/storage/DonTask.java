@@ -267,6 +267,8 @@ public class DonTask implements IDonTask {
 		}
 
 		newTask.setStatus(this.getStatus());
+		newTask.setTimeUsed(this.isTimeUsed());
+		newTask.setLabels(new ArrayList<String>(this.getLabels()));
 		return newTask;
 
 	}

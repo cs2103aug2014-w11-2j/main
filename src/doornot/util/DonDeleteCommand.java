@@ -220,7 +220,6 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		if(count!=deletedTasks.size()) {
 			response = createUndoFailureResponse();
 		} else {
-			System.out.println(count);
 			response = createUndoSuccessResponse(count);
 			executed = false;
 			deletedTasks.clear();
