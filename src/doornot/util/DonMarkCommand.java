@@ -65,7 +65,7 @@ public class DonMarkCommand extends DonEditCommand {
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 
 		} else {
-			unchangedTask = task.clone();
+			unchangedTask.add(task.clone());
 			boolean taskCompleted = !task.getStatus();
 			task.setStatus(taskCompleted);
 
@@ -74,6 +74,35 @@ public class DonMarkCommand extends DonEditCommand {
 			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, searchID,
 					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
 			
+		}
+		return response;
+	}
+	
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusOverdue(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> tasks = SearchHelper.findOverdue(donStorage);
+		if (tasks.isEmpty()) {
+			// No overdue task
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+
+		} else {
+			for(IDonTask task : tasks) {
+				unchangedTask.add(task.clone());
+				boolean taskCompleted = !task.getStatus();
+				task.setStatus(taskCompleted);
+				response.addTask(task);
+			}
+			
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
 		}
 		return response;
 	}
@@ -114,6 +143,8 @@ public class DonMarkCommand extends DonEditCommand {
 			response = toggleStatusByID(donStorage);
 		} else if (type == MarkType.MARK_STRING) {
 			response = toggleStatusByTitle(donStorage);
+		} else if (type == MarkType.MARK_OVERDUE) {
+			response = toggleStatusOverdue(donStorage);
 		}
 		
 		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {

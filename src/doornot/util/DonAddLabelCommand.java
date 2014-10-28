@@ -53,7 +53,7 @@ public class DonAddLabelCommand extends DonEditCommand {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
-			unchangedTask = task.clone();
+			unchangedTask.add(task.clone());
 			List<String> currentLabels = task.getLabels();
 			if (currentLabels.contains(newLabel)) {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);

@@ -28,6 +28,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
 	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
+	protected static final String MSG_TOGGLE_STATUS_MULTI_SUCCESS = "%$d tasks' status toggled.";
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
 	protected static final String MSG_COMMAND_WRONG_FORMAT = "The format of '%1$s' is invalid!";

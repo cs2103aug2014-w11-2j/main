@@ -22,7 +22,7 @@ public class DonEditCommand extends AbstractDonCommand {
 	private String newTitle;
 	private Calendar newDeadline, newStartDate, newEndDate;
 	private boolean isTimeUsed, isStartDate = true;
-	protected IDonTask unchangedTask;
+	protected List<IDonTask> unchangedTask;
 	
 	protected DonEditCommand() {
 		generalCommandType = GeneralCommandType.EDIT;
@@ -175,7 +175,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
-			unchangedTask = task.clone(); // For undo to use
+			unchangedTask.add(task.clone()); // For undo to use
 			String oldTitle = task.getTitle();
 			task.setTitle(newTitle);
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
@@ -238,7 +238,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
-			unchangedTask = task.clone();
+			unchangedTask.add(task.clone());
 			Calendar oldDate = null;
 			String dateType = "";
 			if (task.getType() == IDonTask.TaskType.FLOATING) {
@@ -323,7 +323,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
-			unchangedTask = task.clone();
+			unchangedTask.add(task.clone());
 			Calendar oldStartDate = null, oldEndDate = null;
 			if (task.getType() == IDonTask.TaskType.FLOATING) {
 				// TODO: What should we do with floating tasks when the user
@@ -420,16 +420,28 @@ public class DonEditCommand extends AbstractDonCommand {
 		}
 		IDonResponse response = null;
 
-		IDonTask changedTask = donStorage.getTask(searchID);
-		if (changedTask == null) {
+		//IDonTask changedTask = donStorage.getTask(searchID);
+		
+		int count = 0;
+		for(IDonTask task : unchangedTask) {
+			int id = task.getID();
+			IDonTask changedTask = donStorage.getTask(id);
+			if(changedTask == null) {
+				
+			} else {
+				changedTask.copyTaskDetails(task);
+				count++;
+			}
+		}
+		if(count!=unchangedTask.size()) {
 			// Could not find for some reason.
 			response = createUndoFailureResponse();
 		} else {
-			changedTask.copyTaskDetails(unchangedTask);
 			response = createUndoSuccessResponse();
 			executed = false;
+			unchangedTask.clear();
 		}
-
+		
 		return response;
 	}
 
