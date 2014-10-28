@@ -284,8 +284,9 @@ public class DonGUIV2 {
 
 	private void setTypeData() {
 		textArea.setVisible(false);
-		list.setVisible(true);
+		scrollPane_textarea.setVisible(false);
 		scrollPane_list.setVisible(true);
+		list.setVisible(true);
 		searchLabel.setBorder(null);
 		overdueLabel.setBorder(null);
 		if (selectedPage == 0) {
@@ -321,10 +322,10 @@ public class DonGUIV2 {
 			lblTaskList.setText("Task List: search results");
 		} else if (selectedPage == 7) {
 			lblTaskList.setText("Output Console");
-			scrollPane_textarea.setVisible(true);
-			textArea.setVisible(true);
 			list.setVisible(false);
 			scrollPane_list.setVisible(false);
+			scrollPane_textarea.setVisible(true);
+			textArea.setVisible(true);
 		}
 	}
 
