@@ -281,6 +281,12 @@ public class DonGUIV2 {
 		df.applyPattern("dd/MM");
 		return df.format(cal.getTime());
 	}
+	
+	private String printDayInWeek(Calendar cal) {
+		SimpleDateFormat df = new SimpleDateFormat();
+		df.applyPattern("EEE");
+		return df.format(cal.getTime());
+	}
 
 	private void setTypeData() {
 		textArea.setVisible(false);
@@ -595,36 +601,6 @@ public class DonGUIV2 {
 		list.setFixedCellHeight(70);
 		list.setCellRenderer(new TaskCellRenderer());
 
-		/*
-		 * helpButton = new JButton("Help"); helpButton.setBounds(619, 43, 57,
-		 * 25); helpButton.addMouseListener(new MouseAdapter() {
-		 * 
-		 * @Override public void mouseClicked(MouseEvent e) { display +=
-		 * "Type add \"[Task Name]\" to add a floating task" +
-		 * "\nType add \"[Task Name]\" at DDMMYYYY_hhmm(or DDMMYYYY) to add a deadline task"
-		 * +
-		 * "\nType add \"[Task Name]\" from DDMMYYYY_hhmm(or DDMMYYYY) to DDMMYYYY_hhmm(or DDMMYYYY) to add a duration event"
-		 * +
-		 * "\nType delete [Task Name] to delete a task, if more than one task match the name, a list of "
-		 * + "ids of the tasks will be shown and you can choose an id" +
-		 * "\nType delete [id] to delete a task with the specified id" +
-		 * "\nType search [Task Name] to search tasks, a list of ids of the tasks that match the name will be shown"
-		 * +
-		 * "\nType search DDMMYYYY_hhmm or DDMMYYYY to search for tasks that start(due) or occur on that date/time"
-		 * +
-		 * "\nType edit [id] [New Task Name] to change the name of an existing task"
-		 * +
-		 * "\n Type edit [Task Name] [New Task Name] to change the name of an existing task, if more than one task match"
-		 * +
-		 * "the name, a list of ids of the tasks will be shown and you can choose an id"
-		 * +
-		 * "\n Type edit [id]/[Task Name] [New Start Date] ([New End State]) to change the start date(deadline) (and end"
-		 * + "date if provided) of the specified task" +
-		 * "\n Type undo to undo the former action" +
-		 * "\n Type mark [id]/[Task Name] to mark a task done/undone" +
-		 * "\n Shortcuts: add/a search/s delete/del/d edit/ed/e mark/m";
-		 * textArea.setText(display); } });
-		 */
 
 		sendButton = new JButton("Send");
 		sendButton.setBounds(551, 419, 72, 25);
@@ -901,24 +877,6 @@ public class DonGUIV2 {
 
 	class TaskCellRenderer extends JLabel implements ListCellRenderer {
 
-		/*
-		 * JPanel panel_1 = new JPanel(); GridBagConstraints gbc_panel_1 = new
-		 * GridBagConstraints(); gbc_panel_1.anchor = GridBagConstraints.SOUTH;
-		 * gbc_panel_1.fill = GridBagConstraints.HORIZONTAL; gbc_panel_1.insets
-		 * = new Insets(0, 0, 5, 0); gbc_panel_1.gridx = 3; gbc_panel_1.gridy =
-		 * 1; frmDoornot.getContentPane().add(panel_1, gbc_panel_1);
-		 * GridBagLayout gbl_panel_1 = new GridBagLayout();
-		 * //gbl_panel_1.columnWidths = new int[]{0, 0, 4, 0};
-		 * //gbl_panel_1.rowHeights = new int[]{0, 0, 0};
-		 * gbl_panel_1.columnWeights = new double[]{1.0, 5.0, 0.0,
-		 * Double.MIN_VALUE}; gbl_panel_1.rowWeights = new double[]{1.0, 1.0,
-		 * Double.MIN_VALUE}; panel_1.setLayout(gbl_panel_1);
-		 */
-
-		// JPanel np = new JPanel();
-		// gbc_np.fill = GridBagConstraints.HORIZONTAL;
-
-		// JPanel p = new JPanel(new BorderLayout());
 		JPanel p = new JPanel();
 		JTextPane id = new JTextPane();
 		JTextPane content = new JTextPane();
@@ -1024,7 +982,7 @@ public class DonGUIV2 {
 				if (entry.getType() == IDonTask.TaskType.FLOATING) {
 					id.setText("F");
 				} else if(entry.getType() == IDonTask.TaskType.DEADLINE){
-					id.setText(printShortDate(entry.getStartDate()));
+					id.setText(printShortDate(entry.getStartDate())+ "\n" + printDayInWeek(entry.getStartDate()));
 				} else {
 					id.setText(printShortDate(entry.getStartDate()) + "\n" 
 				+ printShortDate(entry.getEndDate()));
