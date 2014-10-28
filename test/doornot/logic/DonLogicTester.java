@@ -5,29 +5,31 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.Calendar;
 
-import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import doornot.parser.DonParser;
+import doornot.storage.DonStorage;
 import doornot.storage.IDonTask;
 
 //@author A0111995Y
 public class DonLogicTester {
 	
 	private static DonLogic logic;
-	private static DonStorageStub storage;
+	private static DonStorage storage;
 	@BeforeClass
 	public static void initLogic() {
-		storage = new DonStorageStub("logic_test");
+		storage = new DonStorage();
+		storage.changeFileName("logic_test");
 		logic = new DonLogic(storage, new DonParser(), false);
 	}
 	
-	@After
+	@Before
 	public void removeTestFile() {
 		File f = new File("logic_test");
 		f.delete();
-		storage.clearTasks();
+		storage.getTaskList().clear();
 	}
 
 	@Test
