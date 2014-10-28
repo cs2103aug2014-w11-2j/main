@@ -27,6 +27,10 @@ public class DonInvalidCommand extends AbstractDonCommand{
 		error = true;
 	}
 	
+	public InvalidType getType() {
+		return type;
+	}
+	
 	public String getStringInput() {
 		return command;
 	}

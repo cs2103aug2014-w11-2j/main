@@ -15,6 +15,8 @@ import doornot.util.DonDeleteCommand;
 import doornot.util.DonEditCommand;
 import doornot.util.DonFindCommand;
 import doornot.util.DonHelpCommand;
+import doornot.util.DonInvalidCommand;
+import doornot.util.DonInvalidCommand.InvalidType;
 import doornot.util.DonMarkCommand;
 import doornot.util.AbstractDonCommand.GeneralCommandType;
 import doornot.util.DonAddLabelCommand.AddLabelType;
@@ -25,6 +27,7 @@ import doornot.util.DonEditCommand.EditType;
 import doornot.util.DonFindCommand.SearchType;
 import doornot.util.DonHelpCommand.HelpType;
 import doornot.util.DonMarkCommand.MarkType;
+
 /**
  * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand
@@ -50,6 +53,10 @@ public class DonParserTest {
 		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24");
 		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 9 sep 1.24 pm");
 		
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a \"hihihi 12345678 \" at 12/13/2014");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad \"hihihi\" at 09082014");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a hihihi\" at 09082014");
+		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a \"hihih;i\" at 09082014");
 		
 		assertEquals(AddType.DEADLINE, create1.getType());
 		assertEquals("hihihi 12345678 ", create1.getTaskTitle());
@@ -58,7 +65,7 @@ public class DonParserTest {
 		
 		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create2.getStartDate()));
 		
-		assertEquals(GeneralCommandType.INVALID_DATE, parser.parseCommand("a \"hihihi 12345678 \" at 12/13/2014").getGeneralType());
+		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
 		
 		
 		// test hours
@@ -83,16 +90,13 @@ public class DonParserTest {
 //		DonCreateCommand create6 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ every 09/09/2014 13:24");
 		
 		
-		
-		
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_COMMAND, parser.parseCommand("ad \"hihihi\" at 09082014").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("a hihihi\" at 09082014").getGeneralType());
-//		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" 09082014").getGeneralType()); //float
-//		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("add \"hihihi\" at 090814").getGeneralType()); // parser mistake
-//		assertEquals(CommandType.INVALID_FORMAT, parser.parseCommand("a \"hihihi\" a 09082014").getGeneralType()); //float
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("a \"hihih;i\" at 09082014").getGeneralType());
-		
+		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
+		assertEquals("ad", invalid2.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("a", invalid3.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid4.getType());
+		assertEquals("a", invalid4.getStringInput());
 		
 	}
 	
@@ -128,19 +132,22 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(endDate1, create4.getEndDate()));
 		
 		// test invalid 
-		assertEquals(GeneralCommandType.INVALID_DATE, 
-				parser.parseCommand("add \"hihihi\" from 07082014 to 09082014_1554").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_DATE, 
-				parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 07082014 to 09082014_1554");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" fro 07082014 to 09082014");
+		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 0702014 to 0908204");
+		DonInvalidCommand invalid5 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 0702014 2 0908204");
+		DonInvalidCommand invalid6 = (DonInvalidCommand) parser.parseCommand("add \"hihihi from 0702014 2 0908204");
 		
-		assertEquals(GeneralCommandType.INVALID_FORMAT,
-				parser.parseCommand("add \"hihihi\" fro 07082014 to 09082014").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_DATE,
-				parser.parseCommand("add \"hihihi\" from 0702014 to 0908204").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_DATE,
-				parser.parseCommand("add \"hihihi\" from 0702014 2 0908204").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_FORMAT,
-				parser.parseCommand("add \"hihihi from 0702014 2 0908204").getGeneralType());
+		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
+		assertEquals(InvalidType.INVALID_DATE, invalid2.getType());
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("add", invalid3.getStringInput());
+		assertEquals(InvalidType.INVALID_DATE, invalid4.getType());
+		assertEquals(InvalidType.INVALID_DATE, invalid5.getType());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid6.getType());
+		assertEquals("add", invalid6.getStringInput());
 	}
 	
 	@Test
@@ -151,8 +158,10 @@ public class DonParserTest {
 		assertEquals("hihihi", create1.getTaskTitle());
 		
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, 
-				parser.parseCommand("add \"hihihi\" dfs").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" dfs");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("add", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -164,9 +173,18 @@ public class DonParserTest {
 		assertEquals(MarkType.MARK_STRING, mark1.getMarkType());
 		assertEquals("blah95", mark1.getSearchTitle());
 		
+		// test batch mark
+		DonMarkCommand mark2 = (DonMarkCommand) parser.parseCommand("mark overdue");
+		DonMarkCommand mark3 = (DonMarkCommand) parser.parseCommand("mark float");
+		
+		assertEquals(MarkType.MARK_OVERDUE, mark2.getMarkType());
+		assertEquals(MarkType.MARK_FLOAT, mark3.getMarkType());
+		
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, 
-				parser.parseCommand("mark \"blah95").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark \"blah95");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("mark", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -182,8 +200,19 @@ public class DonParserTest {
 		// test delete
 		assertEquals(DeleteType.DELETE_TITLE, delete1.getType());
 		assertEquals("blah95", delete1.getSearchTitle());
+		
+		// test batch delete
+		DonDeleteCommand delete2 = (DonDeleteCommand) parser.parseCommand("del od");
+		DonDeleteCommand delete3 = (DonDeleteCommand) parser.parseCommand("del fl");
+				
+		assertEquals(DeleteType.DELETE_OVERDUE, delete2.getType());
+		assertEquals(DeleteType.DELETE_FLOAT, delete3.getType());
+		
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("del \"blah95").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del \"blah95");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("del", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -273,6 +302,14 @@ public class DonParserTest {
 		DonFindCommand search12 = (DonFindCommand) parser.parseCommand("overdue");
 		assertEquals(SearchType.OVERDUE, search11.getType());
 		assertEquals(SearchType.OVERDUE, search12.getType());
+		
+		// test future
+		DonFindCommand search13 = (DonFindCommand) parser.parseCommand("future");
+		assertEquals(SearchType.FUTURE, search13.getType());
+				
+		// test 7 days
+		DonFindCommand search14 = (DonFindCommand) parser.parseCommand("week");
+		assertEquals(SearchType.SEVEN_DAYS, search14.getType());
 	}
 	@Test
 	public void testEditName(){
@@ -282,9 +319,14 @@ public class DonParserTest {
 		assertEquals(EditType.NAME_NAME, edit1.getType());
 		assertEquals("HEHEHE", edit1.getNewTitle());
 		assertEquals("hihihi", edit1.getSearchTitle());
+		
 		//test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("EDIT \"hihihi to \"HEHEHE\"").getGeneralType());
-		// tets edit ID
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("EDIT \"hihihi to \"HEHEHE\"");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("EDIT", invalid1.getStringInput());
+		
+		// test edit ID
 		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit 666 to \"hehehe\"");
 		
 		assertEquals(EditType.ID_NAME, edit2.getType());
@@ -411,9 +453,16 @@ public class DonParserTest {
 		assertEquals(HelpType.HELP_REDO, help9.getRequestedCommand());
 
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("help commands").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_COMMAND, parser.parseCommand("helpppp add").getGeneralType());
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("help adds").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("help commands");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("helpppp add");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("help adds");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("help", invalid1.getStringInput());
+		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
+		assertEquals("helpppp", invalid2.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("help", invalid3.getStringInput());
 	}
 
 	@Test
@@ -425,8 +474,12 @@ public class DonParserTest {
 		assertEquals(AddLabelType.LABEL_NAME, label1.getAddLabelType());
 		assertEquals("projects", label1.getNewLabel());
 		assertEquals("hihihi", label1.getSearchTitle());
+		
 		//test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("label \"hihihi\" \"projects").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("label \"hihihi\" \"projects");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("label", invalid1.getStringInput());
 		
 		// tets label ID
 		
@@ -446,7 +499,10 @@ public class DonParserTest {
 		assertEquals("hihihi", delabel1.getSearchTitle());
 
 		//test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("delabel \"hihihi\" \"projects").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("delabel \"hihihi\" \"projects");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("delabel", invalid1.getStringInput());
 
 		// tets delabel ID
 		DonDelabelCommand delabel2 = (DonDelabelCommand) parser.parseCommand("delabel 666 \"projects\"");
@@ -464,6 +520,11 @@ public class DonParserTest {
 		assertEquals("projects", search1.getSearchTitle());
 		
 		// test invalid
-		assertEquals(GeneralCommandType.INVALID_FORMAT, parser.parseCommand("sl \"projects").getGeneralType());
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("sl \"projects");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("sl", invalid1.getStringInput());
+
+		
 	}
 }
