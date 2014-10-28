@@ -25,11 +25,7 @@ import doornot.storage.IDonTask;
  */
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
-
 	
-	private static final String MSG_COMMAND_WRONG_FORMAT = "The command you entered was of the wrong format!";
-	private static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
-	private static final String MSG_UNKNOWN_COMMAND = "You have entered an unknown command";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 
@@ -110,13 +106,6 @@ public class DonLogic implements IDonLogic {
 			response = undoLastAction();
 		} else if (genCommandType == GeneralCommandType.REDO) {
 			response = redoAction();
-		} else if (genCommandType == GeneralCommandType.INVALID_FORMAT) {
-			
-			response = createInvalidFormatResponse();
-		} else if (genCommandType == GeneralCommandType.INVALID_DATE) {
-			response = createInvalidDateResponse();
-		} else if (genCommandType == GeneralCommandType.INVALID_COMMAND) {
-			response = createInvalidCommandResponse();
 		} else {
 			response = dCommand.executeCommand(donStorage);
 			if(dCommand.hasExecuted()) {
@@ -152,41 +141,7 @@ public class DonLogic implements IDonLogic {
 		return donParser.parseCommand("today").executeCommand(donStorage);
 	}
 
-	/**
-	 * Creates a response for user entered commands with invalid formatting
-	 * 
-	 * @return the response
-	 */
-	private IDonResponse createInvalidFormatResponse() {
-		IDonResponse response = new DonResponse();
-		response.addMessage(MSG_COMMAND_WRONG_FORMAT);
-		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
-		return response;
-	}
-
-	/**
-	 * Creates a response for user entered commands with invalid dates
-	 * 
-	 * @return the response
-	 */
-	private IDonResponse createInvalidDateResponse() {
-		IDonResponse response = new DonResponse();
-		response.addMessage(MSG_COMMAND_WRONG_DATE);
-		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
-		return response;
-	}
-
-	/**
-	 * Creates a response for unrecognized commands
-	 * 
-	 * @return the response
-	 */
-	private IDonResponse createInvalidCommandResponse() {
-		IDonResponse response = new DonResponse();
-		response.addMessage(MSG_UNKNOWN_COMMAND);
-		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
-		return response;
-	}
+	
 
 	/**
 	 * Undoes the last action

@@ -24,6 +24,7 @@ import doornot.logic.DonGeneralCommand;
 import doornot.logic.DonHelpCommand;
 import doornot.logic.DonHelpCommand.HelpType;
 import doornot.logic.DonInvalidCommand;
+import doornot.logic.DonInvalidCommand.InvalidType;
 import doornot.logic.DonMarkCommand;
 import doornot.logic.DonMarkCommand.MarkType;
 
@@ -486,7 +487,7 @@ public class DonParser implements IDonParser {
 					SearchType.SEARCH_LABEL);
 			
 		} else {
-			dCommand = new DonInvalidCommand(InvlaidType.INVALID_FORMAT, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 
 	}
