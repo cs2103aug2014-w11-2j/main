@@ -1,6 +1,8 @@
-package doornot.logic;
+package doornot.util;
 
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 /**
@@ -20,8 +22,8 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	protected static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
-	protected static final String MSG_DELETE_SUCCESS = "The above task was deleted successfully.";
-	protected static final String MSG_DELETE_FAILED = "The above task could not be deleted.";
+	protected static final String MSG_DELETE_SUCCESS = "The task was deleted successfully.";
+	protected static final String MSG_DELETE_FAILED = "The task could not be deleted.";
 	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";

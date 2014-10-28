@@ -1,10 +1,14 @@
-package doornot.logic;
+package doornot.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.storage.IDonTask.TaskType;
 
 public class DonDeleteCommand extends AbstractDonCommand {
 	
@@ -18,7 +22,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	private DeleteType type;
 	private int searchID;
 	private String searchTitle;
-	private IDonTask deletedTask;
+	private List<IDonTask> deletedTasks = new ArrayList<IDonTask>();
 	
 	/**
 	 * Set a delete command by id
@@ -74,7 +78,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
 				response.addMessage(MSG_DELETE_SUCCESS);
 				response.addTask(task);
-				deletedTask = task.clone();
+				deletedTasks.add(task.clone());
 
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
@@ -115,6 +119,70 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	private IDonResponse deleteOverdueTasks(IDonStorage donStorage) {
+		assert searchTitle!=null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.findOverdue(donStorage);
+		
+		if (foundList.isEmpty()) {
+			// No overdue tasks
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for(IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				boolean deleted = donStorage.removeTask(task.getID());
+				if(!deleted) {
+					//Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if(success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+			
+		}
+
+		return response;
+	}
+	
+	private IDonResponse deleteFloatingTasks(IDonStorage donStorage) {
+		assert searchTitle!=null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, true);
+		
+		if (foundList.isEmpty()) {
+			// No overdue tasks
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for(IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				boolean deleted = donStorage.removeTask(task.getID());
+				if(!deleted) {
+					//Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if(success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+			
+		}
+
+		return response;
+	}
+	
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		IDonResponse response = null;
@@ -122,6 +190,10 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			response = deleteTaskByID(donStorage);
 		} else if (type == DeleteType.DELETE_TITLE) {
 			response = deleteTaskByTitle(donStorage);
+		} else if (type == DeleteType.DELETE_OVERDUE) {
+			response = deleteOverdueTasks(donStorage);
+		} else if (type == DeleteType.DELETE_FLOAT) {
+			response = deleteFloatingTasks(donStorage);
 		}
 		
 		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {
@@ -133,15 +205,24 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	@Override
 	public IDonResponse undoCommand(IDonStorage donStorage) {
 		//Perform an add
-		assert deletedTask!=null;
-		int id = donStorage.addTask(deletedTask);
+		assert deletedTasks!=null;
 		IDonResponse response = null;
-		if(id != -1) {
+		int count = 0;
+		for(IDonTask task : deletedTasks) {
+			int id = donStorage.addTask(task);
+			if(id != -1) {
+				count++;
+			}
+		}
+		
+		if(count!=deletedTasks.size()) {
+			response = createUndoFailureResponse();
+		} else {
 			response = createUndoSuccessResponse();
 			executed = false;
-		} else {
-			response = createUndoFailureResponse();
+			deletedTasks.clear();
 		}
+		
 		return response;
 	}
 

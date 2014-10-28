@@ -1,7 +1,9 @@
-package doornot.logic;
+package doornot.util;
 
 import java.util.List;
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;

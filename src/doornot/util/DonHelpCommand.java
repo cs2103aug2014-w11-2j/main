@@ -1,5 +1,8 @@
-package doornot.logic;
+package doornot.util;
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
+import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 
 public class DonHelpCommand extends AbstractDonCommand {

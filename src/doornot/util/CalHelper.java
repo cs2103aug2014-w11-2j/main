@@ -1,4 +1,4 @@
-package doornot;
+package doornot.util;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;

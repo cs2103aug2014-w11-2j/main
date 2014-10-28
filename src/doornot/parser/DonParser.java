@@ -9,24 +9,24 @@ import java.util.regex.Pattern;
 
 import com.joestelmach.natty.*;
 
-import doornot.CalHelper;
-import doornot.logic.AbstractDonCommand;
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
-import doornot.logic.DonDelabelCommand;
-import doornot.logic.DonDeleteCommand;
-import doornot.logic.DonDeleteCommand.DeleteType;
-import doornot.logic.DonFindCommand;
-import doornot.logic.DonFindCommand.SearchType;
-import doornot.logic.DonAddLabelCommand;
-import doornot.logic.DonCreateCommand;
-import doornot.logic.DonEditCommand;
-import doornot.logic.DonGeneralCommand;
-import doornot.logic.DonHelpCommand;
-import doornot.logic.DonHelpCommand.HelpType;
-import doornot.logic.DonInvalidCommand;
-import doornot.logic.DonInvalidCommand.InvalidType;
-import doornot.logic.DonMarkCommand;
-import doornot.logic.DonMarkCommand.MarkType;
+import doornot.util.AbstractDonCommand;
+import doornot.util.CalHelper;
+import doornot.util.DonAddLabelCommand;
+import doornot.util.DonCreateCommand;
+import doornot.util.DonDelabelCommand;
+import doornot.util.DonDeleteCommand;
+import doornot.util.DonEditCommand;
+import doornot.util.DonFindCommand;
+import doornot.util.DonGeneralCommand;
+import doornot.util.DonHelpCommand;
+import doornot.util.DonInvalidCommand;
+import doornot.util.DonMarkCommand;
+import doornot.util.AbstractDonCommand.GeneralCommandType;
+import doornot.util.DonDeleteCommand.DeleteType;
+import doornot.util.DonFindCommand.SearchType;
+import doornot.util.DonHelpCommand.HelpType;
+import doornot.util.DonInvalidCommand.InvalidType;
+import doornot.util.DonMarkCommand.MarkType;
 
 /**
  * DonParser parses the commands and creates a DonCommand

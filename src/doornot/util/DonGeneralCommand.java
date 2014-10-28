@@ -1,5 +1,6 @@
-package doornot.logic;
+package doornot.util;
 
+import doornot.logic.IDonResponse;
 import doornot.storage.IDonStorage;
 
 /**
