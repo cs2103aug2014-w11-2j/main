@@ -105,6 +105,8 @@ public abstract class AbstractDonCommand {
 	
 	protected boolean executed = false; //Set to true when execution has finished to allow undo to take place
 	
+	protected boolean error = false;
+	
 	public abstract IDonResponse executeCommand(IDonStorage donStorage);
 	
 	public abstract IDonResponse undoCommand(IDonStorage donStorage);
@@ -145,6 +147,10 @@ public abstract class AbstractDonCommand {
 	
 	public boolean hasExecuted() {
 		return executed;
+	}
+	
+	public boolean hasError() {
+		return error;
 	}
 	
 }

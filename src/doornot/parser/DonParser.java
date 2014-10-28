@@ -152,6 +152,14 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("od")
 				|| commandWord.equalsIgnoreCase("overdue")) {
 			dCommand = new DonFindCommand(SearchType.OVERDUE);
+		}else if (commandWord.equalsIgnoreCase("7 days")
+				|| commandWord.equalsIgnoreCase("this week")) {
+			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
+		}else if (commandWord.equalsIgnoreCase("upcoming")
+				|| commandWord.equalsIgnoreCase("")) {
+//			dCommand = new DonFindCommand(SearchType.UPCOMING);
+		}else if (commandWord.equalsIgnoreCase("undone")) {
+//			dCommand = new DonFindCommand(SearchType.UNDONE);
 		} else if (commandWord.equalsIgnoreCase("undo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")) {
@@ -706,6 +714,8 @@ public class DonParser implements IDonParser {
 	private boolean setNewDeadlineForCommand(String parameters,
 			Calendar deadlineOut) {
 		boolean hasSetTime = false;
+//	    boolean hasRecurred = false;
+//		Date recursTill;
 		if (!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")) {
 
 			try {
@@ -714,7 +724,12 @@ public class DonParser implements IDonParser {
 				String param = removeFormalDate(parameters, dateReg,
 						dateNoYearReg);
 				Date time = getTimeFromParser(param);
-
+				
+//				if(isRecurrence()){
+//					hasRecurred = true;
+//					recursTill = getRecurringUntil();
+//				}
+				
 				if (isTimeMentioned()) {
 					hasSetTime = true;
 					CalHelper.copyCalendar(createDateTimeNatty(date, time),
@@ -732,7 +747,12 @@ public class DonParser implements IDonParser {
 				Date date = getTimeFromParser(parameters);
 				Calendar cal = new GregorianCalendar();
 				cal.setTime(date);
-
+				
+//				if(isRecurrence()){
+//					hasRecurred = true;
+//					recursTill = getRecurringUntil();
+//				}
+				
 				if (isTimeMentioned()) {
 					hasSetTime = true;
 					CalHelper.copyCalendar(cal, deadlineOut);
@@ -773,7 +793,29 @@ public class DonParser implements IDonParser {
 	private boolean isTimeMentioned() {
 		return !(groups.get(0).isTimeInferred());
 	}
-
+	/**
+	 * check if it is recurrence. user has "every"
+	 * 
+	 * @return
+	 */
+//	private boolean isRecurrence() {
+//		return (groups.get(0).isRecurring());
+//	}
+	/**
+	 * get end of recurrence
+	 * 
+	 * @return
+	 */
+//	private Date getRecurringUntil() {
+//		if(groups.get(0).getRecursUntil() == null){
+//			// year 2020 ??
+//			Calendar cal = new GregorianCalendar(2020,11,31);
+//			return cal.getTime();
+//		} else {
+//			return groups.get(0).getRecursUntil();
+//		}
+//		
+//	}
 	/**
 	 * Gets date from parser
 	 * 
@@ -802,6 +844,8 @@ public class DonParser implements IDonParser {
 	private boolean setStartAndEndForCommand(String parameters,
 			Calendar startDate, Calendar endDate) {
 		boolean hasSetTime = false;
+//		boolean hasRecurred = false;
+//		Date recursTill;
 		if (!removeFormalDate(parameters, dateEventReg, dateNoYearEventReg)
 				.equals("")) {
 
@@ -810,7 +854,12 @@ public class DonParser implements IDonParser {
 				String param = removeFormalDate(parameters, dateEventReg,
 						dateNoYearEventReg);
 				Date[] timings = getTimingsFromParser(param);
-
+				
+//				if(isRecurrence()){
+//					hasRecurred = true;
+//					recursTill = getRecurringUntil();
+//				}
+				
 				if (isTimeMentioned()) {
 					hasSetTime = true;
 					CalHelper.copyCalendar(
@@ -837,7 +886,12 @@ public class DonParser implements IDonParser {
 				Calendar cal2 = new GregorianCalendar();
 				cal2.setTime(dates[1]);
 				calArr[1] = cal2;
-
+				
+//				if(isRecurrence()){
+//					hasRecurred = true;
+//					recursTill = getRecurringUntil();
+//				}
+				
 				if (isTimeMentioned()) {
 					hasSetTime = true;
 					CalHelper.copyCalendar(calArr[0], startDate);
