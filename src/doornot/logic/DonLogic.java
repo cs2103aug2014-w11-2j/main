@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
@@ -31,9 +30,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
-	private static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
-	private static final String MSG_REDO_SUCCESS = "Redo successful. %1$d change(s) redone.";	
 
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
 
@@ -159,13 +156,10 @@ public class DonLogic implements IDonLogic {
 		} else {
 			AbstractDonCommand lastCommand = commandPast.pop();
 			assert lastCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
-			lastCommand.undoCommand(donStorage);
+			response = lastCommand.undoCommand(donStorage);
 			if(!lastCommand.hasExecuted()) {
 				//Command undone
 				commandFuture.add(lastCommand);
-				
-				response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
-				response.addMessage(String.format(MSG_UNDO_SUCCESS, 1));
 			}
 		}
 
@@ -187,13 +181,11 @@ public class DonLogic implements IDonLogic {
 		} else {
 			AbstractDonCommand nextCommand = commandFuture.pop();
 			assert !nextCommand.hasExecuted(); //The lastCommand can only be in the stack if it has run
-			nextCommand.executeCommand(donStorage);
+			
+			response = nextCommand.executeCommand(donStorage);
 			if(nextCommand.hasExecuted()) {
 				//Command redone
 				commandPast.add(nextCommand);
-				
-				response.setResponseType(IDonResponse.ResponseType.REDO_SUCCESS);
-				response.addMessage(String.format(MSG_REDO_SUCCESS, 1));
 			}
 
 		}

@@ -126,14 +126,11 @@ public class DonMarkCommand extends DonEditCommand {
 		} else {
 			int x = tasks.get(0).getID();
 			for(IDonTask task : tasks) {
-				System.out.println(task.getID());
 				unchangedTask.add(task.clone());
 				boolean taskCompleted = !task.getStatus();
 				task.setStatus(taskCompleted);
-				System.out.println(task.getStatus());
 				response.addTask(task);
 			}
-			System.out.println(donStorage.getTask(x).getStatus());
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
 			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
 		}
