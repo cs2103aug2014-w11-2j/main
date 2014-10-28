@@ -10,7 +10,9 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	
 	public enum DeleteType {
 		DELETE_ID,
-		DELETE_TITLE
+		DELETE_TITLE,
+		DELETE_OVERDUE,
+		DELETE_FLOAT
 	}
 	
 	private DeleteType type;
@@ -31,6 +33,11 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	public DonDeleteCommand(String title) {
 		searchTitle = title;
 		type = DeleteType.DELETE_TITLE;
+		generalCommandType = GeneralCommandType.DELETE;
+	}
+	
+	public DonDeleteCommand(DeleteType deltype) {
+		type = deltype;
 		generalCommandType = GeneralCommandType.DELETE;
 	}
 	

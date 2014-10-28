@@ -23,7 +23,7 @@ public class DonInvalidCommand extends AbstractDonCommand{
 	
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
-		
+		return null;	
 	}
 
 	@Override

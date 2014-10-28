@@ -14,6 +14,7 @@ import doornot.logic.AbstractDonCommand;
 import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.DonDelabelCommand;
 import doornot.logic.DonDeleteCommand;
+import doornot.logic.DonDeleteCommand.DeleteType;
 import doornot.logic.DonFindCommand;
 import doornot.logic.DonFindCommand.SearchType;
 import doornot.logic.DonAddLabelCommand;
@@ -22,7 +23,9 @@ import doornot.logic.DonEditCommand;
 import doornot.logic.DonGeneralCommand;
 import doornot.logic.DonHelpCommand;
 import doornot.logic.DonHelpCommand.HelpType;
+import doornot.logic.DonInvalidCommand;
 import doornot.logic.DonMarkCommand;
+import doornot.logic.DonMarkCommand.MarkType;
 
 /**
  * DonParser parses the commands and creates a DonCommand
@@ -38,7 +41,8 @@ public class DonParser implements IDonParser {
 
 	private String userCommand;
 	private AbstractDonCommand dCommand;
-
+	private String commandWord;
+	
 	// for natty parser
 	private Parser nattyParser = new Parser();
 	private List<DateGroup> groups;
@@ -117,7 +121,7 @@ public class DonParser implements IDonParser {
 
 	@Override
 	public void setDonCommand() {
-		String commandWord = getFirstWord(userCommand);
+		commandWord = getFirstWord(userCommand);
 
 		if (commandWord.equalsIgnoreCase("a")
 				|| commandWord.equalsIgnoreCase("add")) {
@@ -169,7 +173,7 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("exit")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.EXIT);
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_COMMAND);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_COMMAND, commandWord);
 		}
 
 	}
@@ -198,7 +202,7 @@ public class DonParser implements IDonParser {
 				}
 				
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 			// is it "blah" from
@@ -219,7 +223,7 @@ public class DonParser implements IDonParser {
 				}
 				
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 			// is it "blah"
@@ -232,10 +236,10 @@ public class DonParser implements IDonParser {
 				dCommand = new DonCreateCommand(taskName);
 				
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 
 	}
@@ -258,7 +262,7 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 		} else if (isRightCommand(parameters, editIDToNameReg)) {
@@ -272,7 +276,7 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 		} else if (isRightCommand(parameters, editNameToEventReg)) {
@@ -295,7 +299,7 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 		} else if (isRightCommand(parameters, editIDToEventReg)) {
@@ -329,7 +333,7 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
 		} else if (isRightCommand(parameters, editIDToDateReg)) {
@@ -348,7 +352,7 @@ public class DonParser implements IDonParser {
 			
 
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 	}
 
@@ -357,8 +361,17 @@ public class DonParser implements IDonParser {
 	 */
 	private void setMarkCommand() {
 		String parameters = removeFirstWord(userCommand);
-
-		if (isTaskName(parameters)) {
+		
+		if(parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")){
+			dCommand = new DonMarkCommand(MarkType.MARK_OVERDUE);
+			
+		} else if(parameters.equalsIgnoreCase("float")
+				|| parameters.equalsIgnoreCase("fl")
+				|| parameters.equalsIgnoreCase("floating")){
+			dCommand = new DonMarkCommand(MarkType.MARK_FLOAT);
+			
+		} else if (isTaskName(parameters)) {
 			dCommand = new DonMarkCommand(extractName(parameters));
 			
 		} else {
@@ -368,7 +381,7 @@ public class DonParser implements IDonParser {
 				
 
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		}
 
@@ -379,8 +392,17 @@ public class DonParser implements IDonParser {
 	 */
 	private void setDeleteCommand() {
 		String parameters = removeFirstWord(userCommand);
-
-		if (isTaskName(parameters)) {
+		
+		if(parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")){
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_OVERDUE);
+			
+		} else if(parameters.equalsIgnoreCase("float")
+				|| parameters.equalsIgnoreCase("fl")
+				|| parameters.equalsIgnoreCase("floating")){
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
+			
+		} else if (isTaskName(parameters)) {
 			dCommand = new DonDeleteCommand(extractName(parameters));
 			
 		} else {
@@ -390,7 +412,7 @@ public class DonParser implements IDonParser {
 				
 
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		}
 
@@ -464,7 +486,7 @@ public class DonParser implements IDonParser {
 					SearchType.SEARCH_LABEL);
 			
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+			dCommand = new DonInvalidCommand(InvlaidType.INVALID_FORMAT, commandWord);
 		}
 
 	}
@@ -496,10 +518,10 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 
 	}
@@ -531,10 +553,10 @@ public class DonParser implements IDonParser {
 				
 
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		} else {
-			dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 
 	}
@@ -565,7 +587,7 @@ public class DonParser implements IDonParser {
 			} else if (parameters.equalsIgnoreCase("redo")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_REDO);
 			} else {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_FORMAT);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 		}
 
@@ -739,7 +761,7 @@ public class DonParser implements IDonParser {
 				}
 
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_DATE);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 			}
 
 		} else {
@@ -760,7 +782,7 @@ public class DonParser implements IDonParser {
 					CalHelper.copyCalendar(createDateNatty(cal), deadlineOut);
 				}
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_DATE);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 			}
 		}
 
@@ -874,7 +896,7 @@ public class DonParser implements IDonParser {
 				}
 
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_DATE);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 			}
 		} else {
 			try {
@@ -902,7 +924,7 @@ public class DonParser implements IDonParser {
 					CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
 				}
 			} catch (Exception e) {
-				dCommand = new DonGeneralCommand(GeneralCommandType.INVALID_DATE);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 			}
 		}
 
