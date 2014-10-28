@@ -186,7 +186,7 @@ public class CalHelper {
 	
 	public static Calendar getDaysFromNow(int numDays) {
 		Parser nattyParser = new Parser();
-		List<DateGroup> dateGroup = nattyParser.parse(numDays+" from today");
+		List<DateGroup> dateGroup = nattyParser.parse(numDays+" days from today");
 		Calendar outCal = new GregorianCalendar();
 		outCal.setTime(dateGroup.get(0).getDates().get(0));
 		return outCal;
