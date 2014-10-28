@@ -46,17 +46,17 @@ public class DonStorage implements IDonStorage {
 		return task.getID();
 	}
 	
-	private int initStack(int newID){
+	private void initStack(int newID){
 		if(newID>currentMaxID){
-			for(int i = currentMaxID;i<newID;i++){
+			for(int i = currentMaxID+1;i<newID;i++){
 				IDStack.push(i);
 			}
 			currentMaxID = newID;
 		}
 		else{
-			IDStack.remove(newID);
+			Integer ID = newID;
+			IDStack.remove(ID);
 		}
-		return currentMaxID;
 	}
 	
 	private void refreshStack(){
