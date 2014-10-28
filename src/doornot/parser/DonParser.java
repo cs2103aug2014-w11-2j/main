@@ -157,14 +157,12 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("od")
 				|| commandWord.equalsIgnoreCase("overdue")) {
 			dCommand = new DonFindCommand(SearchType.OVERDUE);
-		}else if (commandWord.equalsIgnoreCase("7 days")
-				|| commandWord.equalsIgnoreCase("this week")) {
+		}else if (commandWord.equalsIgnoreCase("week")) {
 			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
-		}else if (commandWord.equalsIgnoreCase("upcoming")
-				|| commandWord.equalsIgnoreCase("")) {
-//			dCommand = new DonFindCommand(SearchType.UPCOMING);
-		}else if (commandWord.equalsIgnoreCase("undone")) {
-//			dCommand = new DonFindCommand(SearchType.UNDONE);
+		}else if (commandWord.equalsIgnoreCase("future")) {
+			dCommand = new DonFindCommand(SearchType.FUTURE);
+//		}else if (commandWord.equalsIgnoreCase("float")) {
+//			dCommand = new DonFindCommand(SearchType.FLOAT);
 		} else if (commandWord.equalsIgnoreCase("undo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")) {
@@ -476,7 +474,6 @@ public class DonParser implements IDonParser {
 		}
 
 	}
-
 	/**
 	 * Creates the search label CommandType
 	 */
