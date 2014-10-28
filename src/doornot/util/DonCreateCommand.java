@@ -1,7 +1,9 @@
-package doornot.logic;
+package doornot.util;
 
 import java.util.Calendar;
 
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;

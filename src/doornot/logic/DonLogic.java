@@ -9,13 +9,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.util.AbstractDonCommand;
+import doornot.util.AbstractDonCommand.GeneralCommandType;
 
 
 /**

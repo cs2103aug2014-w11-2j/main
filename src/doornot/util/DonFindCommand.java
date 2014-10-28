@@ -1,4 +1,4 @@
-package doornot.logic;
+package doornot.util;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -6,13 +6,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import com.joestelmach.natty.Parser;
-
-import doornot.CalHelper;
+import doornot.logic.DonPeriod;
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
+import doornot.util.SearchHelper;
 
 public class DonFindCommand extends AbstractDonCommand {
 
@@ -118,14 +119,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findTaskByName(IDonStorage donStorage) {
 		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			// Search for the given name/title without case sensitivity
-			if (task.getTitle().toLowerCase()
-					.contains(searchTitle.toLowerCase())) {
-				response.addTask(task);
-			}
-		}
+		List<IDonTask> taskList = SearchHelper.findTaskByName(donStorage, searchTitle);//donStorage.getTaskList();
+		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
 
@@ -148,25 +143,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findTaskByDate(IDonStorage donStorage) {
 		assert searchStartDate != null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			// Search for the given name/title without case sensitivity
-			TaskType taskType = task.getType();
-			if (taskType == TaskType.FLOATING) {
-				// Floating tasks have no date.
-				continue;
-			}
-			Calendar taskDate = task.getStartDate();
-			Calendar taskEndDate = task.getEndDate();
-			// If the date falls within the start and end date of an event, the
-			// event is returned as well
-			if (CalHelper.isSameDay(taskDate, searchStartDate)
-					|| (taskType == TaskType.DURATION && CalHelper
-							.isBetweenDates(searchStartDate, taskDate,
-									taskEndDate))) {
-				response.addTask(task);
-			}
-		}
+		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate);
+		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		} else {
@@ -203,42 +181,9 @@ public class DonFindCommand extends AbstractDonCommand {
 			Calendar startDate, Calendar endDate, int completeType) {
 		assert !(startDate == null && endDate == null);
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
+		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage, startDate, endDate, completeType);
+		response.setTaskList(taskList);
 
-		for (IDonTask task : taskList) {
-			if (task.getType() == TaskType.FLOATING) {
-				// Floating tasks have no date.
-				continue;
-			}
-			// Ignore tasks that do not match the completion status to search
-			// for
-			if ((task.getStatus() && completeType == FIND_INCOMPLETE)
-					|| (!task.getStatus() && completeType == FIND_COMPLETE)) {
-				continue;
-			}
-			Calendar taskStart = task.getStartDate();
-			Calendar taskEnd = task.getEndDate();
-			if (startDate == null) {
-				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
-					response.addTask(task);
-				}
-			} else if (endDate == null) {
-				if (CalHelper.dateEqualOrAfter(taskStart, startDate)) {
-					response.addTask(task);
-				}
-			} else {
-				// If task is between date or is ongoing between the dates
-				if ((CalHelper.dateEqualOrAfter(taskStart, startDate) && CalHelper
-						.dateEqualOrBefore(taskStart, endDate))
-						|| (CalHelper.dateEqualOrAfter(startDate, taskStart) && CalHelper
-								.dateEqualOrBefore(startDate, taskEnd))
-						|| (CalHelper.dateEqualOrAfter(endDate, taskStart) && CalHelper
-								.dateEqualOrBefore(endDate, taskEnd))) {
-					response.addTask(task);
-				}
-			}
-
-		}
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		} else {
@@ -275,12 +220,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse findUndone(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-		for (IDonTask task : taskList) {
-			if (!task.getStatus()) {
-				response.addTask(task.clone());
-			}
-		}
+		List<IDonTask> taskList = SearchHelper.findUndone(donStorage);
+		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
 		} else {
@@ -316,17 +257,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse findLabel(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = donStorage.getTaskList();
-
-		for (IDonTask task : taskList) {
-			List<String> labels = task.getLabels();
-			for (String label : labels) {
-				if (label.equalsIgnoreCase(searchTitle)) {
-					response.addTask(task);
-					break;
-				}
-			}
-		}
+		List<IDonTask> taskList = SearchHelper.findLabel(donStorage, searchTitle);
+		response.setTaskList(taskList);
 		if (!response.hasTasks()) {
 			// No task with given label found
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
@@ -339,45 +271,6 @@ public class DonFindCommand extends AbstractDonCommand {
 		return response;
 	}
 
-	/**
-	 * Returns a list of tasks by the given task type
-	 * 
-	 * @param donStorage
-	 *            the storage in which the tasks are located
-	 * @param type
-	 *            the type of the task
-	 * @param allowOverdue
-	 *            true if overdue tasks are allowed.
-	 * @param allowFinished
-	 *            true if completed tasks are allowed
-	 * @return the list of tasks
-	 */
-	private List<IDonTask> getTaskByType(IDonStorage donStorage,
-			IDonTask.TaskType type, boolean allowOverdue, boolean allowFinished) {
-		List<IDonTask> taskList = donStorage.getTaskList();
-		List<IDonTask> resultList = new ArrayList<IDonTask>();
-		Calendar now = Calendar.getInstance();
-		for (IDonTask task : taskList) {
-			if (task.getType() == type) {
-				if (type == IDonTask.TaskType.DEADLINE) {
-					if ((!allowOverdue && task.getStartDate().before(now))
-							|| (!allowFinished && task.getStatus())) {
-						// is overdue or finished
-						continue;
-					}
-				} else if (type == IDonTask.TaskType.DURATION) {
-					if ((!allowOverdue && task.getEndDate().before(now))
-							|| (!allowFinished && task.getStatus())) {
-						// is overdue or finished
-						continue;
-					}
-				}
-				// Clone the task to prevent the original from being edited.
-				resultList.add(task.clone());
-			}
-		}
-		return resultList;
-	}
 
 	/**
 	 * Find free time in the user's schedule based on existing task and events.
@@ -391,9 +284,9 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findFreeTime(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
 		// Get all tasks with deadlines or events that end after today
-		List<IDonTask> taskList = getTaskByType(donStorage,
+		List<IDonTask> taskList = SearchHelper.getTaskByType(donStorage,
 				IDonTask.TaskType.DEADLINE, false, false);
-		taskList.addAll(getTaskByType(donStorage, IDonTask.TaskType.DURATION,
+		taskList.addAll(SearchHelper.getTaskByType(donStorage, IDonTask.TaskType.DURATION,
 				false, false));
 		Collections.sort(taskList);
 
@@ -481,14 +374,14 @@ public class DonFindCommand extends AbstractDonCommand {
 	 *            the storage in which the tasks are located
 	 * @return
 	 */
-	private IDonResponse findFuture(IDonStorage donStorage) {
+	protected IDonResponse findFuture(IDonStorage donStorage) {
 		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
 		IDonResponse response = findTaskRange(donStorage, start, null,
 				FIND_INCOMPLETE);
 		return response;
 	}
 
-	private IDonResponse findOverdue(IDonStorage donStorage) {
+	protected IDonResponse findOverdue(IDonStorage donStorage) {
 		IDonResponse response = findTaskRange(donStorage, null,
 				Calendar.getInstance(), FIND_INCOMPLETE);
 		List<IDonTask> taskList = new ArrayList<IDonTask>();
