@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -68,7 +69,7 @@ public class DonStorageTester {
 			List<IDonTask> tasks = new ArrayList<IDonTask>();
 
 			List<IDonTask> tasksTemp = storage.getTaskList();
-			int ID = 1;
+			int ID = storage.getNextID();
 			IDonTask task = new DonTask("something", ID);
 			storage.addTask(task);
 			tasks.add(task);
@@ -78,12 +79,13 @@ public class DonStorageTester {
 			storage.addTask(task);
 			tasks.add(task);
 
-			storage.removeTask(2);
+			assertEquals(null,true,storage.removeTask(2));
 			tasks.remove(1);
 
 			tasksTemp = storage.getTaskList();
 			boolean flag = tasksTemp.equals(tasks);
 			System.out.println(flag);
+			storage.saveToDisk();
 		}
 
 	}
@@ -156,4 +158,29 @@ public class DonStorageTester {
 			storage.saveToDisk();
 		}
 	}
+	
+	@Test
+	public void testMaxID(){
+		DonStorage storage = new DonStorage();
+		
+		storage.changeFileName("testFile8.txt");
+		storage.clear();
+		if(storage.loadFromDisk()){
+			Random ran = new Random();
+			for(int i =0;i<1100;i++){
+				IDonTask task = new DonTask("something", storage.getNextID());
+				assertEquals(null,i+1,storage.addTask(task));
+			}
+			for(int i = 0;i<100;i++){
+				assertEquals(null,true,storage.removeTask(ran.nextInt(9)+i*10+1));
+			}
+			for(int i =0;i<800;i++){
+				IDonTask task = new DonTask("something", storage.getNextID());
+				storage.addTask(task);
+			}
+		}
+		System.out.println(storage.getTaskList().size());
+		storage.saveToDisk();
+	}
+	
 }

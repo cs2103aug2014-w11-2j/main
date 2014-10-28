@@ -7,26 +7,27 @@ import java.util.GregorianCalendar;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import doornot.CalHelper;
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
-import doornot.logic.DonAddLabelCommand.AddLabelType;
-import doornot.logic.DonCreateCommand.AddType;
-import doornot.logic.DonDelabelCommand;
-import doornot.logic.DonDelabelCommand.DelabelType;
-import doornot.logic.DonDeleteCommand.DeleteType;
-import doornot.logic.DonEditCommand.EditType;
-import doornot.logic.DonFindCommand.SearchType;
-import doornot.logic.DonHelpCommand.HelpType;
-import doornot.logic.DonInvalidCommand;
-import doornot.logic.DonInvalidCommand.InvalidType;
-import doornot.logic.DonMarkCommand.MarkType;
-import doornot.logic.DonAddLabelCommand;
-import doornot.logic.DonCreateCommand;
-import doornot.logic.DonDeleteCommand;
-import doornot.logic.DonEditCommand;
-import doornot.logic.DonFindCommand;
-import doornot.logic.DonHelpCommand;
-import doornot.logic.DonMarkCommand;
+import doornot.util.CalHelper;
+import doornot.util.DonAddLabelCommand;
+import doornot.util.DonCreateCommand;
+import doornot.util.DonDelabelCommand;
+import doornot.util.DonDeleteCommand;
+import doornot.util.DonEditCommand;
+import doornot.util.DonFindCommand;
+import doornot.util.DonHelpCommand;
+import doornot.util.DonInvalidCommand;
+import doornot.util.DonInvalidCommand.InvalidType;
+import doornot.util.DonMarkCommand;
+import doornot.util.AbstractDonCommand.GeneralCommandType;
+import doornot.util.DonAddLabelCommand.AddLabelType;
+import doornot.util.DonCreateCommand.AddType;
+import doornot.util.DonDelabelCommand.DelabelType;
+import doornot.util.DonDeleteCommand.DeleteType;
+import doornot.util.DonEditCommand.EditType;
+import doornot.util.DonFindCommand.SearchType;
+import doornot.util.DonHelpCommand.HelpType;
+import doornot.util.DonMarkCommand.MarkType;
+
 /**
  * Test the DonParser and check if it parses the user commands correctly and creates the right
  * DonCommand

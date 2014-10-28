@@ -1,12 +1,14 @@
-package doornot.logic;
+package doornot.util;
 
 import java.util.List;
 
-import doornot.logic.AbstractDonCommand.GeneralCommandType;
-import doornot.logic.DonDeleteCommand.DeleteType;
+import doornot.logic.DonResponse;
+import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.util.AbstractDonCommand.GeneralCommandType;
+import doornot.util.DonDeleteCommand.DeleteType;
 
 public class DonMarkCommand extends DonEditCommand {
 
