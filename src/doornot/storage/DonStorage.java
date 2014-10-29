@@ -32,19 +32,13 @@ public class DonStorage implements IDonStorage {
 	private static final int POSITION_OF_TASK_ID = 4;
 	private static final int POSITION_OF_TASK_TIMEUSAGE = 5;
 	private static final int POSITION_OF_TASK_LABELS = 6;
-	private static final int MAX_OF_TASK_ID = 1000;
 	private static final int MIN_OF_TASK_ID = 1;
 
 	protected List<IDonTask> tasks = new ArrayList<IDonTask>();
 
-	private int nextID = 0;
-	private int[] listOfIDs = new int[MAX_OF_TASK_ID + 1];
-
 	@Override
 	public int addTask(IDonTask task) {
 		tasks.add(task);
-		listOfIDs[task.getID()] = task.getID();
-		setNextID();
 		return task.getID();
 	}
 
@@ -58,8 +52,6 @@ public class DonStorage implements IDonStorage {
 		int taskIndex = searchTask(ID);
 		if (taskIndex != -1) {
 			tasks.remove(taskIndex);
-			listOfIDs[ID] = -1;
-			setNextID();
 			return true;
 		} else
 			return false;
@@ -67,17 +59,36 @@ public class DonStorage implements IDonStorage {
 
 	@Override
 	public int getNextID() {
-		return nextID;
+		if (tasks.isEmpty()) {
+			return MIN_OF_TASK_ID;
+		} else {
+			int[] IDArray = constructIDArray();
+			for (int i = 1; i < IDArray.length; i++) {
+				if (IDArray[i] == 0) {
+					return i;
+				}
+			}
+			return IDArray.length;
+		}
 	}
 
-	private void setNextID() {
-		if (!tasks.isEmpty()) {
-			int i = MIN_OF_TASK_ID;
-			while ((listOfIDs[i] == i) && (i <= MAX_OF_TASK_ID))
-				i++;
-			nextID = i;
-		} else
-			nextID = MIN_OF_TASK_ID;
+	private int[] constructIDArray() {
+		int maxID = findMaxID();
+		int IDArray[] = new int[maxID + 1];
+		for (int i = 0; i < tasks.size(); i++) {
+			IDArray[tasks.get(i).getID()] = 1;
+		}
+		return IDArray;
+	}
+
+	private int findMaxID() {
+		int max = 0;
+		for (int i = 0; i < tasks.size(); i++) {
+			if (tasks.get(i).getID() > max) {
+				max = tasks.get(i).getID();
+			}
+		}
+		return max;
 	}
 
 	@Override
@@ -88,7 +99,7 @@ public class DonStorage implements IDonStorage {
 		else
 			return null;
 	}
-	
+
 	/**
 	 * Find tasks with the given name
 	 * 
@@ -97,7 +108,7 @@ public class DonStorage implements IDonStorage {
 	 * @return the response containing the tasks
 	 */
 	public List<IDonTask> getTaskByName(String name) {
-		assert name!=null;
+		assert name != null;
 		List<IDonTask> foundTasks = new ArrayList<IDonTask>();
 
 		for (IDonTask task : tasks) {
@@ -148,7 +159,7 @@ public class DonStorage implements IDonStorage {
 						taskStatus = "Done";
 					}
 					taskID = tasks.get(i).getID();
-					if(tasks.get(i).isTimeUsed()){
+					if (tasks.get(i).isTimeUsed()) {
 						taskTimeUsage = "True";
 					}
 					if (!tasks.get(i).getLabels().isEmpty()) {
@@ -156,11 +167,10 @@ public class DonStorage implements IDonStorage {
 					} else {
 						taskLabels.add("null");
 					}
-					
 
 					String taskInfo = taskTitle + ";" + taskStartDate + ";"
-							+ taskEndDate + ";" + taskStatus + ";" + taskID + ";"
-							+ taskTimeUsage + ";";
+							+ taskEndDate + ";" + taskStatus + ";" + taskID
+							+ ";" + taskTimeUsage + ";";
 
 					for (int j = 0; j < taskLabels.size(); j++) {
 						taskInfo = taskInfo + taskLabels.get(j) + ";";
@@ -191,9 +201,9 @@ public class DonStorage implements IDonStorage {
 			return readFile(textFile);
 		}
 	}
-	
-	public void changeFileName(String newFileName){
-		FILE_NAME=newFileName;
+
+	public void changeFileName(String newFileName) {
+		FILE_NAME = newFileName;
 	}
 
 	protected boolean readFile(File file) {
@@ -225,7 +235,8 @@ public class DonStorage implements IDonStorage {
 				if (taskInfo[POSITION_OF_TASK_STATUS].equalsIgnoreCase("done")) {
 					task.setStatus(true);
 				}
-				if(taskInfo[POSITION_OF_TASK_TIMEUSAGE].equalsIgnoreCase("True")){
+				if (taskInfo[POSITION_OF_TASK_TIMEUSAGE]
+						.equalsIgnoreCase("True")) {
 					task.setTimeUsed(true);
 				}
 
@@ -236,10 +247,8 @@ public class DonStorage implements IDonStorage {
 					task.setLabels(taskLabels);
 				}
 				tasks.add(task);
-				listOfIDs[task.getID()] = task.getID();
 			}
 			myReader.close();
-			setNextID();
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
