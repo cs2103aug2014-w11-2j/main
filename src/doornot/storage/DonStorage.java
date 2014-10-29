@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Stack;
 
 import doornot.logic.DonResponse;
 import doornot.logic.IDonResponse;
@@ -33,38 +32,20 @@ public class DonStorage implements IDonStorage {
 	private static final int POSITION_OF_TASK_ID = 4;
 	private static final int POSITION_OF_TASK_TIMEUSAGE = 5;
 	private static final int POSITION_OF_TASK_LABELS = 6;
-	
-	
+	private static final int MAX_OF_TASK_ID = 1000;
+	private static final int MIN_OF_TASK_ID = 1;
+
 	protected List<IDonTask> tasks = new ArrayList<IDonTask>();
 
-	private Integer currentMaxID = 0;
-	private Stack<Integer> IDStack = new Stack<Integer>();
+	private int nextID = 0;
+	private int[] listOfIDs = new int[MAX_OF_TASK_ID + 1];
 
 	@Override
 	public int addTask(IDonTask task) {
 		tasks.add(task);
+		listOfIDs[task.getID()] = task.getID();
+		setNextID();
 		return task.getID();
-	}
-	
-	private void initStack(int newID){
-		if(newID>currentMaxID){
-			for(int i = currentMaxID+1;i<newID;i++){
-				IDStack.push(i);
-			}
-			currentMaxID = newID;
-		}
-		else{
-			Integer ID = newID;
-			IDStack.remove(ID);
-		}
-	}
-	
-	private void refreshStack(){
-		if(IDStack.contains(currentMaxID)){
-			currentMaxID--;
-			IDStack.remove(currentMaxID);
-			refreshStack();
-		}
 	}
 
 	public void clear() {
@@ -77,8 +58,8 @@ public class DonStorage implements IDonStorage {
 		int taskIndex = searchTask(ID);
 		if (taskIndex != -1) {
 			tasks.remove(taskIndex);
-			IDStack.push(ID);
-			refreshStack();
+			listOfIDs[ID] = -1;
+			setNextID();
 			return true;
 		} else
 			return false;
@@ -86,13 +67,18 @@ public class DonStorage implements IDonStorage {
 
 	@Override
 	public int getNextID() {
-		if(IDStack.empty()){
-			currentMaxID++;
-			IDStack.push(currentMaxID);
-		}
-		return IDStack.pop();
+		return nextID;
 	}
 
+	private void setNextID() {
+		if (!tasks.isEmpty()) {
+			int i = MIN_OF_TASK_ID;
+			while ((listOfIDs[i] == i) && (i <= MAX_OF_TASK_ID))
+				i++;
+			nextID = i;
+		} else
+			nextID = MIN_OF_TASK_ID;
+	}
 
 	@Override
 	public IDonTask getTask(int ID) {
@@ -250,10 +236,10 @@ public class DonStorage implements IDonStorage {
 					task.setLabels(taskLabels);
 				}
 				tasks.add(task);
-				initStack(task.getID());
+				listOfIDs[task.getID()] = task.getID();
 			}
 			myReader.close();
-			
+			setNextID();
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
