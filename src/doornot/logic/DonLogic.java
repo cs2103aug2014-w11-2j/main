@@ -30,6 +30,7 @@ public class DonLogic implements IDonLogic {
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
+	private static final String MSG_UNDO_REMINDER = "You can undo your action with the undo command.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
 
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
@@ -107,6 +108,8 @@ public class DonLogic implements IDonLogic {
 		} else {
 			response = dCommand.executeCommand(donStorage);
 			if(dCommand.hasExecuted()) {
+				//Executed commands can be undone, add undo message
+				response.addMessage(MSG_UNDO_REMINDER);
 				commandPast.add(dCommand);
 				commandFuture.clear(); //If a change has been made, the redo stack needs to be cleared
 			}
