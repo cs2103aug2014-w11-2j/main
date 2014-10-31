@@ -18,7 +18,7 @@ import doornot.util.SearchHelper;
 public class DonFindCommand extends AbstractDonCommand {
 
 	public enum SearchType {
-		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE;
+		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT;
 	}
 
 	private SearchType type;
@@ -401,6 +401,20 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		return response;
 	}
+	
+	protected IDonResponse findFloat(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, false);
+		response.setTaskList(taskList);
+		if (response.hasTasks()) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_FOUND, taskList.size()));
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_SEARCH_FAILED);
+		}
+		return response;
+	}
 
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
@@ -430,6 +444,8 @@ public class DonFindCommand extends AbstractDonCommand {
 			response = findSevenDays(donStorage);
 		} else if (type == SearchType.FUTURE) {
 			response = findFuture(donStorage);
+		} else if (type == SearchType.FLOAT) {
+			response = findFloat(donStorage);
 		}
 		return response;
 	}

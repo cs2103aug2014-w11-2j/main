@@ -161,8 +161,8 @@ public class DonParser implements IDonParser {
 			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
 		}else if (commandWord.equalsIgnoreCase("future")) {
 			dCommand = new DonFindCommand(SearchType.FUTURE);
-//		}else if (commandWord.equalsIgnoreCase("float")) {
-//			dCommand = new DonFindCommand(SearchType.FLOAT);
+		}else if (commandWord.equalsIgnoreCase("float")) {
+			dCommand = new DonFindCommand(SearchType.FLOAT);
 		} else if (commandWord.equalsIgnoreCase("undo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")) {
