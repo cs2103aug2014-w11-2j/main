@@ -15,6 +15,8 @@ public class DonHelpCommand extends AbstractDonCommand {
 		HELP_MARK,
 		HELP_UNDO,
 		HELP_REDO,
+		HELP_LABEL,
+		HELP_DELABEL,
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
 	}
@@ -43,7 +45,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 		if (commandType == HelpType.HELP_GENERAL) {
 			// Give info on all commands available
 			response.addMessage("Welcome to DoOrNot. These are the available commands:");
-			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m");
+			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m, label / l, delabel, slabel / sl");
 			response.addMessage("Type help command name to learn how to use the command!");
 		} else if (commandType == HelpType.HELP_ADD) {
 			// Help for add
@@ -51,7 +53,6 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Command format: add \"Task title\"");
 			response.addMessage("Command format: add \"Task title\" @ DD/MM/YYYY HHmm");
 			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DD/MM/YYYY HHmm");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
 			response.addMessage("add \"Submit CS9842 assignment\" @ 18/11/2014 <-- Adds a task with a deadline at 18th of November 2014");
@@ -66,7 +67,6 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
 			response.addMessage("Command format: edit \"Part of old Task title\" to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
 			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
 			response.addMessage("edit \"Do work\" to 17/01/2015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
@@ -86,11 +86,28 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Command format: search Task_id");
 			response.addMessage("Command format: search \"Part of Task title\"");
 			response.addMessage("Command format: search 22/01/2016");
-			response.addMessage("All dates can either be with time (DD/MM/YYYY HHmm) or without (DD/MM/YYYY)");
 			response.addMessage("Examples:");
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
 			response.addMessage("search 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
+		} else if (commandType == HelpType.HELP_LABEL) {
+			// Help for label
+			response.addMessage("label: Tags a task with a given label");
+			response.addMessage("Command format: label Task_id \"Label title\"");
+			response.addMessage("Command format: label \"Part of Task title\" \"Label title\"");
+			response.addMessage("Examples:");
+			response.addMessage("label 22 \"work\" <-- Adds the \"work\" label to task 22");
+			response.addMessage("label \"Buy paper\" \"personal\" <-- Adds the \"personal\" label to the task with \"Buy paper\" in the title");
+		} else if (commandType == HelpType.HELP_DELABEL) {
+			// Help for delabel
+			response.addMessage("delabel: Removes a given label from a task");
+			response.addMessage("Command format: delabel Task_id");
+			response.addMessage("Command format: delabel Task_id \"Label title\"");
+			response.addMessage("Command format: delabel \"Part of Task title\" \"Label title\"");
+			response.addMessage("Examples:");
+			response.addMessage("delabel 21 <-- Removes all labels from task 21");
+			response.addMessage("delabel 22 \"work\" <-- Removes the \"work\" label from task 22");
+			response.addMessage("delabel \"Buy paper\" \"personal\" <-- Removes the \"personal\" label from the task with \"Buy paper\" in the title");
 		} else if (commandType == HelpType.HELP_UNDO || commandType == HelpType.HELP_REDO) {
 			//Help for undo
 			response.addMessage("undo : Undoes the previous action");
@@ -100,7 +117,6 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("undo");
 			response.addMessage("redo");
 			response.addMessage("(What were you expecting?)");
-
 		}
 
 		return response;
