@@ -12,6 +12,8 @@ import doornot.storage.IDonStorage;
 //@author A0115503W
 public abstract class AbstractDonCommand {
 	
+	protected static final String MSG_NAME_CONFLICT = "Warning: Another task with '%1$s' already exists.";
+	protected static final String MSG_DEADLINE_CONFLICT = "Warning: Another task is happening at the same time.";
 	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
 	protected static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
 	protected static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
