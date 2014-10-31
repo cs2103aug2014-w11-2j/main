@@ -26,6 +26,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
 	protected static final String MSG_NO_FLOATING = "No floating tasks found!";
+	protected static final String MSG_NO_LABEL_TASKS = "No tasks with the label '%1$s' found!";
 	protected static final String MSG_NO_UNDONE_OVERDUE = "No undone overdue tasks found!";
 	protected static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";

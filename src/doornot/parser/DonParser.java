@@ -402,7 +402,7 @@ public class DonParser implements IDonParser {
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
 			
 		} else if (isTaskName(parameters)) {
-			dCommand = new DonDeleteCommand(extractName(parameters));
+			dCommand = new DonDeleteCommand(extractName(parameters), DeleteType.DELETE_TITLE);
 			
 		} else {
 			try {
