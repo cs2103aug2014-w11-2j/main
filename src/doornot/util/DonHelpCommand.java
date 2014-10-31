@@ -52,7 +52,8 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("add / a: Adds a task to the todo list");
 			response.addMessage("Command format: add \"Task title\"");
 			response.addMessage("Command format: add \"Task title\" @ DD/MM/YYYY HHmm");
-			response.addMessage("Command format: add \"Task title\" from DDMMYYYY_HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: add \"Task title\" from DDMMYYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("The date can be in any logical date format");
 			response.addMessage("Examples:");
 			response.addMessage("add \"Finish reading Book X\" <-- Adds a floating task");
 			response.addMessage("add \"Submit CS9842 assignment\" @ 18/11/2014 <-- Adds a task with a deadline at 18th of November 2014");
@@ -66,6 +67,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Command format: edit \"Part of old Task title\" to DD/MM/YYYY HHmm");
 			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
 			response.addMessage("Command format: edit \"Part of old Task title\" to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("The date can be in any logical date format");
 			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
 			response.addMessage("Examples:");
 			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
@@ -86,10 +88,20 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Command format: search Task_id");
 			response.addMessage("Command format: search \"Part of Task title\"");
 			response.addMessage("Command format: search 22/01/2016");
+			response.addMessage("Command format: saf 22/01/2016");
 			response.addMessage("Examples:");
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search \"Do work\" <-- Searches for tasks containing \"Do work\" in the title");
 			response.addMessage("search 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
+			response.addMessage("saf 22/01/2016 <-- Searches for tasks occurring after 22nd of January 2016");
+		} else if (commandType == HelpType.HELP_MARK) {
+			// Help for mark
+			response.addMessage("mark: Marks a task as done/undone");
+			response.addMessage("Command format: mark Task_id");
+			response.addMessage("Command format: mark \"Part of Task title\"");
+			response.addMessage("Examples:");
+			response.addMessage("mark 22 <-- Marks task 22 as done/undone depending on its current status");
+			response.addMessage("mark \"Buy paper\" <-- Marks the task with \"Buy paper\" in the title as done/undone");
 		} else if (commandType == HelpType.HELP_LABEL) {
 			// Help for label
 			response.addMessage("label: Tags a task with a given label");
