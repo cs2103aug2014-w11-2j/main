@@ -10,6 +10,7 @@ import doornot.logic.DonPeriod;
 import doornot.logic.DonResponse;
 import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
+import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
@@ -297,6 +298,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		Collections.sort(taskList);
 
 		if (taskList.size() <= 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
 			response.addMessage(MSG_FREE_EVERYWHERE);
 			return response;
 		}
@@ -306,8 +308,12 @@ public class DonFindCommand extends AbstractDonCommand {
 		// if possible
 		Calendar now = Calendar.getInstance();
 		if (taskList.get(0).getStartDate().after(now)) {
-			DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
-			response.addPeriod(free);
+			IDonTask free = new DonTask("Free time", -1);
+			free.setStartDate(now);
+			free.setEndDate(taskList.get(0).getStartDate());
+			response.addTask(free);
+			//DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
+			//response.addPeriod(free);
 		}
 
 		for (int i = 0; i < taskList.size() - 1; i++) {
@@ -322,20 +328,30 @@ public class DonFindCommand extends AbstractDonCommand {
 				if (currentTask.getStartDate().compareTo(
 						nextTask.getStartDate()) < 0) {
 					// There is a free period
-					DonPeriod free = new DonPeriod(currentTask.getStartDate(),
-							nextTask.getStartDate());
-					response.addPeriod(free);
+					IDonTask free = new DonTask("Free time", -1);
+					free.setStartDate(currentTask.getStartDate());
+					free.setEndDate(nextTask.getStartDate());
+					response.addTask(free);
+					
+					//DonPeriod free = new DonPeriod(currentTask.getStartDate(),
+					//		nextTask.getStartDate());
+					//response.addPeriod(free);
 				}
 			} else {
 				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
 					// There is a free period
+					IDonTask free = new DonTask("Free time", -1);
+					free.setStartDate(currentTask.getEndDate());
+					free.setEndDate(nextTask.getStartDate());
+					response.addTask(free);
+					/*
 					DonPeriod free = new DonPeriod(currentTask.getEndDate(),
 							nextTask.getStartDate());
-					response.addPeriod(free);
+					response.addPeriod(free);*/
 				}
 			}
 		}
-
+		response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		return response;
 	}
 
