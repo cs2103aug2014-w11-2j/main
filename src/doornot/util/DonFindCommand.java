@@ -312,9 +312,8 @@ public class DonFindCommand extends AbstractDonCommand {
 			IDonTask free = new DonTask("Free time", -1);
 			free.setStartDate(now);
 			free.setEndDate(taskList.get(0).getStartDate());
+			free.setTimeUsed(taskList.get(0).isTimeUsed());
 			response.addTask(free);
-			//DonPeriod free = new DonPeriod(now, taskList.get(0).getStartDate());
-			//response.addPeriod(free);
 		}
 
 		for (int i = 0; i < taskList.size() - 1; i++) {
@@ -332,11 +331,8 @@ public class DonFindCommand extends AbstractDonCommand {
 					IDonTask free = new DonTask("Free time", -1);
 					free.setStartDate(currentTask.getStartDate());
 					free.setEndDate(nextTask.getStartDate());
-					response.addTask(free);
-					
-					//DonPeriod free = new DonPeriod(currentTask.getStartDate(),
-					//		nextTask.getStartDate());
-					//response.addPeriod(free);
+					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
+					response.addTask(free);		
 				}
 			} else {
 				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
@@ -344,11 +340,8 @@ public class DonFindCommand extends AbstractDonCommand {
 					IDonTask free = new DonTask("Free time", -1);
 					free.setStartDate(currentTask.getEndDate());
 					free.setEndDate(nextTask.getStartDate());
+					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
 					response.addTask(free);
-					/*
-					DonPeriod free = new DonPeriod(currentTask.getEndDate(),
-							nextTask.getStartDate());
-					response.addPeriod(free);*/
 				}
 			}
 		}

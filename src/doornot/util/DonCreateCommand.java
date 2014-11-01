@@ -83,7 +83,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>0) {
+			if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
@@ -115,9 +115,9 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskByDate(donStorage, startDate).size()>0) {
+			if (SearchHelper.findTaskByDate(donStorage, startDate).size()>1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
-			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>0) {
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
@@ -148,9 +148,9 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskRange(donStorage, startDate, endDate, FIND_INCOMPLETE).size()>0) {
+			if (SearchHelper.findTaskRange(donStorage, startDate, endDate, FIND_INCOMPLETE).size()>1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
-			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>0) {
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
