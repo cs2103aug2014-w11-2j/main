@@ -16,7 +16,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		DELETE_ID,
 		DELETE_TITLE,
 		DELETE_OVERDUE,
-		DELETE_FLOAT
+		DELETE_FLOAT,
+		DELETE_LABEL
 	}
 	
 	private DeleteType type;
@@ -34,9 +35,9 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		generalCommandType = GeneralCommandType.DELETE;
 	}
 	
-	public DonDeleteCommand(String title) {
+	public DonDeleteCommand(String title, DeleteType delType) {
 		searchTitle = title;
-		type = DeleteType.DELETE_TITLE;
+		type = delType;
 		generalCommandType = GeneralCommandType.DELETE;
 	}
 	
@@ -158,13 +159,53 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		List<IDonTask> foundList = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, true);
 		
 		if (foundList.isEmpty()) {
-			// No overdue tasks
+			// No floating tasks
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(MSG_NO_FLOATING);
 		} else {
 			// >=1 task found
 			boolean success = true;
 			for(IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				boolean deleted = donStorage.removeTask(task.getID());
+				if(!deleted) {
+					//Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if(success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+			
+		}
+
+		return response;
+	}
+	
+	private IDonResponse deleteLabelTasks(IDonStorage donStorage) {
+		assert searchTitle!=null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = donStorage.getTaskList();
+		List<IDonTask> deleteList = new ArrayList<IDonTask>();
+		
+		for(IDonTask task : foundList) {
+			if(task.getLabels().contains(searchTitle)) {
+				deleteList.add(task);
+			}
+		}
+		
+		if (deleteList.isEmpty()) {
+			// No tasks with the given label
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_NO_LABEL_TASKS, searchTitle));
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for(IDonTask task : deleteList) {
 				deletedTasks.add(task.clone());
 				boolean deleted = donStorage.removeTask(task.getID());
 				if(!deleted) {
@@ -196,6 +237,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			response = deleteOverdueTasks(donStorage);
 		} else if (type == DeleteType.DELETE_FLOAT) {
 			response = deleteFloatingTasks(donStorage);
+		} else if (type == DeleteType.DELETE_LABEL) {
+			response = deleteLabelTasks(donStorage);
 		}
 		
 		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {

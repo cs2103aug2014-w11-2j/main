@@ -36,6 +36,27 @@ public class SearchHelper {
 	}
 
 	/**
+	 * Find tasks with the exact given name
+	 * 
+	 * @param donStorage the storage containing the tasks
+	 * @param searchTitle
+	 *            the name to search for
+	 * @return the response containing the tasks
+	 */
+	public static List<IDonTask> findTaskByExactName(IDonStorage donStorage, String searchTitle) {
+		assert searchTitle != null;
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			if (task.getTitle().equals(searchTitle)) {
+				response.add(task);
+			}
+		}
+		return response;
+	}
+	
+	/**
 	 * Find tasks starting/occurring on a given date
 	 * 
 	 * @param date
