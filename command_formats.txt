@@ -89,7 +89,7 @@ exit
 help
 help add
 help edit
-help serach
+help search
 help {del || delete}
 help label
 help mark
