@@ -21,11 +21,13 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_DELETE_FAILED = "The task could not be deleted.";
 	protected static final String MSG_DELETE_SUCCESS = "The task was deleted successfully.";
 	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
+	protected static final String MSG_EDIT_SINGLE_DATE_ADD_SUCCESS = "%1$s changed to %2$s.";
 	protected static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
 	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
-	protected static final String MSG_LABEL_ADDED_ID = "Label '%1$s' added to task %2$d";
-	protected static final String MSG_LABEL_EXISTS = "The label '%1$s' already exists";
-	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed";
+	protected static final String MSG_LABEL_ADDED_ID = "Label '%1$s' added to task %2$d.";
+	protected static final String MSG_LABEL_EXISTS = "The label '%1$s' already exists.";
+	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed.";
+	protected static final String MSG_LABEL_ALL_REMOVED = "All labels have been removed.";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
 	protected static final String MSG_NO_FLOATING = "No floating tasks found!";
 	protected static final String MSG_NO_LABEL_TASKS = "No tasks with the label '%1$s' found!";
@@ -53,6 +55,7 @@ public abstract class AbstractDonCommand {
 	protected static final String PHRASE_START_DATE = "Start date";
 	protected static final String PHRASE_COMPLETE = "complete";
 	protected static final String PHRASE_INCOMPLETE = "incomplete";
+	protected static final String PHRASE_DEADLINE = "Deadline";
 	
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;

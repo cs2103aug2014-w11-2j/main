@@ -53,8 +53,7 @@ public class DonDelabelCommand extends DonEditCommand {
 	
 	/**
 	 * Removes a label from a task with the given id
-	 * @param id the task's id to search for and add a label to
-	 * @param labelName the name of the label to add
+	 * @param id the task's id to search for and remove the label from
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeLabelByID(IDonStorage donStorage) {
@@ -83,8 +82,7 @@ public class DonDelabelCommand extends DonEditCommand {
 	
 	/**
 	 * Removes a label from a task with the given name
-	 * @param id the task's id to search for and add a label to
-	 * @param labelName the name of the label to add
+	 * @param id the task's id to search for and remove the label from
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeLabelByTitle(IDonStorage donStorage) {
@@ -108,6 +106,56 @@ public class DonDelabelCommand extends DonEditCommand {
 		
 		return response;
 	}
+	
+	/**
+	 * Removes all labels from a task with the given id
+	 * @param id the task's id to search for remove all labels from
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeAllLabelsByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone());
+			task.getLabels().clear();
+			response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
+			response.addMessage(MSG_LABEL_ALL_REMOVED);			
+			response.addTask(task);
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * Removes all labels from a task with the given name
+	 * @param id the task's id to search for and add a label to
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeAllLabelsByTitle(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundTasks.get(0).getID();
+			response = removeAllLabelsByID(donStorage);
+		}
+		
+		return response;
+	}
 
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
@@ -116,6 +164,10 @@ public class DonDelabelCommand extends DonEditCommand {
 			response = removeLabelByID(donStorage);
 		} else if (type == DelabelType.LABEL_NAME) {
 			response = removeLabelByTitle(donStorage);
+		} else if (type == DelabelType.LABEL_ALL_ID) {
+			response = removeAllLabelsByID(donStorage);
+		} else if (type == DelabelType.LABEL_ALL_NAME) {
+			response = removeAllLabelsByTitle(donStorage);
 		}
 		
 		if (response.getResponseType() == ResponseType.LABEL_REMOVED) {

@@ -243,13 +243,22 @@ public class DonEditCommand extends AbstractDonCommand {
 			Calendar oldDate = null;
 			String dateType = "";
 			if (task.getType() == IDonTask.TaskType.FLOATING) {
-				// TODO: What should we do with floating tasks when the user
-				// wants to edit the date?
+				// If a user edits the (non-existent) deadline of a floating task, the deadline is added
+				// This can be undone but no command exists to remove the deadline to turn it back to a 
+				// floating task
+				dateType = PHRASE_DEADLINE;
+				task.setStartDate(newDeadline);
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
+						dateType, newDeadline.getTime().toString()));
 			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
-				dateType = "Deadline";
+				dateType = PHRASE_DEADLINE;
 				oldDate = task.getStartDate();
 				task.setStartDate(newDeadline);
 				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						dateType, oldDate.getTime().toString(), newDeadline
+								.getTime().toString()));
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				if (isStartDate) {
 					dateType = PHRASE_START_DATE;
@@ -261,14 +270,13 @@ public class DonEditCommand extends AbstractDonCommand {
 					task.setEndDate(newDeadline);
 				}
 				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						dateType, oldDate.getTime().toString(), newDeadline
+								.getTime().toString()));
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
-					dateType, oldDate.getTime().toString(), newDeadline
-							.getTime().toString()));
-
 		}
 		return response;
 	}
@@ -326,12 +334,17 @@ public class DonEditCommand extends AbstractDonCommand {
 		} else {
 			unchangedTask.add(task.clone());
 			Calendar oldStartDate = null, oldEndDate = null;
-			if (task.getType() == IDonTask.TaskType.FLOATING) {
-				// TODO: What should we do with floating tasks when the user
-				// wants to edit the date?
-			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
-				// TODO: What should we do with deadline tasks when the user
-				// wants to edit the end date?
+			if (task.getType() == IDonTask.TaskType.FLOATING || task.getType() == IDonTask.TaskType.DEADLINE) {
+				// If a user edits the (non-existent) start+end date of a floating/deadline task, they are added
+				// This can be undone but no command exists to remove the dates to turn it back to a 
+				// floating task
+				task.setStartDate(newStartDate);
+				task.setEndDate(newEndDate);
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
+						PHRASE_START_DATE, newStartDate.getTime().toString()));
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
+						PHRASE_END_DATE, newEndDate.getTime().toString()));
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				oldStartDate = task.getStartDate();
 				task.setStartDate(newStartDate);
@@ -340,17 +353,18 @@ public class DonEditCommand extends AbstractDonCommand {
 				task.setEndDate(newEndDate);
 
 				task.setTimeUsed(isTimeUsed);
-
+				
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						PHRASE_START_DATE, oldStartDate.getTime().toString(),
+						newStartDate.getTime().toString()));
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						PHRASE_END_DATE, oldEndDate.getTime().toString(),
+						newEndDate.getTime().toString()));
 			}
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
-					PHRASE_START_DATE, oldStartDate.getTime().toString(),
-					newStartDate.getTime().toString()));
-			response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
-					PHRASE_END_DATE, oldEndDate.getTime().toString(),
-					newEndDate.getTime().toString()));
+			
 
 		}
 		return response;
