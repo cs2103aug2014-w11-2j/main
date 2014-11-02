@@ -617,128 +617,6 @@ public class DonParser implements IDonParser {
 		return matcher.find();
 	}
 
-	/**
-	 * Checks if the date follows the dd/mm/yyyy format
-	 * 
-	 * @param parameters
-	 * @return
-	 */
-	private String removeFormalDate(String param, String regex, String regex2) {
-		// if dd/mm/yyyy
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		if (matcher.find()) {
-			return param.replaceAll(dateReg, " today ");
-		} else {
-			// if dd/mm
-			Pattern pattern2 = Pattern
-					.compile(regex2, Pattern.CASE_INSENSITIVE);
-			Matcher matcher2 = pattern2.matcher(param);
-			if (matcher2.find()) {
-				return param.replaceAll(dateNoYearReg, " today ");
-			} else {
-				return "";
-			}
-		}
-	}
-
-	/**
-	 * gets the date following the dd/mm/yyyy format
-	 * 
-	 * @param parameters
-	 * @return
-	 * @throws WrongDateException
-	 */
-	private Calendar getFormalDate(String param) throws WrongDateException {
-		// if dd/mm/yyyy
-		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		Calendar cal;
-		if (matcher.find()) {
-			cal = createFormalDate(matcher.group());
-		} else {
-			Pattern pattern2 = Pattern.compile(dateNoYearReg,
-					Pattern.CASE_INSENSITIVE);
-			Matcher matcher2 = pattern2.matcher(param);
-			matcher2.find();
-			cal = createFormalNoYearDate(matcher2.group());
-		}
-		return cal;
-	}
-
-	/**
-	 * gets the event dates following the dd/mm/yyyy format
-	 * 
-	 * @param parameters
-	 * @return
-	 * @throws WrongDateException
-	 */
-	private Calendar[] getFormalEventDates(String param)
-			throws WrongDateException {
-		// if dd/mm/yyyy
-		Pattern pattern = Pattern.compile(dateReg, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(param);
-		Calendar cal;
-		Calendar[] calArr = new Calendar[2];
-		if (matcher.find()) {
-			cal = createFormalDate(matcher.group());
-			calArr[0] = cal;
-			matcher.find();
-			cal = createFormalDate(matcher.group());
-			calArr[1] = cal;
-		} else {// is dd/mm
-			Pattern pattern2 = Pattern.compile(dateNoYearReg,
-					Pattern.CASE_INSENSITIVE);
-			Matcher matcher2 = pattern2.matcher(param);
-			matcher2.find();
-			cal = createFormalNoYearDate(matcher2.group());
-			calArr[0] = cal;
-			matcher2.find();
-			cal = createFormalNoYearDate(matcher2.group());
-			calArr[1] = cal;
-		}
-		return calArr;
-	}
-
-	private Calendar createFormalDate(String date) throws WrongDateException {
-		Calendar calCheck = new GregorianCalendar();
-
-		int day = Integer.parseInt(date.substring(0, 2));
-		int month = Integer.parseInt(date.substring(3, 5)) - 1;
-		int year = Integer.parseInt(date.substring(6, 10));
-
-		calCheck.set(Calendar.YEAR, year);
-		calCheck.set(Calendar.MONTH, month);
-		calCheck.set(Calendar.DAY_OF_MONTH, 1);
-
-		if ((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH))
-				|| (month >= 12)) {
-			// create an error date ref
-			throw new WrongDateException();
-		} else {
-			return new GregorianCalendar(year, month, day);
-		}
-	}
-
-	private Calendar createFormalNoYearDate(String date)
-			throws WrongDateException {
-		Calendar calCheck = new GregorianCalendar();
-
-		int day = Integer.parseInt(date.substring(0, 2));
-		int month = Integer.parseInt(date.substring(3, 5)) - 1;
-
-		calCheck.set(Calendar.MONTH, month);
-		calCheck.set(Calendar.DAY_OF_MONTH, 1);
-
-		if ((day > calCheck.getActualMaximum(Calendar.DAY_OF_MONTH))
-				|| (month >= 12)) {
-			// create an error date ref
-			throw new WrongDateException();
-		} else {
-			return new GregorianCalendar(calCheck.get(Calendar.YEAR), month,
-					day);
-		}
-	}
 
 	/**
 	 * Sets new deadlines for dCommand
@@ -751,55 +629,23 @@ public class DonParser implements IDonParser {
 	private boolean setNewDeadlineForCommand(String parameters,
 			Calendar deadlineOut) {
 		boolean hasSetTime = false;
-//	    boolean hasRecurred = false;
-//		Date recursTill;
-		if (!removeFormalDate(parameters, dateReg, dateNoYearReg).equals("")) {
 
-			try {
-				Calendar date = getFormalDate(parameters);
 
-				String param = removeFormalDate(parameters, dateReg,
-						dateNoYearReg);
-				Date time = getTimeFromParser(param);
-				
-//				if(isRecurrence()){
-//					hasRecurred = true;
-//					recursTill = getRecurringUntil();
-//				}
-				
-				if (isTimeMentioned()) {
-					hasSetTime = true;
-					CalHelper.copyCalendar(createDateTimeNatty(date, time),
-							deadlineOut);
-				} else {
-					CalHelper.copyCalendar(createDateNatty(date), deadlineOut);
-				}
+		try {
+			Date date = getTimeFromParser(parameters);
+			Calendar cal = new GregorianCalendar();
+			cal.setTime(date);
 
-			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
+			if (isTimeMentioned()) {
+				hasSetTime = true;
+				CalHelper.copyCalendar(cal, deadlineOut);
+			} else {
+				CalHelper.copyCalendar(createDateNatty(cal), deadlineOut);
 			}
-
-		} else {
-			try {
-				Date date = getTimeFromParser(parameters);
-				Calendar cal = new GregorianCalendar();
-				cal.setTime(date);
-				
-//				if(isRecurrence()){
-//					hasRecurred = true;
-//					recursTill = getRecurringUntil();
-//				}
-				
-				if (isTimeMentioned()) {
-					hasSetTime = true;
-					CalHelper.copyCalendar(cal, deadlineOut);
-				} else {
-					CalHelper.copyCalendar(createDateNatty(cal), deadlineOut);
-				}
-			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
-			}
+		} catch (Exception e) {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 		}
+
 
 		return hasSetTime;
 	}
@@ -830,38 +676,27 @@ public class DonParser implements IDonParser {
 	private boolean isTimeMentioned() {
 		return !(groups.get(0).isTimeInferred());
 	}
-	/**
-	 * check if it is recurrence. user has "every"
-	 * 
-	 * @return
-	 */
-//	private boolean isRecurrence() {
-//		return (groups.get(0).isRecurring());
-//	}
-	/**
-	 * get end of recurrence
-	 * 
-	 * @return
-	 */
-//	private Date getRecurringUntil() {
-//		if(groups.get(0).getRecursUntil() == null){
-//			// year 2020 ??
-//			Calendar cal = new GregorianCalendar(2020,11,31);
-//			return cal.getTime();
-//		} else {
-//			return groups.get(0).getRecursUntil();
-//		}
-//		
-//	}
+
 	/**
 	 * Gets date from parser
 	 * 
 	 * @param parameters
 	 * @return
+	 * @throws WrongDateException 
 	 */
-	private Date getTimeFromParser(String parameters) {
+	private Date getTimeFromParser(String parameters) throws WrongDateException {
 		groups = nattyParser.parse(parameters);
-		return groups.get(0).getDates().get(0);
+		
+		Date date = groups.get(0).getDates().get(0);
+		
+		if (groups.get(0).getDates().size() != 1
+				|| groups.get(0).isRecurring()){
+			throw new WrongDateException();
+			
+		} else {
+			return date;
+		}
+
 	}
 
 	/**
@@ -986,9 +821,10 @@ public class DonParser implements IDonParser {
 	private boolean isGoodName(String name) {
 		// ensures semi colon not in name
 		if (!name.contains(";") 
-				&& !name.contains(" overdue ")
-				&& !name.contains(" float ")
-				&& !name.contains(" done ")
+				&& !name.matches("^overdue$")
+				&& !name.matches("^float$")
+				&& !name.matches("^done$")
+				&& !name.matches("^undone$")
 				&& !name.matches("[0-9]+")) {
 			
 			return true;
