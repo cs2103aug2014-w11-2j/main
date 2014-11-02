@@ -571,18 +571,35 @@ public class DonParser implements IDonParser {
 		if (parameters.isEmpty()) {
 			dCommand = new DonHelpCommand(HelpType.HELP_GENERAL);
 		} else {
-			if (parameters.equalsIgnoreCase("add")) {
+			if (parameters.equalsIgnoreCase("add")
+					|| parameters.equalsIgnoreCase("a")
+					|| parameters.equalsIgnoreCase("af")
+					|| parameters.equalsIgnoreCase("addf")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_ADD);
-			} else if (parameters.equalsIgnoreCase("edit")) {
+			} else if (parameters.equalsIgnoreCase("edit")
+					|| parameters.equalsIgnoreCase("ed")
+					|| parameters.equalsIgnoreCase("e")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_EDIT);
-			} else if (parameters.equalsIgnoreCase("search")) {
+			} else if (parameters.equalsIgnoreCase("search")
+					|| parameters.equalsIgnoreCase("s")
+					|| parameters.equalsIgnoreCase("saf")
+					|| parameters.equalsIgnoreCase("son")
+					|| parameters.equalsIgnoreCase("sd")
+					|| parameters.equalsIgnoreCase("sud")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_SEARCH);
 			} else if (parameters.equalsIgnoreCase("del")
-					|| parameters.equalsIgnoreCase("delete")) {
+					|| parameters.equalsIgnoreCase("delete")
+					|| parameters.equalsIgnoreCase("d")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_DELETE);
-			} else if (parameters.equalsIgnoreCase("label")) {
+			} else if (parameters.equalsIgnoreCase("label")
+					|| parameters.equalsIgnoreCase("delabel")
+					|| parameters.equalsIgnoreCase("slabel")
+					|| parameters.equalsIgnoreCase("dl")
+					|| parameters.equalsIgnoreCase("sl")
+					|| parameters.equalsIgnoreCase("l")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_LABEL);
-			} else if (parameters.equalsIgnoreCase("mark")) {
+			} else if (parameters.equalsIgnoreCase("mark")
+					|| parameters.equalsIgnoreCase("m")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_MARK);
 			} else if (parameters.equalsIgnoreCase("undo")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_UNDO);

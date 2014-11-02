@@ -87,11 +87,11 @@ exit
 
 === HELP ===
 help
-help add
-help edit
-help serach
-help {del || delete}
-help label
-help mark
+help {a || add || af || addf}
+help {e || edit}
+help {search || s || saf || son || sd || sud}
+help {del || delete || d}
+help { l || dl || sl || label || delabel || slabel}
+help {m || mark}
 help undo
 help redo
