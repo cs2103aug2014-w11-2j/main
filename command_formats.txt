@@ -1,0 +1,97 @@
+=== ADD  ===
+{af || addf} <taskname>
+{a || add} <taskname> by <date>
+{a || add} <taskname> from <date> to <date>
+
+// start and end can be: mon to fri 2pm. 
+
+=== EDIT ===
+
+{e || ed || edit} ID to "<name>"
+{e || ed || edit}  <taskname> to "<name>"
+
+{e || ed || edit} ID by <date>
+{e || ed || edit} <taskname> by <date>
+
+{e || ed || edit} ID from <date> to <date>
+{e || ed || edit} <taskname> from <date> to <date>
+
+=== MARK ===
+
+{m || mark} {od || overdue}
+{m || mark} {fl || floating || float}
+{m || mark} <taskname>
+{m || mark} ID
+
+=== DELETE ===
+
+{d || del || delete} {od || overdue}
+{d || del || delete} fl || floating || float
+{d || del || delete} <taskname>
+{d || del || delete} ID
+{d || del || delete} #<labelname>
+
+=== SEARCH ===
+{s || search} <taskname>
+{s || search} ID
+
+saf <date> //for tasks after that date
+son <date> //for tasks on that date
+
+=== SEARCH FREE ===
+
+{s || search} free
+
+=== SEARCH DONE ===
+{s || search} done
+sd
+done
+
+=== SEARCH UNDONE ===
+{s || search} undone
+sud
+undone
+
+=== SEARCH ALL ===
+{s || search}
+all
+
+=== ADD LABEL ===
+
+{l || label} <taskname> #<labelname>
+{l || label} ID #<labelname>
+
+=== DELETE LABEL ===
+
+{dl || delabel} <taskname> #<labelname>
+{dl || delabel} ID #<labelname>
+
+// for delabelling all the labels
+{dl || delabel} <taskname>
+{dl || delabel} ID
+
+=== SEARCH LABEL ===
+{sl || slabel} #<labelname>
+
+
+=== MISC ===
+{fl || float || floating}
+{od || overdue}
+{result || results}
+week
+today
+future
+undo
+redo
+exit
+
+=== HELP ===
+help
+help add
+help edit
+help serach
+help {del || delete}
+help label
+help mark
+help undo
+help redo
