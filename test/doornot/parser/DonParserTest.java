@@ -292,14 +292,14 @@ public class DonParserTest {
 	@Test
 	public void testEditName(){
 		// test edit 
-		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("ed \"hihihi\" to \"HEHEHE\"");
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("ed hihihi to \"HEHEHE\"");
 		
 		assertEquals(EditType.NAME_NAME, edit1.getType());
 		assertEquals("HEHEHE", edit1.getNewTitle());
 		assertEquals("hihihi", edit1.getSearchTitle());
 		
 		//test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("EDIT \"hihihi to \"HEHEHE\"");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("EDIT hihihi to HEHEHE\"");
 		
 		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
 		assertEquals("EDIT", invalid1.getStringInput());
@@ -316,7 +316,7 @@ public class DonParserTest {
 	public void testEditEvent(){
 		
 		// test edit event
-		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to from 07/08/2014 to 09/08/2014");
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit hihihi from 07/08/2014 to 09/08/2014");
 		Calendar startDate = new GregorianCalendar(2014,7,7,23,59), endDate = new GregorianCalendar(2014,7,9,23,59);
 		
 		assertEquals(EditType.NAME_EVENT, edit1.getType());
@@ -324,7 +324,7 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit1.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit1.getNewEndDate()));
 
-		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to from 7 aug to 9 aug");
+		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit hihihi from 7 aug to 9 aug");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit2.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit2.getNewEndDate()));
 		
@@ -332,14 +332,14 @@ public class DonParserTest {
 		startDate = new GregorianCalendar(2014,7,7,23,59);
 		endDate = new GregorianCalendar(2014,7,9,23,59);
 		
-		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit 666 to from 07/08/2014 to 09/08/2014");
+		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit 666 from 07/08/2014 to 09/08/2014");
 		
 		assertEquals(EditType.ID_EVENT, edit3.getType());
 		assertEquals(666, edit3.getSearchID());
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit3.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit3.getNewEndDate()));
 		
-		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit 666 to from 7 aug to 9 aug");
+		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit 666 from 7 aug to 9 aug");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit4.getNewEndDate()));
 		
@@ -347,12 +347,12 @@ public class DonParserTest {
 		startDate = new GregorianCalendar(2014,7,7,13,55);
 		endDate = new GregorianCalendar(2014,7,9,11,44);
 		
-		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("edit 666 to from 07/08/2014 13:55 to 09/08/2014 11:44");
+		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("edit 666 from 07/08/2014 13:55 to 09/08/2014 11:44");
 		
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit5.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit5.getNewEndDate()));
 		
-		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 to from 7 aug 13:55 to 9 aug 11:44");
+		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 from 7 aug 13:55 to 9 aug 11:44");
 		
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit6.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit6.getNewEndDate()));
@@ -361,34 +361,34 @@ public class DonParserTest {
 	@Test
 	public void testEditDate(){
 		// test edit date
-		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to 09/08/2014");
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit hihihi by 09/08/2014");
 		Calendar startDate = new GregorianCalendar(2014,7,9,23,59);
 		
 		assertEquals(EditType.NAME_DATE, edit1.getType());
 		assertEquals("hihihi", edit1.getSearchTitle());
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit1.getNewDeadline()));
 
-		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to 9 aug");
+		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit hihihi by 9 aug");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit2.getNewDeadline()));
 		
 		// tets with time
 		startDate = new GregorianCalendar(2014,7,9,1,23);
-		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to 09/08/2014 1.23 am");
+		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit hihihi by 09/08/2014 1.23 am");
 		
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit3.getNewDeadline()));
 		
-		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit \"hihihi\" to 9 aug 1.23 am");
+		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit hihihi by 9 aug 1.23 am");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewDeadline()));
 		
 		// tets ID edit date
 		startDate = new GregorianCalendar(2014,7,9,23,59);
 		
-		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("e 666 to 09/08/2014");
+		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("e 666 by 09/08/2014");
 		assertEquals(EditType.ID_DATE, edit5.getType());
 		assertEquals(666, edit5.getSearchID());
 		assertEquals(startDate.getTime().toString(), edit5.getNewDeadline().getTime().toString());
 
-		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 to 9 aug");
+		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 by 9 aug");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit6.getNewDeadline()));		
 	
 	}
