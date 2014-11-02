@@ -53,7 +53,7 @@ public class DonParserTest {
 		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add hihihi by 09/09/2014 13:24");
 		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add hihihi by 9 sep 1.24 pm");
 		
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678  by 12/13/2014");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678 by 12/13/2014");
 		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad hihihi by 09082014");
 		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a done by 09082014");
 		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
@@ -146,15 +146,10 @@ public class DonParserTest {
 	public void testMark(){
 		
 		DonMarkCommand mark1 = (DonMarkCommand) parser.parseCommand("mark blah95");
-		DonMarkCommand mark2 = (DonMarkCommand) parser.parseCommand("mark 95");
 		
 		// test mark
 		assertEquals(MarkType.MARK_STRING, mark1.getMarkType());
 		assertEquals("blah95", mark1.getSearchTitle());
-		
-		assertEquals(MarkType.MARK_ID, mark2.getMarkType());
-		assertEquals(95, mark2.getSearchID());
-		
 		
 		// test batch mark
 		DonMarkCommand mark3 = (DonMarkCommand) parser.parseCommand("mark overdue");
@@ -179,7 +174,7 @@ public class DonParserTest {
 	}
 	@Test
 	public void testDelete(){
-		DonDeleteCommand delete1 = (DonDeleteCommand) parser.parseCommand("del \"blah95\"");
+		DonDeleteCommand delete1 = (DonDeleteCommand) parser.parseCommand("del blah95");
 		// test delete
 		assertEquals(DeleteType.DELETE_TITLE, delete1.getType());
 		assertEquals("blah95", delete1.getSearchTitle());
@@ -187,12 +182,15 @@ public class DonParserTest {
 		// test batch delete
 		DonDeleteCommand delete2 = (DonDeleteCommand) parser.parseCommand("del od");
 		DonDeleteCommand delete3 = (DonDeleteCommand) parser.parseCommand("del fl");
-				
+		DonDeleteCommand delete4 = (DonDeleteCommand) parser.parseCommand("del #funny business");
+		
 		assertEquals(DeleteType.DELETE_OVERDUE, delete2.getType());
 		assertEquals(DeleteType.DELETE_FLOAT, delete3.getType());
+		assertEquals(DeleteType.DELETE_LABEL, delete4.getType());
+		assertEquals("funny business", delete4.getSearchTitle());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del \"blah95");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del undone");
 		
 		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
 		assertEquals("del", invalid1.getStringInput());

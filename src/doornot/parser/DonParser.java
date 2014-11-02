@@ -65,13 +65,10 @@ public class DonParser implements IDonParser {
 	// for to "
 	private String editNameSpaceReg = "to \"";
 	// number
-	private String getIDReg = "^[0-9]+";
-
-	// for id only
-	private String searchIDReg = "^[0-9]+$";
-
+	private String getIDReg = "^[0-9]+$";
+	
 	// allow xx "BLAH"
-	private String labelIDReg = "^[0-9]+\\s\".+\"$";
+	private String labelReg = "#.+$";
 
 	// allow "blah" "BLAH"
 	private String labelNameReg = "^\".+\"\\s\".+\"$";
@@ -375,6 +372,7 @@ public class DonParser implements IDonParser {
 			dCommand = new DonMarkCommand(parameters);
 			
 		} else {
+			
 			try {
 				int ID = Integer.parseInt(parameters);
 				dCommand = new DonMarkCommand(ID);
@@ -402,8 +400,11 @@ public class DonParser implements IDonParser {
 				|| parameters.equalsIgnoreCase("floating")){
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
 			
-		} else if (isTaskName(parameters)) {
-			dCommand = new DonDeleteCommand(extractName(parameters), DeleteType.DELETE_TITLE);
+		} else if (isRightCommand(parameters, labelReg)) {
+			dCommand = new DonDeleteCommand(extractLabelName(parameters), DeleteType.DELETE_LABEL);
+			
+		}else if (isGoodName(parameters)) {
+			dCommand = new DonDeleteCommand(parameters, DeleteType.DELETE_TITLE);
 			
 		} else {
 			try {
@@ -441,7 +442,7 @@ public class DonParser implements IDonParser {
 			} else {
 
 				// if date
-				if (isRightCommand(parameters, searchIDReg)) {
+				if (isRightCommand(parameters, labelReg)) {
 					int num = Integer.parseInt(parameters);
 					dCommand = new DonFindCommand(num);
 					
@@ -496,7 +497,7 @@ public class DonParser implements IDonParser {
 	private void setDelabelCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		if (isRightCommand(parameters, labelIDReg)) {
+		if (isRightCommand(parameters, labelReg)) {
 
 			String idStr = getID(parameters);
 			int ID = Integer.parseInt(idStr);
@@ -531,7 +532,7 @@ public class DonParser implements IDonParser {
 	private void setLabelCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		if (isRightCommand(parameters, labelIDReg)) {
+		if (isRightCommand(parameters, labelReg)) {
 
 			String idStr = getID(parameters);
 			int ID = Integer.parseInt(idStr);
@@ -769,6 +770,7 @@ public class DonParser implements IDonParser {
 	private boolean isGoodName(String name) {
 		// ensures semi colon not in name
 		if (!name.contains(";") 
+				&& !name.contains("#") 
 				&& !name.matches("^overdue$")
 				&& !name.matches("^od$")
 				&& !name.matches("^fl$")
@@ -815,9 +817,14 @@ public class DonParser implements IDonParser {
 	 * Removes ""
 	 */
 	private String extractName(String param) {
-		return param.substring(1, param.length() - 1);
+		return param.substring(1, param.length() - 1).trim();
 	}
-
+	/**
+	 * Removes #
+	 */
+	private String extractLabelName(String param) {
+		return param.substring(1, param.length()).trim();
+	}
 	public class WrongDateException extends Exception {
 
 		public WrongDateException() {
