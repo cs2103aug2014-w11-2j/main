@@ -50,23 +50,14 @@ public class DonParser implements IDonParser {
 
 	// List of all the allowed types
 
-	// date in DD/MM/YYYY format
-	private String dateReg = "\\b[0-9]{2}/[0-9]{2}/[0-9]{4}\\b";
-	private String dateNoYearReg = "\\b[0-9]{2}/[0-9]{2}\\b";
-
-	private String dateEventReg = "\\b[0-9]{2}/[0-9]{2}/[0-9]{4}\\s.*to\\s[0-9]{2}/[0-9]{2}/[0-9]{4}\\b";
-	private String dateNoYearEventReg = "\\b[0-9]{2}/[0-9]{2}\\s.*to\\s[0-9]{2}/[0-9]{2}\\b";
 	// name must be between " "
 	private String taskNameReg = "\".+\"";
 
-	// allow "blah" at or "blah" @
-	private String addTaskReg = "^\".+\"\\sat\\b|^\".+\"\\s@";
+	// allow "blah" by 
+	private String deadlineTaskReg = ".+((\\s.+)+)?(by\\s.+((\\s.+)+)?){1}";
 
-	// allow from
-	private String addEventReg = "^\".+\"\\sfrom\\s";
-
-	// allow only name
-	private String addFloatReg = "^\".+\"$";
+	// allow "blah" from
+	private String eventTaskReg = ".+((\\s.+)+)?(from\\s.+((\\s.+)+)?){1}";
 
 	// allow "blah" to
 	private String editNameToDateReg = "^\".+\"\\sto\\b";
@@ -127,7 +118,10 @@ public class DonParser implements IDonParser {
 		if (commandWord.equalsIgnoreCase("a")
 				|| commandWord.equalsIgnoreCase("add")) {
 			setAddCommand();
-		} else if (commandWord.equalsIgnoreCase("e")
+		} else if (commandWord.equalsIgnoreCase("addf")
+				|| commandWord.equalsIgnoreCase("af")) {
+			setAddFloatCommand();
+		}else if (commandWord.equalsIgnoreCase("e")
 				|| commandWord.equalsIgnoreCase("ed")
 				|| commandWord.equalsIgnoreCase("edit")) {
 			setEditCommand();
@@ -184,63 +178,84 @@ public class DonParser implements IDonParser {
 		String parameters = removeFirstWord(userCommand);
 
 		// is it "blah" at ...
-		if (isRightCommand(parameters, addTaskReg)) {
-
-			// get blah
-			String taskName = getTaskName(parameters);
-
-			if (isGoodName(taskName)) {
-				// Floating task
-				// get rid of "blah" at
-				String date = parameters.replaceFirst(addTaskReg, "").trim();
-				Calendar deadline = Calendar.getInstance();
-				boolean hasSetTime = setNewDeadlineForCommand(date, deadline);
-				//if dCommand is not null setNewDeadlineForCommand must have set INVALID_DATE
-				if(dCommand==null) {
-					dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);					
-				}
-				
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		if (isRightCommand(parameters, deadlineTaskReg) && isRightCommand(parameters, eventTaskReg)) {
+			//check which is later.
+			int byIndex = parameters.lastIndexOf(" by ");
+			int fromIndex = parameters.lastIndexOf(" from ");
+			
+			if(byIndex > fromIndex){
+				createAddDeadlineCommand(parameters);
+			}else{
+				createAddEventCommand(parameters);
+			}
+		}else if (isRightCommand(parameters, deadlineTaskReg)){
+			createAddDeadlineCommand(parameters);
+			
+		}else if (isRightCommand(parameters, eventTaskReg)){
+			createAddEventCommand(parameters);
+			
+		} else{
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		}
+	}
+			
+	private void createAddDeadlineCommand(String param) {
+		int byIndex = param.lastIndexOf(" by ");
+		String taskDate = param.substring(byIndex);
+		String taskName = param.substring(0, byIndex);
+		
+		if (isGoodName(taskName)) {
+			
+			Calendar deadline = Calendar.getInstance();
+			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
+			//if dCommand is not null setNewDeadlineForCommand must have set INVALID_DATE
+			if(dCommand==null) {
+				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);					
 			}
 
-			// is it "blah" from
-		} else if (isRightCommand(parameters, addEventReg)) {
-
-			// get blah
-			String taskName = getTaskName(parameters);
-			if (isGoodName(taskName)) {
-				// get rid of "blah" from
-				String date = parameters.replaceFirst(addEventReg, "").trim();
-				Calendar startDate = Calendar.getInstance(), endDate = Calendar
-						.getInstance();
-				boolean hasSetTime = setStartAndEndForCommand(date, startDate,
-						endDate);
-				if(dCommand==null) {
-					dCommand = new DonCreateCommand(taskName, startDate, endDate,
-						hasSetTime);
-				}
-				
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
-			}
-
-			// is it "blah"
-		} else if (isRightCommand(parameters, addFloatReg)) {
-
-			// get blah
-			String taskName = getTaskName(parameters);
-
-			if (isGoodName(taskName)) {
-				dCommand = new DonCreateCommand(taskName);
-				
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
-			}
 		} else {
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 
+	}
+	
+	private void createAddEventCommand(String param) {
+		int fromIndex = param.lastIndexOf(" from ");
+		String taskDates = param.substring(fromIndex);
+		String taskName = param.substring(0, fromIndex);
+		
+		if (isGoodName(taskName)) {
+			
+			Calendar startDate = Calendar.getInstance(), endDate = Calendar
+					.getInstance();
+			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
+					endDate);
+			
+			if(dCommand==null) {
+				dCommand = new DonCreateCommand(taskName, startDate, endDate,
+					hasSetTime);
+			}
+			
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		}
+		
+		
+	}
+	/**
+	 * Creates the add floating command. 
+	 * 
+	 */
+	private void setAddFloatCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+
+		if (isGoodName(parameters)) {
+			dCommand = new DonCreateCommand(parameters);
+		} else{
+			// TODO maybe here invalid task name?
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		}
 	}
 
 	/**
@@ -970,7 +985,12 @@ public class DonParser implements IDonParser {
 	 */
 	private boolean isGoodName(String name) {
 		// ensures semi colon not in name
-		if (!name.contains(";")) {
+		if (!name.contains(";") 
+				&& !name.contains(" overdue ")
+				&& !name.contains(" float ")
+				&& !name.contains(" done ")
+				&& !name.matches("[0-9]+")) {
+			
 			return true;
 		} else {
 			return false;
