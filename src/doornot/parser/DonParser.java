@@ -578,6 +578,8 @@ public class DonParser implements IDonParser {
 			} else if (parameters.equalsIgnoreCase("del")
 					|| parameters.equalsIgnoreCase("delete")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_DELETE);
+			} else if (parameters.equalsIgnoreCase("label")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_LABEL);
 			} else if (parameters.equalsIgnoreCase("mark")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_MARK);
 			} else if (parameters.equalsIgnoreCase("undo")) {
