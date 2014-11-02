@@ -201,8 +201,8 @@ public class DonParser implements IDonParser {
 			
 	private void createAddDeadlineCommand(String param) {
 		int byIndex = param.lastIndexOf(" by ");
-		String taskDate = param.substring(byIndex);
-		String taskName = param.substring(0, byIndex);
+		String taskDate = param.substring(byIndex+1);
+		String taskName = param.substring(0, byIndex+1).trim();
 		
 		if (isGoodName(taskName)) {
 			
@@ -221,8 +221,8 @@ public class DonParser implements IDonParser {
 	
 	private void createAddEventCommand(String param) {
 		int fromIndex = param.lastIndexOf(" from ");
-		String taskDates = param.substring(fromIndex);
-		String taskName = param.substring(0, fromIndex);
+		String taskDates = param.substring(fromIndex+1);
+		String taskName = param.substring(0, fromIndex+1).trim();
 		
 		if (isGoodName(taskName)) {
 			
@@ -645,8 +645,7 @@ public class DonParser implements IDonParser {
 		} catch (Exception e) {
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 		}
-
-
+		
 		return hasSetTime;
 	}
 
@@ -657,15 +656,6 @@ public class DonParser implements IDonParser {
 		int day = dateCal.get(Calendar.DAY_OF_MONTH);
 
 		return new GregorianCalendar(year, month, day, 23, 59);
-	}
-
-	private Calendar createDateTimeNatty(Calendar date, Date time) {
-
-		Calendar timeCal = new GregorianCalendar();
-		timeCal.setTime(time);
-		date.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
-		date.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
-		return date;
 	}
 
 	/**
@@ -704,80 +694,52 @@ public class DonParser implements IDonParser {
 	 * 
 	 * @param parameters
 	 * @return
+	 * @throws WrongDateException 
 	 */
-	private Date[] getTimingsFromParser(String parameters) {
+	private Date[] getTimingsFromParser(String parameters) throws WrongDateException {
 		groups = nattyParser.parse(parameters);
-		Date[] dates = new Date[2];
-		dates[0] = groups.get(0).getDates().get(0);
-		dates[1] = groups.get(0).getDates().get(1);
-		return dates;
+		
+		if (groups.get(0).getDates().size() != 2
+				|| groups.get(0).isRecurring()){
+			
+			throw new WrongDateException();
+			
+		} else {
+			Date[] dates = new Date[2];
+			dates[0] = groups.get(0).getDates().get(0);
+			dates[1] = groups.get(0).getDates().get(1);
+			return dates;
+		}
 	}
 
 	private boolean setStartAndEndForCommand(String parameters,
 			Calendar startDate, Calendar endDate) {
 		boolean hasSetTime = false;
-//		boolean hasRecurred = false;
-//		Date recursTill;
-		if (!removeFormalDate(parameters, dateEventReg, dateNoYearEventReg)
-				.equals("")) {
 
-			try {
-				Calendar[] dates = getFormalEventDates(parameters);
-				String param = removeFormalDate(parameters, dateEventReg,
-						dateNoYearEventReg);
-				Date[] timings = getTimingsFromParser(param);
-				
-//				if(isRecurrence()){
-//					hasRecurred = true;
-//					recursTill = getRecurringUntil();
-//				}
-				
-				if (isTimeMentioned()) {
-					hasSetTime = true;
-					CalHelper.copyCalendar(
-							createDateTimeNatty(dates[0], timings[0]),
-							startDate);
-					CalHelper.copyCalendar(
-							createDateTimeNatty(dates[1], timings[1]), endDate);
-				} else {
-					CalHelper
-							.copyCalendar(createDateNatty(dates[0]), startDate);
-					CalHelper.copyCalendar(createDateNatty(dates[1]), endDate);
-				}
+		try {
+			Date[] dates = getTimingsFromParser(parameters);
+			Calendar[] calArr = new Calendar[2];
+			Calendar cal = new GregorianCalendar();
+			
+			cal.setTime(dates[0]);
+			calArr[0] = cal;
+			Calendar cal2 = new GregorianCalendar();
+			cal2.setTime(dates[1]);
+			calArr[1] = cal2;
 
-			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
+			if (isTimeMentioned()) {
+				hasSetTime = true;
+				CalHelper.copyCalendar(calArr[0], startDate);
+				CalHelper.copyCalendar(calArr[1], endDate);
+			} else {
+				CalHelper.copyCalendar(createDateNatty(calArr[0]),
+						startDate);
+				CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
 			}
-		} else {
-			try {
-				Date[] dates = getTimingsFromParser(parameters);
-				Calendar[] calArr = new Calendar[2];
-				Calendar cal = new GregorianCalendar();
-				cal.setTime(dates[0]);
-				calArr[0] = cal;
-				Calendar cal2 = new GregorianCalendar();
-				cal2.setTime(dates[1]);
-				calArr[1] = cal2;
-				
-//				if(isRecurrence()){
-//					hasRecurred = true;
-//					recursTill = getRecurringUntil();
-//				}
-				
-				if (isTimeMentioned()) {
-					hasSetTime = true;
-					CalHelper.copyCalendar(calArr[0], startDate);
-					CalHelper.copyCalendar(calArr[1], endDate);
-				} else {
-					CalHelper.copyCalendar(createDateNatty(calArr[0]),
-							startDate);
-					CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
-				}
-			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
-			}
+		} catch (Exception e) {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 		}
-
+		
 		return hasSetTime;
 	}
 

@@ -48,18 +48,18 @@ public class DonParserTest {
 		// test add task
 		
 		
-		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a \"hihihi 12345678 \" at 09/09/2014");
-		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add \"hihihi 12345678 \" @ 9th september");
-		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 09/09/2014 13:24");
-		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ 9 sep 1.24 pm");
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a hihihi 12345678 by 09/09/2014");
+		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add hihihi 12345678 by 9th september");
+		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add hihihi by 09/09/2014 13:24");
+		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add hihihi by 9 sep 1.24 pm");
 		
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a \"hihihi 12345678 \" at 12/13/2014");
-		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad \"hihihi\" at 09082014");
-		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a hihihi\" at 09082014");
-		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a \"hihih;i\" at 09082014");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678  by 12/13/2014");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad hihihi by 09082014");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a done by 09082014");
+		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
 		
 		assertEquals(AddType.DEADLINE, create1.getType());
-		assertEquals("hihihi 12345678 ", create1.getTaskTitle());
+		assertEquals("hihihi 12345678", create1.getTaskTitle());
 
 		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create1.getStartDate()));
 		
@@ -105,8 +105,8 @@ public class DonParserTest {
 		// test add event
 
 		
-		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" from 07/08/2014 to 09/08/2014");
-		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" from 7 aug to 9 aug");
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("add hihihi from 07/08/2014 to 09/08/2014");
+		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add hihihi from 7 aug to 9 aug");
 		
 		Calendar startDate1 = new GregorianCalendar(2014,7,7,23,59);
 		Calendar endDate1 = new GregorianCalendar(2014,7,9,23,59);
@@ -123,8 +123,8 @@ public class DonParserTest {
 		startDate1 = new GregorianCalendar(2014,7,7,13,24);
 		endDate1 = new GregorianCalendar(2014,7,9,15,54);
 		
-		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" from 07/08/2014 1.24 pm to 09/08/2014 15:54");
-		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" from 7 aug 1.24 pm to 9 aug 3.54 pm");
+		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add hihihi from 07/08/2014 1.24 pm to 09/08/2014 15:54");
+		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add hihihi from 7 aug 1.24 pm to 9 aug 3.54 pm");
 		assertEquals(true, CalHelper.relevantEquals(startDate1, create3.getStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate1, create3.getEndDate()));
 		
@@ -132,36 +132,28 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(endDate1, create4.getEndDate()));
 		
 		// test invalid 
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 07082014 to 09082014_1554");
-		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 07082014_1324 to 09082014");
-		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" fro 07082014 to 09082014");
-		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 0702014 to 0908204");
-		DonInvalidCommand invalid5 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" from 0702014 2 0908204");
-		DonInvalidCommand invalid6 = (DonInvalidCommand) parser.parseCommand("add \"hihihi from 0702014 2 0908204");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add hihihi fro 07082014 to 09082014");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("add hihihi from 0702014 to 0908204");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("add hihihi from 0702014 2 0908204");
 		
-		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("add", invalid1.getStringInput());
 		assertEquals(InvalidType.INVALID_DATE, invalid2.getType());
-		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
-		assertEquals("add", invalid3.getStringInput());
-		assertEquals(InvalidType.INVALID_DATE, invalid4.getType());
-		assertEquals(InvalidType.INVALID_DATE, invalid5.getType());
-		assertEquals(InvalidType.INVALID_FORMAT, invalid6.getType());
-		assertEquals("add", invalid6.getStringInput());
+		assertEquals(InvalidType.INVALID_DATE, invalid3.getType());
 	}
 	
 	@Test
 	public void testAddFloat(){
-		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("add \"hihihi\"");
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("addf overdue work");
 		// test event add
 		assertEquals(AddType.FLOATING, create1.getType());
-		assertEquals("hihihi", create1.getTaskTitle());
+		assertEquals("overdue work", create1.getTaskTitle());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add \"hihihi\" dfs");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf overdue");
 		
 		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("add", invalid1.getStringInput());
+		assertEquals("addf", invalid1.getStringInput());
 	}
 	
 	@Test
