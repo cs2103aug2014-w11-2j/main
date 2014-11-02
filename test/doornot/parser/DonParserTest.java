@@ -145,21 +145,26 @@ public class DonParserTest {
 	@Test
 	public void testMark(){
 		
-		DonMarkCommand mark1 = (DonMarkCommand) parser.parseCommand("mark \"blah95\"");
+		DonMarkCommand mark1 = (DonMarkCommand) parser.parseCommand("mark blah95");
+		DonMarkCommand mark2 = (DonMarkCommand) parser.parseCommand("mark 95");
 		
 		// test mark
 		assertEquals(MarkType.MARK_STRING, mark1.getMarkType());
 		assertEquals("blah95", mark1.getSearchTitle());
 		
-		// test batch mark
-		DonMarkCommand mark2 = (DonMarkCommand) parser.parseCommand("mark overdue");
-		DonMarkCommand mark3 = (DonMarkCommand) parser.parseCommand("mark float");
+		assertEquals(MarkType.MARK_ID, mark2.getMarkType());
+		assertEquals(95, mark2.getSearchID());
 		
-		assertEquals(MarkType.MARK_OVERDUE, mark2.getMarkType());
-		assertEquals(MarkType.MARK_FLOAT, mark3.getMarkType());
+		
+		// test batch mark
+		DonMarkCommand mark3 = (DonMarkCommand) parser.parseCommand("mark overdue");
+		DonMarkCommand mark4 = (DonMarkCommand) parser.parseCommand("mark float");
+		
+		assertEquals(MarkType.MARK_OVERDUE, mark3.getMarkType());
+		assertEquals(MarkType.MARK_FLOAT, mark4.getMarkType());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark \"blah95");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark undone");
 		
 		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
 		assertEquals("mark", invalid1.getStringInput());

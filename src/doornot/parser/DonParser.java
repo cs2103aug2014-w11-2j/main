@@ -371,8 +371,8 @@ public class DonParser implements IDonParser {
 				|| parameters.equalsIgnoreCase("floating")){
 			dCommand = new DonMarkCommand(MarkType.MARK_FLOAT);
 			
-		} else if (isTaskName(parameters)) {
-			dCommand = new DonMarkCommand(extractName(parameters));
+		} else if (isGoodName(parameters)) {
+			dCommand = new DonMarkCommand(parameters);
 			
 		} else {
 			try {
@@ -770,6 +770,9 @@ public class DonParser implements IDonParser {
 		// ensures semi colon not in name
 		if (!name.contains(";") 
 				&& !name.matches("^overdue$")
+				&& !name.matches("^od$")
+				&& !name.matches("^fl$")
+				&& !name.matches("^floating$")
 				&& !name.matches("^float$")
 				&& !name.matches("^done$")
 				&& !name.matches("^undone$")
