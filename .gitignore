@@ -6,3 +6,4 @@ DoorNot_current.txt
 /src/doornot/parser/Playground.java
 *.log
 *.log.lck
+*.log.1
