@@ -2,7 +2,6 @@
 /doc
 *.class
 DoorNot_current.txt
-*.txt
 /src/doornot/parser/Playground.java
 *.log
 *.log.lck
