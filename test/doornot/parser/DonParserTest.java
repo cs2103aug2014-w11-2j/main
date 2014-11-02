@@ -206,13 +206,10 @@ public class DonParserTest {
 	}
 	@Test
 	public void testSearchName(){
-		DonFindCommand search = (DonFindCommand) parser.parseCommand("search \"blah95\"");
+		DonFindCommand search = (DonFindCommand) parser.parseCommand("search blah95");
 		// test search
 		assertEquals(SearchType.SEARCH_NAME, search.getType());
 		assertEquals("blah95", search.getSearchTitle());
-		// test invalid
-//		assertEquals(CommandType.INVALID_FORMAT, 
-//				parser.parseCommand("search \"blah95").getGeneralType());
 	}
 	
 	@Test
@@ -225,8 +222,8 @@ public class DonParserTest {
 	
 	@Test
 	public void testSearchDate(){
-		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("s 09/08/2014");
-		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("s 9 aug");
+		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("son 09/08/2014");
+		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("son 9 aug");
 		Calendar date1 = new GregorianCalendar(2014,7,9,23,59);
 		// test search date
 		assertEquals(SearchType.SEARCH_DATE, search1.getType());
@@ -234,8 +231,8 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(date1, search2.getSearchStartDate()));
 		
 		// test search with time
-		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("s 09/08/2014 11:23");
-		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("s 9 aug 11:23");
+		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("son 09/08/2014 11:23");
+		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("son 9 aug 11:23");
 		date1 = new GregorianCalendar(2014,7,9,11,23);
 		assertEquals(true, CalHelper.relevantEquals(date1, search3.getSearchStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(date1, search4.getSearchStartDate()));
@@ -274,6 +271,14 @@ public class DonParserTest {
 		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
 		assertEquals(SearchType.SEARCH_UNDONE, search9.getType());
 		
+		// test search done
+		DonFindCommand search16 = (DonFindCommand) parser.parseCommand("sd");
+		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("s done");
+		DonFindCommand search18 = (DonFindCommand) parser.parseCommand("search done");
+		assertEquals(SearchType.SEARCH_DONE, search16.getType());
+		assertEquals(SearchType.SEARCH_DONE, search17.getType());
+		assertEquals(SearchType.SEARCH_DONE, search18.getType());
+		
 		// test today
 		DonFindCommand search10 = (DonFindCommand) parser.parseCommand("today");
 		assertEquals(SearchType.TODAY, search10.getType());
@@ -288,9 +293,19 @@ public class DonParserTest {
 		DonFindCommand search13 = (DonFindCommand) parser.parseCommand("future");
 		assertEquals(SearchType.FUTURE, search13.getType());
 				
-		// test 7 days
-		DonFindCommand search14 = (DonFindCommand) parser.parseCommand("week");
-		assertEquals(SearchType.SEVEN_DAYS, search14.getType());
+		// test results
+		DonFindCommand search14 = (DonFindCommand) parser.parseCommand("results");
+		assertEquals(SearchType.RESULTS, search14.getType());
+		
+		// test float
+		DonFindCommand search15 = (DonFindCommand) parser.parseCommand("fl");
+		assertEquals(SearchType.FLOAT, search15.getType());	
+		
+		// test search done
+		DonFindCommand search19 = (DonFindCommand) parser.parseCommand("s");
+		DonFindCommand search20 = (DonFindCommand) parser.parseCommand("all");
+		assertEquals(SearchType.SEARCH_ALL, search19.getType());
+		assertEquals(SearchType.SEARCH_ALL, search20.getType());
 	}
 	@Test
 	public void testEditName(){
@@ -450,21 +465,15 @@ public class DonParserTest {
 	public void testLabel(){
 		
 		// test label 
-		DonAddLabelCommand label1 = (DonAddLabelCommand) parser.parseCommand("label \"hihihi\" \"projects\"");
+		DonAddLabelCommand label1 = (DonAddLabelCommand) parser.parseCommand("label hihihi #projects");
 		
 		assertEquals(AddLabelType.LABEL_NAME, label1.getAddLabelType());
 		assertEquals("projects", label1.getNewLabel());
 		assertEquals("hihihi", label1.getSearchTitle());
 		
-		//test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("label \"hihihi\" \"projects");
-		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("label", invalid1.getStringInput());
-		
 		// tets label ID
 		
-		DonAddLabelCommand label2 = (DonAddLabelCommand) parser.parseCommand("label 666 \"projects\"");
+		DonAddLabelCommand label2 = (DonAddLabelCommand) parser.parseCommand("label 666 #projects");
 		assertEquals(AddLabelType.LABEL_ID, label2.getAddLabelType());
 		assertEquals("projects", label2.getNewLabel());
 		assertEquals(666, label2.getSearchID());
@@ -473,35 +482,40 @@ public class DonParserTest {
 	public void testDelabel(){
 		// test delabel 
 		
-		DonDelabelCommand delabel1 = (DonDelabelCommand) parser.parseCommand("delabel \"hihihi\" \"projects\"");
+		DonDelabelCommand delabel1 = (DonDelabelCommand) parser.parseCommand("dl hihihi #projects");
 
 		assertEquals(DelabelType.LABEL_NAME, delabel1.getDelabelType());
 		assertEquals("projects", delabel1.getSearchLabel());
 		assertEquals("hihihi", delabel1.getSearchTitle());
 
-		//test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("delabel \"hihihi\" \"projects");
-		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("delabel", invalid1.getStringInput());
-
 		// tets delabel ID
-		DonDelabelCommand delabel2 = (DonDelabelCommand) parser.parseCommand("delabel 666 \"projects\"");
+		DonDelabelCommand delabel2 = (DonDelabelCommand) parser.parseCommand("delabel 666 #projects");
 		assertEquals(DelabelType.LABEL_ID, delabel2.getDelabelType());
 		assertEquals("projects", delabel2.getSearchLabel());
 		assertEquals(666, delabel2.getSearchID());
 		
+		//test delabel all id
+		DonDelabelCommand delabel3 = (DonDelabelCommand) parser.parseCommand("delabel 666");
+		assertEquals(DelabelType.LABEL_ALL_ID, delabel3.getDelabelType());
+		assertEquals(666, delabel3.getSearchID());
+		
+		//test delabel all name
+		DonDelabelCommand delabel4 = (DonDelabelCommand) parser.parseCommand("delabel blah95");
+		assertEquals(DelabelType.LABEL_ALL_NAME, delabel4.getDelabelType());
+		assertEquals("blah95", delabel4.getSearchTitle());
+		
+		
 	}
 	@Test
 	public void testSearchLabel(){
-		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("sl \"projects\"");		
+		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("sl #projects");		
 		
 		// test search label
 		assertEquals(SearchType.SEARCH_LABEL, search1.getType());
 		assertEquals("projects", search1.getSearchTitle());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("sl \"projects");
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("sl projects");
 		
 		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
 		assertEquals("sl", invalid1.getStringInput());

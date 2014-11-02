@@ -68,16 +68,10 @@ public class DonParser implements IDonParser {
 	private String getIDReg = "^[0-9]+$";
 	
 	// allow xx "BLAH"
-	private String labelReg = "#.+$";
+	private String labelNameReg = "^#.+$";
 
 	// allow "blah" "BLAH"
-	private String labelNameReg = "^\".+\"\\s\".+\"$";
-
-	// for that space between the names
-	private String labelNameSpaceReg = "\"\\s\"";
-
-	// allow only name
-	private String labelNameAloneReg = "^\".+\"$";
+	private String labelReg = ".+ #.+$";
 
 	@Override
 	public AbstractDonCommand parseCommand(String command) {
@@ -107,7 +101,11 @@ public class DonParser implements IDonParser {
 				|| commandWord.equalsIgnoreCase("search")) {
 			setSearchCommand();
 		} else if (commandWord.equalsIgnoreCase("saf")) {
-			setSearchAfterCommand();
+			setSearchDatesCommand(SearchType.SEARCH_AFTDATE);
+		} else if (commandWord.equalsIgnoreCase("son")) {
+			setSearchDatesCommand(SearchType.SEARCH_DATE);
+		} else if (commandWord.equalsIgnoreCase("all")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
 		} else if (commandWord.equalsIgnoreCase("d")
 				|| commandWord.equalsIgnoreCase("del")
 				|| commandWord.equalsIgnoreCase("delete")) {
@@ -115,15 +113,21 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("m")
 				|| commandWord.equalsIgnoreCase("mark")) {
 			setMarkCommand();
-		} else if (commandWord.equalsIgnoreCase("label")) {
+		} else if (commandWord.equalsIgnoreCase("label")
+				|| commandWord.equalsIgnoreCase("l")) {
 			setLabelCommand();
-		} else if (commandWord.equalsIgnoreCase("delabel")) {
+		} else if (commandWord.equalsIgnoreCase("delabel")
+				|| commandWord.equalsIgnoreCase("dl")) {
 			setDelabelCommand();
 		} else if (commandWord.equalsIgnoreCase("slabel")
 				|| commandWord.equalsIgnoreCase("sl")) {
 			setSlabelCommand();
-		} else if (commandWord.equalsIgnoreCase("sud")) {
+		} else if (commandWord.equalsIgnoreCase("sud")
+				|| commandWord.equalsIgnoreCase("undone")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
+		} else if (commandWord.equalsIgnoreCase("sd")
+				|| commandWord.equalsIgnoreCase("done")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
 		} else if (commandWord.equalsIgnoreCase("today")) {
 			dCommand = new DonFindCommand(SearchType.TODAY);
 		} else if (commandWord.equalsIgnoreCase("od")
@@ -133,9 +137,14 @@ public class DonParser implements IDonParser {
 			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
 		}else if (commandWord.equalsIgnoreCase("future")) {
 			dCommand = new DonFindCommand(SearchType.FUTURE);
-		}else if (commandWord.equalsIgnoreCase("float")) {
-			dCommand = new DonFindCommand(SearchType.FLOAT);
-		} else if (commandWord.equalsIgnoreCase("undo")) {
+		} else if (commandWord.equalsIgnoreCase("float")
+				|| commandWord.equalsIgnoreCase("fl")
+				|| commandWord.equalsIgnoreCase("floating")) {
+			dCommand = new DonFindCommand(SearchType.FLOAT);		
+		} else if (commandWord.equalsIgnoreCase("results")
+				|| commandWord.equalsIgnoreCase("result")) {
+			dCommand = new DonFindCommand(SearchType.RESULTS);
+		}else if (commandWord.equalsIgnoreCase("undo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.REDO);
@@ -400,7 +409,7 @@ public class DonParser implements IDonParser {
 				|| parameters.equalsIgnoreCase("floating")){
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
 			
-		} else if (isRightCommand(parameters, labelReg)) {
+		} else if (isRightCommand(parameters, labelNameReg)) {
 			dCommand = new DonDeleteCommand(extractLabelName(parameters), DeleteType.DELETE_LABEL);
 			
 		}else if (isGoodName(parameters)) {
@@ -434,37 +443,29 @@ public class DonParser implements IDonParser {
 		} else if (parameters.equalsIgnoreCase("undone")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
 
+		} else if (parameters.equalsIgnoreCase("done")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
+
 		} else {
-			if (isTaskName(parameters)) {
-				dCommand = new DonFindCommand(extractName(parameters),
-						SearchType.SEARCH_NAME);
+			if (isGoodName(parameters)) {
+				dCommand = new DonFindCommand(parameters, SearchType.SEARCH_NAME);
 
 			} else {
-
-				// if date
-				if (isRightCommand(parameters, labelReg)) {
-					int num = Integer.parseInt(parameters);
-					dCommand = new DonFindCommand(num);
+				try{
+					int ID = Integer.parseInt(parameters);
+					dCommand = new DonFindCommand(ID);
 					
-				} else {
-
-					Calendar searchDate = Calendar.getInstance();
-					boolean hasSetTime = setNewDeadlineForCommand(parameters,
-							searchDate);
-					if(dCommand==null) {
-						dCommand = new DonFindCommand(searchDate, hasSetTime,
-							SearchType.SEARCH_DATE);
-					}
-					
+				} catch (Exception e){
+					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Creates the search after CommandType
+	 * Creates the search after CommandType and search on CommandType
 	 */
-	private void setSearchAfterCommand() {
+	private void setSearchDatesCommand(SearchType type) {
 		String parameters = removeFirstWord(userCommand);
 
 		
@@ -472,7 +473,7 @@ public class DonParser implements IDonParser {
 		boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
 		if(dCommand==null) {
 			dCommand = new DonFindCommand(searchDate, hasSetTime,
-				SearchType.SEARCH_AFTDATE);
+				type);
 		}
 
 	}
@@ -481,8 +482,9 @@ public class DonParser implements IDonParser {
 	 */
 	private void setSlabelCommand() {
 		String parameters = removeFirstWord(userCommand);
-		if (isRightCommand(parameters, labelNameAloneReg)) {
-			dCommand = new DonFindCommand(extractName(parameters),
+		
+		if (isRightCommand(parameters, labelNameReg)) {
+			dCommand = new DonFindCommand(extractLabelName(parameters),
 					SearchType.SEARCH_LABEL);
 			
 		} else {
@@ -498,30 +500,34 @@ public class DonParser implements IDonParser {
 		String parameters = removeFirstWord(userCommand);
 
 		if (isRightCommand(parameters, labelReg)) {
-
-			String idStr = getID(parameters);
-			int ID = Integer.parseInt(idStr);
-
-			// get rid of xxx
-			String labelName = parameters.replaceFirst(getIDReg, "").trim();
-			dCommand = new DonDelabelCommand(ID, extractName(labelName));
+			int byIndex = parameters.lastIndexOf(" #");
+			String labelName = parameters.substring(byIndex+1);
+			String taskName = parameters.substring(0, byIndex+1).trim();
 			
-
-		} else if (isRightCommand(parameters, labelNameReg)) {
-			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
-
-			String taskName = names[0];
-			String labelName = names[1];
-
-			if (isGoodName(taskName) && isGoodName(labelName)) {
-				dCommand = new DonDelabelCommand(taskName, labelName);
-				
-
+			if(isGoodName(taskName)){
+				dCommand = new DonDelabelCommand(taskName, extractLabelName(labelName));
 			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				try{
+					int ID = Integer.parseInt(taskName);
+					dCommand = new DonDelabelCommand(ID, extractLabelName(labelName));
+					
+				} catch (Exception e){
+					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				}
 			}
+			
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			if(isGoodName(parameters)){
+				dCommand = new DonDelabelCommand(parameters);
+			} else {
+				try{
+					int ID = Integer.parseInt(parameters);
+					dCommand = new DonDelabelCommand(ID);
+					
+				} catch (Exception e){
+					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				}
+			}
 		}
 
 	}
@@ -533,28 +539,22 @@ public class DonParser implements IDonParser {
 		String parameters = removeFirstWord(userCommand);
 
 		if (isRightCommand(parameters, labelReg)) {
-
-			String idStr = getID(parameters);
-			int ID = Integer.parseInt(idStr);
-
-			// get rid of xxx
-			String labelName = parameters.replaceFirst(getIDReg, "").trim();
-			dCommand = new DonAddLabelCommand(ID, extractName(labelName));
+			int byIndex = parameters.lastIndexOf(" #");
+			String labelName = parameters.substring(byIndex+1);
+			String taskName = parameters.substring(0, byIndex+1).trim();
 			
-
-		} else if (isRightCommand(parameters, labelNameReg)) {
-			String[] names = getTaskNameArr(parameters, labelNameSpaceReg);
-
-			String taskName = names[0];
-			String labelName = names[1];
-
-			if (isGoodName(taskName) && isGoodName(labelName)) {
-				dCommand = new DonAddLabelCommand(taskName, labelName);
-				
-
+			if(isGoodName(taskName)){
+				dCommand = new DonAddLabelCommand(taskName, extractLabelName(labelName));
 			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				try{
+					int ID = Integer.parseInt(taskName);
+					dCommand = new DonAddLabelCommand(ID, extractLabelName(labelName));
+					
+				} catch (Exception e){
+					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				}
 			}
+			
 		} else {
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
@@ -793,24 +793,6 @@ public class DonParser implements IDonParser {
 
 	private static String getFirstWord(String userCommand) {
 		return userCommand.trim().split("\\s+")[0];
-	}
-
-	/**
-	 * Checks if the task name is within ""
-	 */
-	private boolean isTaskName(String param) {
-		Pattern pattern = Pattern.compile(taskNameReg);
-		Matcher matcher = pattern.matcher(param);
-		// ensures semi colon not in name
-		if (matcher.find()) {
-			if (!extractName(param).contains(";")) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
 	}
 
 	/**

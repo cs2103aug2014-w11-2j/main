@@ -12,7 +12,7 @@ public class DonDelabelCommand extends DonEditCommand {
 	
 
 	public enum DelabelType {
-		LABEL_ID, LABEL_NAME
+		LABEL_ID, LABEL_NAME, LABEL_ALL_NAME, LABEL_ALL_ID
 	}
 	
 	private DelabelType type;
@@ -29,6 +29,17 @@ public class DonDelabelCommand extends DonEditCommand {
 		searchTitle = title;
 		searchLabel = label;
 		type = DelabelType.LABEL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+	
+	public DonDelabelCommand(String title) {
+		searchTitle = title;
+		type = DelabelType.LABEL_ALL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+	public DonDelabelCommand(int ID) {
+		searchID = ID;
+		type = DelabelType.LABEL_ALL_ID;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
