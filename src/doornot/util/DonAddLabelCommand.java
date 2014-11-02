@@ -16,6 +16,7 @@ public class DonAddLabelCommand extends DonEditCommand {
 	
 	private AddLabelType type;
 	private String newLabel;
+	private static int MAX_LABEL = 3;
 	
 	public DonAddLabelCommand(int id, String label) {
 		searchID = id;
@@ -53,17 +54,23 @@ public class DonAddLabelCommand extends DonEditCommand {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
-			unchangedTask.add(task.clone());
 			List<String> currentLabels = task.getLabels();
-			if (currentLabels.contains(newLabel)) {
-				response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
-				response.addMessage(String.format(MSG_LABEL_EXISTS, newLabel));
+			if (currentLabels.size() >= MAX_LABEL) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_FAILED);
+				response.addMessage(String.format(MSG_LABEL_OVERLOAD, MAX_LABEL));
 			} else {
-				task.addLabel(newLabel);
-				response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
-				response.addMessage(String.format(MSG_LABEL_ADDED_ID, newLabel, searchID));
-				response.addTask(task);
+				unchangedTask.add(task.clone());
+				if (currentLabels.contains(newLabel)) {
+					response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
+					response.addMessage(String.format(MSG_LABEL_EXISTS, newLabel));
+				} else {
+					task.addLabel(newLabel);
+					response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
+					response.addMessage(String.format(MSG_LABEL_ADDED_ID, newLabel, searchID));
+					response.addTask(task);
+				}
 			}
+			
 
 		}
 		

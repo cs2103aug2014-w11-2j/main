@@ -47,6 +47,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	protected static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	protected static final String MSG_UNKNOWN_COMMAND = "The command '%1$s' does not exist!";
+	protected static final String MSG_LABEL_OVERLOAD = "Labelling failed. A task cannot have more than %1$d labels!";
 	
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";
