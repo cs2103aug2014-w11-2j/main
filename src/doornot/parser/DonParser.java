@@ -54,37 +54,18 @@ public class DonParser implements IDonParser {
 	private String taskNameReg = "\".+\"";
 
 	// allow "blah" by 
-	private String deadlineTaskReg = ".+((\\s.+)+)?(by\\s.+((\\s.+)+)?){1}";
+	private String deadlineTaskReg = ".+(by\\s.+){1}";
 
 	// allow "blah" from
-	private String eventTaskReg = ".+((\\s.+)+)?(from\\s.+((\\s.+)+)?){1}";
+	private String eventTaskReg = ".+(from\\s.+){1}";
+	
+	// allow "blah"/ID to
+	private String editToNameReg = ".+(to\\s\".+\"){1}";
 
-	// allow "blah" to
-	private String editNameToDateReg = "^\".+\"\\sto\\b";
-
-	// allow id to
-	private String editIDToDateReg = "^[0-9]+\\sto\\b";
-
+	// for to "
+	private String editNameSpaceReg = "to \"";
 	// number
-	private String getIDReg = "^[0-9]+\\s";
-
-	// allow "blah" to from
-	private String editNameToEventReg = "^\".+\"\\sto\\sfrom\\b";
-
-	// for " to "
-	private String editNameSpaceReg = "\"\\sto\\s\"";
-
-	// allow id to from
-	private String editIDToEventReg = "^[0-9]+\\sto\\sfrom\\b";
-
-	// allow "blah" to "blah"
-	private String editNameToNameReg = "^\".+\"\\sto\\s\".+\"$";
-
-	// allow id to "blah"
-	private String editIDToNameReg = "^[0-9]+\\sto\\s\".+\"$";
-
-	// to "blah"
-	private String editToNameReg = "\\bto\\s\".+\"$";
+	private String getIDReg = "^[0-9]+";
 
 	// for id only
 	private String searchIDReg = "^[0-9]+$";
@@ -177,7 +158,6 @@ public class DonParser implements IDonParser {
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		// is it "blah" at ...
 		if (isRightCommand(parameters, deadlineTaskReg) && isRightCommand(parameters, eventTaskReg)) {
 			//check which is later.
 			int byIndex = parameters.lastIndexOf(" by ");
@@ -264,8 +244,8 @@ public class DonParser implements IDonParser {
 	private void setEditCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		if (isRightCommand(parameters, editNameToNameReg)) {
-
+		if (isRightCommand(parameters, editToNameReg)) {
+			
 			String[] taskNames = getTaskNameArr(parameters, editNameSpaceReg);
 
 			String oldName = taskNames[0];
@@ -274,99 +254,105 @@ public class DonParser implements IDonParser {
 			if (isGoodName(oldName) && isGoodName(newName)) {
 				dCommand = new DonEditCommand(oldName, newName);
 				
-
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
-			}
-
-		} else if (isRightCommand(parameters, editIDToNameReg)) {
-			String newName = getTaskName(parameters);
-
-			if (isGoodName(newName)) {
-				// get rid of to "blah"
-				String id = parameters.replaceFirst(editToNameReg, "").trim();
-				int ID = Integer.parseInt(id);
-				dCommand = new DonEditCommand(ID, newName);
-				
-
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
-			}
-
-		} else if (isRightCommand(parameters, editNameToEventReg)) {
-
-			String taskName = getTaskName(parameters);
-
-			if (isGoodName(taskName)) {
-
-				// get rid of "blah" to from
-				String date = parameters.replaceFirst(editNameToEventReg, "")
-						.trim();
-				Calendar startDate = Calendar.getInstance(), endDate = Calendar
-						.getInstance();
-				boolean hasSetTime = setStartAndEndForCommand(date, startDate,
-						endDate);
-				if(dCommand==null) {
-					dCommand = new DonEditCommand(taskName, startDate, endDate,
-						hasSetTime);
+			}else if (isGoodName(newName)){
+				try {
+					
+					int ID = Integer.parseInt(oldName);
+					dCommand = new DonEditCommand(ID, newName);
+					
+				} catch (Exception e){
+					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 				}
-				
 
 			} else {
 				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 			}
 
-		} else if (isRightCommand(parameters, editIDToEventReg)) {
-
-			String idStr = getID(parameters);
-			int ID = Integer.parseInt(idStr);
-			// get rid of xxx to from
-			String date = parameters.replaceFirst(editIDToEventReg, "").trim();
-			Calendar startDate = Calendar.getInstance(), endDate = Calendar
-					.getInstance();
-			boolean hasSetTime = setStartAndEndForCommand(date, startDate,
-					endDate);
-			if(dCommand==null) {
-				dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);
+		} else if (isRightCommand(parameters, deadlineTaskReg) && isRightCommand(parameters, eventTaskReg)) {
+			//check which is later.
+			int byIndex = parameters.lastIndexOf(" by ");
+			int fromIndex = parameters.lastIndexOf(" from ");
+			
+			if(byIndex > fromIndex){
+				createEditDeadlineCommand(parameters);
+			}else{
+				createEditEventCommand(parameters);
 			}
 			
-
-		} else if (isRightCommand(parameters, editNameToDateReg)) {
-
-			String taskName = getTaskName(parameters);
-
-			if (isGoodName(taskName)) {
-				// get rid of "blah" to
-				String date = parameters.replaceFirst(editNameToDateReg, "")
-						.trim();
-				Calendar newDeadline = Calendar.getInstance();
-				boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
-				if(dCommand==null) {
-					dCommand = new DonEditCommand(taskName, newDeadline, hasSetTime);
-				}
-				
-
-			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
-			}
-
-		} else if (isRightCommand(parameters, editIDToDateReg)) {
-
-			String idStr = getID(parameters);
-
-			int ID = Integer.parseInt(idStr);
-
-			// get rid of xxx to
-			String date = parameters.replaceFirst(editIDToDateReg, "").trim();
-			Calendar newDeadline = Calendar.getInstance();
-			boolean hasSetTime = setNewDeadlineForCommand(date, newDeadline);
-			if(dCommand==null) {
-				dCommand = new DonEditCommand(ID, newDeadline, hasSetTime);
-			}
+		}else if (isRightCommand(parameters, deadlineTaskReg)){
+			createEditDeadlineCommand(parameters);
 			
+		}else if (isRightCommand(parameters, eventTaskReg)){
+			createEditEventCommand(parameters);
+			
+		} else{
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		}
+			
+	}
+
+	private void createEditDeadlineCommand(String param) {
+		int byIndex = param.lastIndexOf(" by ");
+		String taskDate = param.substring(byIndex+1);
+		String taskName = param.substring(0, byIndex+1).trim();
+		
+		if (isGoodName(taskName)) {
+			
+			Calendar deadline = Calendar.getInstance();
+			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
+			
+			if(dCommand==null) {
+				dCommand = new DonEditCommand(taskName, deadline, hasSetTime);					
+			}
 
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			try {
+
+				int ID = Integer.parseInt(taskName);
+				Calendar deadline = Calendar.getInstance();
+				boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
+				
+				if(dCommand==null) {
+					dCommand = new DonEditCommand(ID, deadline, hasSetTime);					
+				}
+			} catch (Exception e){
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			}
+		}
+
+	}
+
+	private void createEditEventCommand(String param) {
+		int fromIndex = param.lastIndexOf(" from ");
+		String taskDates = param.substring(fromIndex+1);
+		String taskName = param.substring(0, fromIndex+1).trim();
+		
+		if (isGoodName(taskName)) {
+			
+			Calendar startDate = Calendar.getInstance(), endDate = Calendar
+					.getInstance();
+			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
+					endDate);
+			
+			if(dCommand==null) {
+				dCommand = new DonEditCommand(taskName, startDate, endDate,
+					hasSetTime);
+			}
+			
+		} else {
+			try {
+				int ID = Integer.parseInt(taskName);
+				Calendar startDate = Calendar.getInstance(), endDate = Calendar
+						.getInstance();
+				boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
+						endDate);
+				
+				if(dCommand==null) {
+					dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);					
+				}
+			} catch (Exception e){
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			}
 		}
 	}
 
@@ -762,7 +748,7 @@ public class DonParser implements IDonParser {
 	private String[] getTaskNameArr(String param, String regex) {
 		String[] nameArr = new String[2];
 		nameArr = param.split(regex);
-		nameArr[0] = extractName(nameArr[0].trim() + "\"");
+		nameArr[0] = nameArr[0].trim();
 		nameArr[1] = extractName("\"" + nameArr[1].trim());
 		return nameArr;
 	}
@@ -787,7 +773,7 @@ public class DonParser implements IDonParser {
 				&& !name.matches("^float$")
 				&& !name.matches("^done$")
 				&& !name.matches("^undone$")
-				&& !name.matches("[0-9]+")) {
+				&& !name.matches("^[0-9]+$")) {
 			
 			return true;
 		} else {

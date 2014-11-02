@@ -67,28 +67,14 @@ public class DonParserTest {
 		
 		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
 		
-		
 		// test hours
 		
 		Calendar septCal = new GregorianCalendar(2014,8,9,13,24);
-//		Calendar lastCal = new GregorianCalendar(2020,11,31);
+
 		
 		assertEquals(septCal.getTime().toString(), create3.getStartDate().getTime().toString());
 		assertEquals(true, CalHelper.relevantEquals(septCal, create3.getStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(septCal, create4.getStartDate()));
-		
-//		assertFalse(parser.hasRecurred);
-		
-//		DonCreateCommand create5 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ every 09/09/2014 13:24");
-		
-//		assertEquals(true, CalHelper.relevantEquals(septCal, create5.getStartDate()));
-//		assertTrue(parser.hasRecurred);
-//		Calendar cal = new GregorianCalendar();
-//		cal.setTime(parser.recursTill);
-//		assertEquals(true, CalHelper.relevantEquals(lastCal, cal));
-		
-//		DonCreateCommand create6 = (DonCreateCommand) parser.parseCommand("add \"hihihi\" @ every 09/09/2014 13:24");
-		
 		
 		// test invalid
 		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
