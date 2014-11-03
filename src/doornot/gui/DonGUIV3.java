@@ -75,7 +75,7 @@ import java.awt.Insets;
 
 import sun.audio.*;
 
-public class DonGUIV2 {
+public class DonGUIV3 {
 
 	private JFrame frmDoornot;
 	DonLogic donLogic = new DonLogic();
@@ -134,7 +134,7 @@ public class DonGUIV2 {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					DonGUIV2 window = new DonGUIV2();
+					DonGUIV3 window = new DonGUIV3();
 					window.frmDoornot.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -146,7 +146,7 @@ public class DonGUIV2 {
 	/**
 	 * Create the application.
 	 */
-	public DonGUIV2() {
+	public DonGUIV3() {
 		initialize();
 	}
 
