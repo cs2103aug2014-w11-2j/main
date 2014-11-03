@@ -218,7 +218,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			}
 			if(success) {
 				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
-				response.addMessage(MSG_DELETE_SUCCESS);
+				response.addMessage(String.format(MSG_DELETE_ALL_WITH_LABEL_SUCCESS, searchTitle));
 			}
 			
 		}

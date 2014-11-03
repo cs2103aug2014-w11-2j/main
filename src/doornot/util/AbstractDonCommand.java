@@ -20,6 +20,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_COMMAND_WRONG_FORMAT = "The format of '%1$s' is invalid!";
 	protected static final String MSG_DELETE_FAILED = "The task could not be deleted.";
 	protected static final String MSG_DELETE_SUCCESS = "The task was deleted successfully.";
+	protected static final String MSG_DELETE_ALL_WITH_LABEL_SUCCESS = "All tasks with the label #%1$s deleted.";
 	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
 	protected static final String MSG_EDIT_SINGLE_DATE_ADD_SUCCESS = "%1$s changed to %2$s.";
 	protected static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
