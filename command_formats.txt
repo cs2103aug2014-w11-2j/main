@@ -1,3 +1,6 @@
+** tasknames can be within "" to differentiate between type of task and name of task
+e.g del overdue will delete all overdue tasks while del "overdue" will delete the task with 'overdue' in the name.
+
 === ADD  ===
 {af || addf} <taskname>
 {a || add} <taskname> by <date>
@@ -39,16 +42,13 @@ saf <date> //for tasks after that date
 son <date> //for tasks on that date
 
 === SEARCH FREE ===
-
-{s || search} free
+free
 
 === SEARCH DONE ===
-{s || search} done
 sd
 done
 
 === SEARCH UNDONE ===
-{s || search} undone
 sud
 undone
 

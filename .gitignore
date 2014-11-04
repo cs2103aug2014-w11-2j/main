@@ -6,3 +6,4 @@ DoorNot_current.txt
 *.log
 *.log.lck
 *.log.1
+*.log.l.lck

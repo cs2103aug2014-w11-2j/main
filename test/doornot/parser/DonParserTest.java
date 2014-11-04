@@ -55,7 +55,7 @@ public class DonParserTest {
 		
 		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678 by 12/13/2014");
 		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad hihihi by 09082014");
-		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a done by 09082014");
+//		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a done by 09082014");
 		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
 		
 		assertEquals(AddType.DEADLINE, create1.getType());
@@ -79,8 +79,8 @@ public class DonParserTest {
 		// test invalid
 		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
 		assertEquals("ad", invalid2.getStringInput());
-		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
-		assertEquals("a", invalid3.getStringInput());
+//		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+//		assertEquals("a", invalid3.getStringInput());
 		assertEquals(InvalidType.INVALID_FORMAT, invalid4.getType());
 		assertEquals("a", invalid4.getStringInput());
 		
@@ -136,10 +136,10 @@ public class DonParserTest {
 		assertEquals("overdue work", create1.getTaskTitle());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf overdue");
+//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf overdue");
 		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("addf", invalid1.getStringInput());
+//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+//		assertEquals("addf", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -159,10 +159,10 @@ public class DonParserTest {
 		assertEquals(MarkType.MARK_FLOAT, mark4.getMarkType());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark undone");
+//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark undone");
 		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("mark", invalid1.getStringInput());
+//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+//		assertEquals("mark", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -190,10 +190,10 @@ public class DonParserTest {
 		assertEquals("funny business", delete4.getSearchTitle());
 		
 		// test invalid
-		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del undone");
+//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del undone");
 		
-		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-		assertEquals("del", invalid1.getStringInput());
+//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+//		assertEquals("del", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -252,10 +252,10 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(date1, search2.getSearchStartDate()));
 		
 		// test search free
-		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("s free");
-		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("search free");
+		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("free");
+//		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("search free");
 		assertEquals(SearchType.SEARCH_FREE, search3.getType());
-		assertEquals(SearchType.SEARCH_FREE, search4.getType());
+//		assertEquals(SearchType.SEARCH_FREE, search4.getType());
 		
 		// test search all
 		DonFindCommand search5 = (DonFindCommand) parser.parseCommand("s");
@@ -265,19 +265,19 @@ public class DonParserTest {
 		
 		// test search undone
 		DonFindCommand search7 = (DonFindCommand) parser.parseCommand("sud");
-		DonFindCommand search8 = (DonFindCommand) parser.parseCommand("s undone");
-		DonFindCommand search9 = (DonFindCommand) parser.parseCommand("search undone");
+//		DonFindCommand search8 = (DonFindCommand) parser.parseCommand("s undone");
+//		DonFindCommand search9 = (DonFindCommand) parser.parseCommand("search undone");
 		assertEquals(SearchType.SEARCH_UNDONE, search7.getType());
-		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
-		assertEquals(SearchType.SEARCH_UNDONE, search9.getType());
+//		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
+//		assertEquals(SearchType.SEARCH_UNDONE, search9.getType());
 		
 		// test search done
 		DonFindCommand search16 = (DonFindCommand) parser.parseCommand("sd");
-		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("s done");
-		DonFindCommand search18 = (DonFindCommand) parser.parseCommand("search done");
+//		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("s done");
+//		DonFindCommand search18 = (DonFindCommand) parser.parseCommand("search done");
 		assertEquals(SearchType.SEARCH_DONE, search16.getType());
-		assertEquals(SearchType.SEARCH_DONE, search17.getType());
-		assertEquals(SearchType.SEARCH_DONE, search18.getType());
+//		assertEquals(SearchType.SEARCH_DONE, search17.getType());
+//		assertEquals(SearchType.SEARCH_DONE, search18.getType());
 		
 		// test today
 		DonFindCommand search10 = (DonFindCommand) parser.parseCommand("today");
