@@ -30,6 +30,7 @@ e.g del overdue will delete all overdue tasks while del "overdue" will delete th
 
 {d || del || delete} {od || overdue}
 {d || del || delete} fl || floating || float
+{d || del || delete} done
 {d || del || delete} <taskname>
 {d || del || delete} ID
 {d || del || delete} #<labelname>

@@ -439,7 +439,10 @@ public class DonParser implements IDonParser {
 				|| parameters.equalsIgnoreCase("floating")){
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
 			
-		} else if (isRightCommand(parameters, labelNameReg)) {
+		} else if(parameters.equalsIgnoreCase("done")){
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_DONE);
+			
+		}else if (isRightCommand(parameters, labelNameReg)) {
 			dCommand = new DonDeleteCommand(extractLabelName(parameters), DeleteType.DELETE_LABEL);
 			
 		}else if (isGoodName(parameters)) {
