@@ -452,11 +452,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse findDone(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		for (IDonTask task : donStorage.getTaskList()) {
-			if(task.getStatus()) {
-				response.addTask(task);
-			}
-		}
+		response.setTaskList(SearchHelper.findDone(donStorage));
 
 		if (!response.hasTasks()) {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
