@@ -34,6 +34,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_NO_LABEL_TASKS = "No tasks with the label '%1$s' found!";
 	protected static final String MSG_NO_UNDONE_OVERDUE = "No undone overdue tasks found!";
 	protected static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
+	protected static final String MSG_NO_DONE_TASKS = "No completed tasks found!";
 	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
 	protected static final String MSG_SEARCH_FAILED = "No tasks found";
 	protected static final String MSG_SEARCH_FOUND = "%1$d task(s) found";

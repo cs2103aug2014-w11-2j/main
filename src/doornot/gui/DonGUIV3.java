@@ -337,6 +337,7 @@ public class DonGUIV3 {
 			int selected = -1;
 			if (searchList != null) {
 				for (int i = 0; i < searchList.size(); i++) {
+					System.out.println(rp.getTasks().size());
 					if (searchList.get(i).getID() == rp.getTasks().get(0)
 							.getID()) {
 						selected = i;

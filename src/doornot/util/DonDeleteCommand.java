@@ -226,6 +226,44 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Delete all completed tasks (marked as done)
+	 * @param donStorage the storage containing the tasks
+	 * @return response containing success/failure of the operation
+	 */
+	private IDonResponse deleteCompletedTasks(IDonStorage donStorage) {
+		assert searchTitle!=null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.findDone(donStorage);
+		
+		if (foundList.isEmpty()) {
+			// No done tasks
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_DONE_TASKS);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for(IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				boolean deleted = donStorage.removeTask(task.getID());
+				if(!deleted) {
+					//Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if(success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+			
+		}
+
+		return response;
+	}
+	
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		IDonResponse response = null;

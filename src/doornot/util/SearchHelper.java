@@ -231,6 +231,11 @@ public class SearchHelper {
 		return resultList;
 	}
 
+	/**
+	 * Get all overdue tasks
+	 * @param donStorage the storage in which the tasks are located
+	 * @return the list of overdue tasks
+	 */
 	public static List<IDonTask> findOverdue(IDonStorage donStorage) {
 		List<IDonTask> response = findTaskRange(donStorage, null,
 				Calendar.getInstance(), FIND_ALL);
@@ -244,5 +249,22 @@ public class SearchHelper {
 		}
 
 		return taskList;
+	}
+	
+	/**
+	 * Get the list of all completed tasks
+	 * @param donStorage the storage in which the tasks are located
+	 * @return the list of completed tasks
+	 */
+	public static List<IDonTask> findDone(IDonStorage donStorage) {
+		List<IDonTask> taskList = donStorage.getTaskList();
+		List<IDonTask> outputList = new ArrayList<IDonTask>();
+		for (IDonTask task : taskList) {
+			if(task.getStatus()) {
+				outputList.add(task);
+			}
+		}
+
+		return outputList;
 	}
 }
