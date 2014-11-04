@@ -17,7 +17,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		DELETE_TITLE,
 		DELETE_OVERDUE,
 		DELETE_FLOAT,
-		DELETE_LABEL
+		DELETE_LABEL,
+		DELETE_DONE
 	}
 	
 	private DeleteType type;
