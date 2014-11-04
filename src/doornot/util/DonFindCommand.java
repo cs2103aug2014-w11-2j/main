@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import doornot.logic.DonPeriod;
 import doornot.logic.DonResponse;
 import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;

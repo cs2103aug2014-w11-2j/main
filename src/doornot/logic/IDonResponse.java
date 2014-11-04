@@ -33,14 +33,6 @@ public interface IDonResponse {
 	 * @return the list of tasks
 	 */
 	public List<IDonTask> getTasks();
-	
-	/**
-	 * Returns the list of periods enclosed within the response. The list will be
-	 * empty if there are no period.
-	 * 
-	 * @return the list of periods
-	 */
-	public List<DonPeriod> getPeriods();
 
 	/**
 	 * Adds a message to the response
@@ -60,15 +52,6 @@ public interface IDonResponse {
 	 */
 	public boolean addTask(IDonTask task);
 	
-	/**
-	 * Adds a period to the response
-	 * 
-	 * @param period
-	 *            the period to add
-	 * @return true if the addition was successful
-	 */
-	public boolean addPeriod(DonPeriod period);
-
 	/**
 	 * Sets the response type of the IDonResponse object
 	 * 
