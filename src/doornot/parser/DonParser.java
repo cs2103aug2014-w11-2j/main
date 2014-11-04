@@ -32,7 +32,6 @@ import doornot.util.DonMarkCommand.MarkType;
  * DonParser parses the commands and creates a DonCommand
  * 
  */
-
 // @author A0115503W
 public class DonParser implements IDonParser {
 
@@ -51,7 +50,7 @@ public class DonParser implements IDonParser {
 	// List of all the allowed types
 
 	// name must be between " "
-	private String taskNameReg = "\".+\"";
+	private String taskNameReg = "^\".+\"$";
 
 	// allow "blah" by 
 	private String deadlineTaskReg = ".+(by\\s.+){1}";
@@ -128,7 +127,9 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("sd")
 				|| commandWord.equalsIgnoreCase("done")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
-		} else if (commandWord.equalsIgnoreCase("today")) {
+		} else if (commandWord.equalsIgnoreCase("free")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
+		}else if (commandWord.equalsIgnoreCase("today")) {
 			dCommand = new DonFindCommand(SearchType.TODAY);
 		} else if (commandWord.equalsIgnoreCase("od")
 				|| commandWord.equalsIgnoreCase("overdue")) {
@@ -144,9 +145,11 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("results")
 				|| commandWord.equalsIgnoreCase("result")) {
 			dCommand = new DonFindCommand(SearchType.RESULTS);
-		}else if (commandWord.equalsIgnoreCase("undo")) {
+		}else if (commandWord.equalsIgnoreCase("undo")
+				|| commandWord.equalsIgnoreCase("un")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
-		} else if (commandWord.equalsIgnoreCase("redo")) {
+		} else if (commandWord.equalsIgnoreCase("redo")
+				|| commandWord.equalsIgnoreCase("re")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.REDO);
 		} else if (commandWord.equalsIgnoreCase("help")) {
 			setHelpCommand();
@@ -190,6 +193,10 @@ public class DonParser implements IDonParser {
 		String taskDate = param.substring(byIndex+1);
 		String taskName = param.substring(0, byIndex+1).trim();
 		
+		if(isWithinInvertedCommas(taskName)){
+			taskName = extractName(taskName);
+		}
+		
 		if (isGoodName(taskName)) {
 			
 			Calendar deadline = Calendar.getInstance();
@@ -209,6 +216,10 @@ public class DonParser implements IDonParser {
 		int fromIndex = param.lastIndexOf(" from ");
 		String taskDates = param.substring(fromIndex+1);
 		String taskName = param.substring(0, fromIndex+1).trim();
+		
+		if(isWithinInvertedCommas(taskName)){
+			taskName = extractName(taskName);
+		}
 		
 		if (isGoodName(taskName)) {
 			
@@ -235,11 +246,13 @@ public class DonParser implements IDonParser {
 	private void setAddFloatCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-
+		if(isWithinInvertedCommas(parameters)){
+			parameters = extractName(parameters);
+		}
+		
 		if (isGoodName(parameters)) {
 			dCommand = new DonCreateCommand(parameters);
 		} else{
-			// TODO maybe here invalid task name?
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
 		}
 	}
@@ -256,7 +269,11 @@ public class DonParser implements IDonParser {
 
 			String oldName = taskNames[0];
 			String newName = taskNames[1];
-
+			
+			if(isWithinInvertedCommas(oldName)){
+				oldName = extractName(oldName);
+			}
+			
 			if (isGoodName(oldName) && isGoodName(newName)) {
 				dCommand = new DonEditCommand(oldName, newName);
 				
@@ -302,6 +319,10 @@ public class DonParser implements IDonParser {
 		String taskDate = param.substring(byIndex+1);
 		String taskName = param.substring(0, byIndex+1).trim();
 		
+		if(isWithinInvertedCommas(taskName)){
+			taskName = extractName(taskName);
+		}
+		
 		if (isGoodName(taskName)) {
 			
 			Calendar deadline = Calendar.getInstance();
@@ -332,6 +353,10 @@ public class DonParser implements IDonParser {
 		int fromIndex = param.lastIndexOf(" from ");
 		String taskDates = param.substring(fromIndex+1);
 		String taskName = param.substring(0, fromIndex+1).trim();
+		
+		if(isWithinInvertedCommas(taskName)){
+			taskName = extractName(taskName);
+		}
 		
 		if (isGoodName(taskName)) {
 			
@@ -378,6 +403,11 @@ public class DonParser implements IDonParser {
 			dCommand = new DonMarkCommand(MarkType.MARK_FLOAT);
 			
 		} else if (isGoodName(parameters)) {
+			
+			if(isWithinInvertedCommas(parameters)){
+				parameters = extractName(parameters);
+			}
+			
 			dCommand = new DonMarkCommand(parameters);
 			
 		} else {
@@ -413,6 +443,9 @@ public class DonParser implements IDonParser {
 			dCommand = new DonDeleteCommand(extractLabelName(parameters), DeleteType.DELETE_LABEL);
 			
 		}else if (isGoodName(parameters)) {
+			if(isWithinInvertedCommas(parameters)){
+				parameters = extractName(parameters);
+			}
 			dCommand = new DonDeleteCommand(parameters, DeleteType.DELETE_TITLE);
 			
 		} else {
@@ -437,17 +470,11 @@ public class DonParser implements IDonParser {
 		if (parameters.isEmpty()) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
 
-		} else if (parameters.equalsIgnoreCase("free")) {
-			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
-
-		} else if (parameters.equalsIgnoreCase("undone")) {
-			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
-
-		} else if (parameters.equalsIgnoreCase("done")) {
-			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
-
 		} else {
 			if (isGoodName(parameters)) {
+				if(isWithinInvertedCommas(parameters)){
+					parameters = extractName(parameters);
+				}
 				dCommand = new DonFindCommand(parameters, SearchType.SEARCH_NAME);
 
 			} else {
@@ -504,6 +531,10 @@ public class DonParser implements IDonParser {
 			String labelName = parameters.substring(byIndex+1);
 			String taskName = parameters.substring(0, byIndex+1).trim();
 			
+			if(isWithinInvertedCommas(taskName)){
+				taskName = extractName(taskName);
+			}
+			
 			if(isGoodName(taskName)){
 				dCommand = new DonDelabelCommand(taskName, extractLabelName(labelName));
 			} else {
@@ -518,6 +549,9 @@ public class DonParser implements IDonParser {
 			
 		} else {
 			if(isGoodName(parameters)){
+				if(isWithinInvertedCommas(parameters)){
+					parameters = extractName(parameters);
+				}
 				dCommand = new DonDelabelCommand(parameters);
 			} else {
 				try{
@@ -542,6 +576,10 @@ public class DonParser implements IDonParser {
 			int byIndex = parameters.lastIndexOf(" #");
 			String labelName = parameters.substring(byIndex+1);
 			String taskName = parameters.substring(0, byIndex+1).trim();
+			
+			if(isWithinInvertedCommas(taskName)){
+				taskName = extractName(taskName);
+			}
 			
 			if(isGoodName(taskName)){
 				dCommand = new DonAddLabelCommand(taskName, extractLabelName(labelName));
@@ -774,11 +812,10 @@ public class DonParser implements IDonParser {
 	/**
 	 * Gets the name of task being referred to from the parameter
 	 */
-	private String getTaskName(String param) {
+	private boolean isWithinInvertedCommas(String param) {
 		Pattern pattern = Pattern.compile(taskNameReg);
 		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		return extractName(matcher.group());
+		return matcher.find();
 	}
 
 	/**
@@ -787,14 +824,7 @@ public class DonParser implements IDonParser {
 	private boolean isGoodName(String name) {
 		// ensures semi colon not in name
 		if (!name.contains(";") 
-				&& !name.contains("#") 
-				&& !name.matches("^overdue$")
-				&& !name.matches("^od$")
-				&& !name.matches("^fl$")
-				&& !name.matches("^floating$")
-				&& !name.matches("^float$")
-				&& !name.matches("^done$")
-				&& !name.matches("^undone$")
+				&& !name.contains("#")
 				&& !name.matches("^[0-9]+$")) {
 			
 			return true;
