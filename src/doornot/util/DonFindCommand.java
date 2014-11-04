@@ -18,6 +18,7 @@ import doornot.util.SearchHelper;
 
 public class DonFindCommand extends AbstractDonCommand {
 
+
 	public enum SearchType {
 		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, 
 		SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE;
@@ -125,6 +126,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_NAME_FOUND, response.getTasks().size(), searchTitle));
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
@@ -149,6 +151,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, searchStartDate.getTime().toString()));
 			response.addMessage(String.format(MSG_SEARCH_FOUND, response.getTasks().size()));
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
@@ -213,6 +216,7 @@ public class DonFindCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_ID, searchID));
 			response.addMessage(String.format(MSG_SEARCH_ID_FOUND, searchID));
 			response.addTask(task);
 		}
@@ -230,6 +234,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(MSG_SEARCH_RESULT_UNDONE);
 			response.addMessage(String.format(MSG_SEARCH_UNDONE_FOUND, taskList.size()));
 		} else {
 			response.addMessage(MSG_NO_UNDONE_TASKS);
@@ -250,6 +255,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		IDonResponse response;
 		response = findTaskRange(donStorage, CalHelper.getTodayStart(),
 				CalHelper.getTodayEnd(), FIND_INCOMPLETE);
+		response.getMessages().set(0, MSG_SEARCH_RESULT_TODAY);
 		response.setResponseType(ResponseType.SEARCH_TODAY);
 		return response;
 	}
@@ -274,6 +280,7 @@ public class DonFindCommand extends AbstractDonCommand {
 					searchTitle));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, "#"+searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND, taskList.size(), searchTitle));
 		}
 
@@ -310,7 +317,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		// if possible
 		Calendar now = Calendar.getInstance();
 		if (taskList.get(0).getStartDate().after(now)) {
-			IDonTask free = new DonTask("Free time", -1);
+			IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
 			free.setStartDate(now);
 			free.setEndDate(taskList.get(0).getStartDate());
 			free.setTimeUsed(taskList.get(0).isTimeUsed());
@@ -329,7 +336,7 @@ public class DonFindCommand extends AbstractDonCommand {
 				if (currentTask.getStartDate().compareTo(
 						nextTask.getStartDate()) < 0) {
 					// There is a free period
-					IDonTask free = new DonTask("Free time", -1);
+					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
 					free.setStartDate(currentTask.getStartDate());
 					free.setEndDate(nextTask.getStartDate());
 					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
@@ -338,7 +345,7 @@ public class DonFindCommand extends AbstractDonCommand {
 			} else {
 				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
 					// There is a free period
-					IDonTask free = new DonTask("Free time", -1);
+					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
 					free.setStartDate(currentTask.getEndDate());
 					free.setEndDate(nextTask.getStartDate());
 					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
@@ -346,6 +353,7 @@ public class DonFindCommand extends AbstractDonCommand {
 				}
 			}
 		}
+		response.addMessage(MSG_SEARCH_RESULT_FREE_TIME);
 		response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		return response;
 	}
@@ -363,6 +371,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		if (donStorage.getTaskList().isEmpty()) {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 		} else {
+			response.addMessage(MSG_SEARCH_RESULT_ALL);
 			response.setResponseType(ResponseType.SEARCH_ALL);
 		}
 
@@ -381,6 +390,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
 		IDonResponse response = findTaskRange(donStorage, start, end,
 				FIND_INCOMPLETE);
+		response.getMessages().set(0, MSG_SEARCH_RESULT_WEEK);
 		response.setResponseType(ResponseType.SEARCH_WEEK);
 		return response;
 	}
@@ -396,6 +406,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
 		IDonResponse response = findTaskRange(donStorage, start, null,
 				FIND_INCOMPLETE);
+		response.getMessages().set(0, MSG_SEARCH_RESULT_FUTURE);
 		response.setResponseType(ResponseType.SEARCH_FUTURE);
 		return response;
 	}
@@ -411,6 +422,7 @@ public class DonFindCommand extends AbstractDonCommand {
 				taskList.add(task);
 			} 
 		}
+		response.getMessages().set(0, MSG_SEARCH_RESULT_OVERDUE);
 		response.setResponseType(ResponseType.SEARCH_OVERDUE);
 		response.setTaskList(taskList);
 		return response;
@@ -422,6 +434,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_FLOAT);
+			response.getMessages().set(0, MSG_SEARCH_RESULT_FLOAT);
 			response.addMessage(String.format(MSG_SEARCH_FOUND, taskList.size()));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
@@ -450,6 +463,7 @@ public class DonFindCommand extends AbstractDonCommand {
 			response.addMessage(MSG_SEARCH_FAILED);
 		} else {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(MSG_SEARCH_RESULT_DONE);
 			response.addMessage(String.format(MSG_SEARCH_FOUND, response.getTasks().size()));
 		}
 

@@ -39,6 +39,17 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_FOUND = "%1$d task(s) found";
 	protected static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
 	protected static final String MSG_SEARCH_ID_FOUND = "Task %1$d found";
+	protected static final String MSG_SEARCH_RESULT_NAME = "Search results for '%1$s'.";
+	protected static final String MSG_SEARCH_RESULT_ID = "Search results for ID %1$d.";
+	protected static final String MSG_SEARCH_RESULT_UNDONE = "Undone tasks";
+	protected static final String MSG_SEARCH_RESULT_TODAY = "Today's tasks";
+	protected static final String MSG_SEARCH_RESULT_FREE_TIME = "Free time";
+	protected static final String MSG_SEARCH_RESULT_ALL = "All tasks";
+	protected static final String MSG_SEARCH_RESULT_WEEK = "Tasks in the coming seven days";
+	protected static final String MSG_SEARCH_RESULT_FUTURE = "Future tasks";
+	protected static final String MSG_SEARCH_RESULT_OVERDUE = "Overdue tasks";
+	protected static final String MSG_SEARCH_RESULT_FLOAT = "Floating tasks";
+	protected static final String MSG_SEARCH_RESULT_DONE = "Completed tasks";
 	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
 	protected static final String MSG_SEARCH_LABEL_FOUND = "%1$d tasks with label '%2%s' found.";
 	protected static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
@@ -57,6 +68,7 @@ public abstract class AbstractDonCommand {
 	protected static final String PHRASE_COMPLETE = "complete";
 	protected static final String PHRASE_INCOMPLETE = "incomplete";
 	protected static final String PHRASE_DEADLINE = "Deadline";
+	protected static final String PHRASE_FREE_TIME = "Free time";
 	
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;

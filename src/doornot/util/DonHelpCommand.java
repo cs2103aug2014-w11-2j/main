@@ -61,7 +61,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 			// Help for edit
 			response.addMessage("edit / ed / e: Edits a task in the todo list");
 			response.addMessage("Command format: edit Task_id to \"New task title\"");
-			response.addMessage("Command format: edit \"Part of old Task title\" to \"New task title\"");
+			response.addMessage("Command format: edit Part of old Task title to \"New task title\"");
 			response.addMessage("Command format: edit Task_id by DD/MM/YYYY HHmm");
 			response.addMessage("Command format: edit Part of old Task title to DD/MM/YYYY HHmm");
 			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
