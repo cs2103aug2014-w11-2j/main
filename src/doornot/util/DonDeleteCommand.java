@@ -278,6 +278,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			response = deleteFloatingTasks(donStorage);
 		} else if (type == DeleteType.DELETE_LABEL) {
 			response = deleteLabelTasks(donStorage);
+		} else if (type == DeleteType.DELETE_DONE){
+			response = deleteCompletedTasks(donStorage);
 		}
 		
 		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {
