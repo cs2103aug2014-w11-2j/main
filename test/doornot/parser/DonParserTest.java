@@ -183,11 +183,13 @@ public class DonParserTest {
 		DonDeleteCommand delete2 = (DonDeleteCommand) parser.parseCommand("del od");
 		DonDeleteCommand delete3 = (DonDeleteCommand) parser.parseCommand("del fl");
 		DonDeleteCommand delete4 = (DonDeleteCommand) parser.parseCommand("del #funny business");
+		DonDeleteCommand delete5 = (DonDeleteCommand) parser.parseCommand("del done");
 		
 		assertEquals(DeleteType.DELETE_OVERDUE, delete2.getType());
 		assertEquals(DeleteType.DELETE_FLOAT, delete3.getType());
 		assertEquals(DeleteType.DELETE_LABEL, delete4.getType());
 		assertEquals("funny business", delete4.getSearchTitle());
+		assertEquals(DeleteType.DELETE_DONE, delete5.getType());
 		
 		// test invalid
 //		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del undone");
