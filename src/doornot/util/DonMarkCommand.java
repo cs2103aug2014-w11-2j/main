@@ -10,7 +10,7 @@ import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
 import doornot.util.AbstractDonCommand.GeneralCommandType;
 import doornot.util.DonDeleteCommand.DeleteType;
-
+//@author A0111995Y
 public class DonMarkCommand extends DonEditCommand {
 
 	public enum MarkType {

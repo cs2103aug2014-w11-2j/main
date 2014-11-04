@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Class containing the properties of a task
  */
-// @author A0111995Y
+//@author A0111995Y
 public class DonTask implements IDonTask {
 
 	private String taskTitle;

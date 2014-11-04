@@ -498,7 +498,6 @@ public class DonLogicTester {
 	public void testLabelNotFound() {
 		// Add		
 		IDonResponse addResponse1 = logic.runCommand("add Eat by 21/10/2014");
-		IDonTask task1 = addResponse1.getTasks().get(0);
 		int taskID1 = addResponse1.getTasks().get(0).getID();
 
 		logic.runCommand("label Ea #food");
