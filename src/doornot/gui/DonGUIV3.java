@@ -16,6 +16,7 @@ import java.awt.Point;
 
 import javax.imageio.ImageIO;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
 import javax.swing.JButton;
@@ -89,9 +90,11 @@ public class DonGUIV3 {
 	private JList<IDonTask> list;
 	private JList<Integer> typeList;
 	private JScrollPane scrollPane_list;
+	private JScrollPane scrollPane_editor;
 	private JLabel lblTaskList;
 	private JPanel panel;
 	private JTextPane infoPane;
+	private JEditorPane editor;
 	private JLabel overdueLabel;
 	private JLabel monthyearLabel;
 	private JLabel dateLabel;
@@ -264,23 +267,25 @@ public class DonGUIV3 {
 		assert rp != null;
 		String fb = "";
 		int size = 0;
-		if (rp.hasMessages()) {
+		if (rp.hasMessages() && rp.getResponseType() != IDonResponse.ResponseType.HELP) {
 			lastMsg = rp.getMessages().get(0);
+			currentMsgList = new ArrayList<String>();
 			size = rp.getMessages().size();
 			if (size > 1) {
-				currentMsgList = new ArrayList<String>();
 				for (int i = 0; i < size; i++) {
 					currentMsgList.add(rp.getMessages().get(i));
 				}
 			}
-			for (int i = 0; i < rp.getMessages().size(); i++) {
-				fb += rp.getMessages().get(i) + "\n";
-			}
 		}
 		if (rp.getResponseType() == IDonResponse.ResponseType.HELP) {
 			size = 1;
-			fb = "\n" + fb;
-			selectedPage = 7;
+			String helptext = "";
+			for(String msg : rp.getMessages()){
+				helptext += msg;
+				helptext += "\n";
+			}
+		    editor.setText(helptext);
+			selectedPage = 8;
 			setTypeData();
 		}
 		if (rp.hasTasks() && (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || 
@@ -298,6 +303,9 @@ public class DonGUIV3 {
 						rp.getResponseType() == IDonResponse.ResponseType.EDIT_FAILURE)) {
 			scrollPane_textarea.setVisible(false);
 			textArea.setVisible(false);
+			if(rp.hasMessages()) curSearchString = rp.getMessages().get(0);
+			currentMsgList.remove(lastMsg);
+			/*
 			if(rp.hasMessages()){
 				int firstapp = rp.getMessages().get(0).indexOf('\'');
 				int lastapp = rp.getMessages().get(0).lastIndexOf('\'');
@@ -305,6 +313,7 @@ public class DonGUIV3 {
 			} else {
 				curSearchString = "free time";
 			}
+			*/
 			/*
 			fb += "The following tasks match the search:\n";
 			for (int i = 0; i < rp.getTasks().size(); i++) {
@@ -320,9 +329,11 @@ public class DonGUIV3 {
 			setTypeData();
 		}
 		if (rp.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
-			flashcode = judgeType(rp.getTasks().get(0));
-			countdown3 = 1000;
-			delflag = true;
+			if(rp.getTasks().size() > 0){
+				flashcode = judgeType(rp.getTasks().get(0));
+				countdown3 = 1000;
+				delflag = true;
+			}
 			int selected = -1;
 			if (searchList != null) {
 				for (int i = 0; i < searchList.size(); i++) {
@@ -339,8 +350,9 @@ public class DonGUIV3 {
 			currentMsgList.add(lastMsg);
 			currentMsgList.add("Type \"undo\" to undo");
 		}
-		display += fb;
 		if (size == 1) {
+			fb += lastMsg;
+			fb += "\n";
 			infoPane.setText(lastMsg);
 			infoPane.setVisible(true);
 			countdown = 1000;
@@ -349,12 +361,16 @@ public class DonGUIV3 {
 			timer = new Timer(1, al);
 			timer.start();
 		} else if (size > 1) {
+			for (int i = 0; i < currentMsgList.size(); i++) {
+				fb += currentMsgList.get(i) + "\n";
+			}
 			countdown2 = 500;
 			if (timer != null)
 				timer.stop();
 			timer = new Timer(1, alm);
 			timer.start();
 		}
+		display += fb;
 		textArea.setText(display);
 		textField.setText("");
 		renewList();
@@ -390,6 +406,8 @@ public class DonGUIV3 {
 	private void setTypeData() {
 		textArea.setVisible(false);
 		scrollPane_textarea.setVisible(false);
+		editor.setVisible(false);
+		scrollPane_editor.setVisible(false);
 		list.setVisible(true);
 		scrollPane_list.setVisible(true);
 		searchLabel.setBorder(null);
@@ -424,13 +442,19 @@ public class DonGUIV3 {
 			list.setListData(Arrays.copyOf(searchList.toArray(),
 					searchList.size(), IDonTask[].class));
 			searchLabel.setText("Search results: " + searchList.size());
-			lblTaskList.setText("Task List: search results of "+"\'"+curSearchString+"\'");
+			lblTaskList.setText("Task List: " + curSearchString);
 		} else if (selectedPage == 7) {
 			lblTaskList.setText("Output Console");
 			list.setVisible(false);
 			scrollPane_list.setVisible(false);
 			scrollPane_textarea.setVisible(true);
 			textArea.setVisible(true);
+		} else if (selectedPage == 8) {
+			lblTaskList.setText("Help");
+			list.setVisible(false);
+			scrollPane_list.setVisible(false);
+			scrollPane_editor.setVisible(true);
+			editor.setVisible(true);
 		}
 	}
 
@@ -901,6 +925,22 @@ public class DonGUIV3 {
 		gbc_searchLabel.gridy = 0;
 		frmDoornot.getContentPane().add(searchLabel, gbc_searchLabel);
 
+		
+		scrollPane_editor = new JScrollPane();
+		GridBagConstraints gbc_scrollPane_editor = new GridBagConstraints();
+		gbc_scrollPane_editor.fill = GridBagConstraints.BOTH;
+		gbc_scrollPane_editor.insets = new Insets(0, 0, 5, 0);
+		gbc_scrollPane_editor.gridheight = 2;
+		gbc_scrollPane_editor.gridwidth = 3;
+		gbc_scrollPane_editor.gridx = 1;
+		gbc_scrollPane_editor.gridy = 1;
+		gbc_scrollPane_editor.weighty = 1;
+		frmDoornot.getContentPane().add(scrollPane_editor, gbc_scrollPane_editor);
+		editor = new JEditorPane();
+		editor.setEditable(false);
+		editor.setVisible(false);
+		scrollPane_editor.setViewportView(editor);
+		
 		scrollPane_textarea = new JScrollPane();
 		GridBagConstraints gbc_scrollPane_textarea = new GridBagConstraints();
 		gbc_scrollPane_textarea.fill = GridBagConstraints.BOTH;
@@ -1463,11 +1503,17 @@ public class DonGUIV3 {
 		    super(parent, "About", true);
 		    Container cp = getContentPane();
 		    cp.setLayout(new FlowLayout());
+		    JTextPane tt = new JTextPane();
+		    tt.setText("Developers:\nEu Yong Xue\nHaritha Ramesh\nHu Yifei\nLin Daqi");
+		    tt.setEditable(false);
+		    /*
 		    cp.add(new JLabel("Developers:"));
 		    cp.add(new JLabel("Eu Yong Xue"));
 		    cp.add(new JLabel("Haritha Ramesh"));
 		    cp.add(new JLabel("Hu Yifei"));
 		    cp.add(new JLabel("Lin Daqi"));
+		    */
+		    cp.add(tt);
 		    JButton ok = new JButton("OK");
 		    ok.addActionListener(new ActionListener() {
 		      public void actionPerformed(ActionEvent e) {
@@ -1475,7 +1521,7 @@ public class DonGUIV3 {
 		      }
 		    });
 		    cp.add(ok);
-		    setSize(150, 125);
+		    setSize(150, 150);
 		    music();
 		  }
 	}
