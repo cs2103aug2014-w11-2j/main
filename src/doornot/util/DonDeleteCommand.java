@@ -136,6 +136,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			boolean success = true;
 			for(IDonTask task : foundList) {
 				deletedTasks.add(task.clone());
+				response.addTask(task);
 				boolean deleted = donStorage.removeTask(task.getID());
 				if(!deleted) {
 					//Was likely not found
@@ -169,6 +170,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			boolean success = true;
 			for(IDonTask task : foundList) {
 				deletedTasks.add(task.clone());
+				response.addTask(task);
 				boolean deleted = donStorage.removeTask(task.getID());
 				if(!deleted) {
 					//Was likely not found
@@ -209,6 +211,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			boolean success = true;
 			for(IDonTask task : deleteList) {
 				deletedTasks.add(task.clone());
+				response.addTask(task);
 				boolean deleted = donStorage.removeTask(task.getID());
 				if(!deleted) {
 					//Was likely not found
@@ -247,6 +250,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 			boolean success = true;
 			for(IDonTask task : foundList) {
 				deletedTasks.add(task.clone());
+				response.addTask(task);
 				boolean deleted = donStorage.removeTask(task.getID());
 				if(!deleted) {
 					//Was likely not found

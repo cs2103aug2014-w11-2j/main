@@ -3,7 +3,9 @@ package doornot.logic;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -12,6 +14,7 @@ import org.junit.Test;
 import doornot.parser.DonParser;
 import doornot.storage.DonStorage;
 import doornot.storage.IDonTask;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonLogicTester {
@@ -124,6 +127,45 @@ public class DonLogicTester {
 		assertEquals(taskID, deletedTask.getID());
 		assertEquals("Finish homework", deletedTask.getTitle());
 
+	}
+	
+	@Test
+	public void testDeleteOverdueTasks() {
+		List<IDonTask> addedTasks = new ArrayList<IDonTask>();
+		IDonResponse addResponse1 = logic.runCommand("add Finish homework by 5 days ago");
+		addedTasks.add(addResponse1.getTasks().get(0));
+		IDonResponse addResponse2 = logic.runCommand("add Do work by 2 days ago");
+		addedTasks.add(addResponse2.getTasks().get(0));
+		Collections.sort(addedTasks);
+		
+		IDonResponse delResponse = logic.runCommand("del overdue");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		Collections.sort(delResponse.getTasks());
+		for(int i=0; i<delResponse.getTasks().size(); i++) {
+			assertEquals(delResponse.getTasks().get(i), addedTasks.get(i));
+		}
+	}
+	
+	@Test
+	public void testDeleteCompletedTasks() {
+		List<IDonTask> addedTasks = new ArrayList<IDonTask>();
+		IDonResponse addResponse1 = logic.runCommand("add Finish homework by 5 days ago");
+		addedTasks.add(addResponse1.getTasks().get(0));
+		logic.runCommand("mark Finish");
+		IDonResponse addResponse2 = logic.runCommand("add Do work by 2 days ago");
+		addedTasks.add(addResponse2.getTasks().get(0));
+		logic.runCommand("mark Do work");
+		Collections.sort(addedTasks);
+		logic.runCommand("add Do not complete this task");
+		
+		IDonResponse delResponse = logic.runCommand("del done");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		Collections.sort(delResponse.getTasks());
+		for(int i=0; i<delResponse.getTasks().size(); i++) {
+			assertEquals(delResponse.getTasks().get(i), addedTasks.get(i));
+		}
 	}
 	
 	/*
