@@ -8,8 +8,7 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
-import doornot.util.AbstractDonCommand.GeneralCommandType;
-import doornot.util.DonDeleteCommand.DeleteType;
+
 //@author A0111995Y
 public class DonMarkCommand extends DonEditCommand {
 
@@ -124,7 +123,6 @@ public class DonMarkCommand extends DonEditCommand {
 			response.addMessage(MSG_NO_FLOATING);
 
 		} else {
-			int x = tasks.get(0).getID();
 			for(IDonTask task : tasks) {
 				unchangedTask.add(task.clone());
 				boolean taskCompleted = !task.getStatus();

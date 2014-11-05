@@ -462,7 +462,6 @@ public class DonLogicTester {
 		IDonResponse addResponse = logic.runCommand("addf Finish homework");
 		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
 				addResponse.getResponseType());
-		IDonTask beforeEditTask = addResponse.getTasks().get(0).clone();
 		int taskID = addResponse.getTasks().get(0).getID();
 		// Edit
 		IDonResponse editResponse = logic.runCommand("edit " + taskID

@@ -11,17 +11,12 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import doornot.logic.DonResponse;
-import doornot.logic.IDonResponse;
-import doornot.logic.IDonResponse.ResponseType;
-
 /**
  * DonStorage - Class for handling the storage of the program
  * (save/read/retrieve of tasks)
  * 
- * @author A0100493R
  */
-
+//@author A0100493R
 public class DonStorage implements IDonStorage {
 
 	private static String FILE_NAME = "DoorNot_current.txt";

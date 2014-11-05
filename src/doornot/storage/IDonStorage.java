@@ -5,9 +5,9 @@ import java.util.List;
 /**
  * Interface defining the functionalities of the storage component
  * 
- * @author cs2103aug2014-w11-2j
  * 
  */
+//@author A0100493R
 public interface IDonStorage {
 	
 	/**

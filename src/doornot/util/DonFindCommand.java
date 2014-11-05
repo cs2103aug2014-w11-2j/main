@@ -147,7 +147,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findTaskByDate(IDonStorage donStorage) {
 		assert searchStartDate != null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate, false);
+		boolean exactSearch = (isTimeUsed ? true : false);
+		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate, exactSearch);
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
