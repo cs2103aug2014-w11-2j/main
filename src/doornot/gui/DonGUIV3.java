@@ -8,13 +8,13 @@ package doornot.gui;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -85,6 +85,7 @@ public class DonGUIV3 {
 	private String lastMsg = "";
 	private JTextField textField;
 	private JButton sendButton;
+	//private JButton helpButton;
 	private JScrollPane scrollPane_textarea;
 	private JTextArea textArea;
 	private JList<IDonTask> list;
@@ -93,6 +94,7 @@ public class DonGUIV3 {
 	private JScrollPane scrollPane_editor;
 	private JLabel lblTaskList;
 	private JPanel panel;
+	private JPanel noTaskPanel;
 	private JTextPane infoPane;
 	private JEditorPane editor;
 	private JLabel overdueLabel;
@@ -100,6 +102,7 @@ public class DonGUIV3 {
 	private JLabel dateLabel;
 	private JLabel buttomFiller;
 	private Image logo;
+	private Image noTaskImage;
 	private Integer[] placeholder = { 1, 2, 3, 4, 5 };
 	private List<IDonTask> guiTaskList;
 	private List<IDonTask> overdueList;
@@ -114,13 +117,6 @@ public class DonGUIV3 {
 	private int selectedPage = 1;
 	private int selectedCmd = -1;
 	private JLabel searchLabel;
-	private int countdown = 1000;
-	private int countdown2 = 500;
-	private int countdown3 = 1000;
-	private int countdown4 = 1000;
-	private Timer timer;
-	private Timer timerf;
-	private Timer timeri;
 	private Timer timerg;
 	private int flashcode = -1;
 	private int curr = -2;
@@ -209,7 +205,7 @@ public class DonGUIV3 {
 			typeList.setSelectedIndex(2);
 			break;
 		case "f":
-		case "floating":
+		case "float":
 			selectedPage = 4;
 			typeList.setSelectedIndex(3);
 			break;
@@ -224,11 +220,10 @@ public class DonGUIV3 {
 				selectedPage = 0;
 				typeList.clearSelection();
 			} else {
+				buttomFiller.setVisible(false);
 				infoPane.setText("No overdue tasks!");
 				infoPane.setVisible(true);
-				countdown = 2000;
-				timer = new Timer(1, al);
-				timer.start();
+				new Alb(1000);
 				return;
 			}
 			break;
@@ -238,11 +233,10 @@ public class DonGUIV3 {
 				selectedPage = 6;
 				typeList.clearSelection();
 			} else {
+				buttomFiller.setVisible(false);
 				infoPane.setText("No search results!");
 				infoPane.setVisible(true);
-				countdown = 2000;
-				timer = new Timer(1, al);
-				timer.start();
+				new Alb(1000);
 				return;
 			}
 			break;
@@ -287,15 +281,15 @@ public class DonGUIV3 {
 		    editor.setText(helptext);
 			selectedPage = 8;
 			setTypeData();
+			textField.setText("");
+			renewList();
+			return;
 		}
 		if (rp.hasTasks() && (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || 
 				rp.getResponseType() == IDonResponse.ResponseType.EDIT_SUCCESS)){
 			delflag = false;
 			flashcode = judgeType(rp.getTasks().get(0));
-			flashcode2 = rp.getTasks().get(0).getID();
-			countdown3 = 1000;
-			countdown4 = 1000;
-			
+			flashcode2 = rp.getTasks().get(0).getID();			
 		}
 		if (rp.hasTasks()
 				&& (rp.getResponseType() == IDonResponse.ResponseType.SEARCH_SUCCESS
@@ -305,22 +299,7 @@ public class DonGUIV3 {
 			textArea.setVisible(false);
 			if(rp.hasMessages()) curSearchString = rp.getMessages().get(0);
 			currentMsgList.remove(lastMsg);
-			/*
-			if(rp.hasMessages()){
-				int firstapp = rp.getMessages().get(0).indexOf('\'');
-				int lastapp = rp.getMessages().get(0).lastIndexOf('\'');
-				curSearchString = rp.getMessages().get(0).substring(firstapp+1, lastapp);
-			} else {
-				curSearchString = "free time";
-			}
-			*/
-			/*
-			fb += "The following tasks match the search:\n";
-			for (int i = 0; i < rp.getTasks().size(); i++) {
-				fb += String.valueOf(rp.getTasks().get(i).getID()) + ". "
-						+ rp.getTasks().get(i).getTitle() + "\n";
-			}
-			*/
+
 			searchList = new ArrayList<IDonTask>();
 			for (IDonTask task : rp.getTasks()) {
 				searchList.add(task);
@@ -331,10 +310,8 @@ public class DonGUIV3 {
 		if (rp.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
 			if(rp.getTasks().size() > 0){
 				flashcode = judgeType(rp.getTasks().get(0));
-				countdown3 = 1000;
 				delflag = true;
 			}
-
 			if (searchList != null) {
 				for(int j=0; j < rp.getTasks().size(); j++) {
 					for (int i = 0; i < searchList.size(); i++) {
@@ -355,21 +332,18 @@ public class DonGUIV3 {
 			fb += lastMsg;
 			fb += "\n";
 			infoPane.setText(lastMsg);
+			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
-			countdown = 1000;
-			if (timer != null)
-				timer.stop();
-			timer = new Timer(1, al);
-			timer.start();
+			
+			new Alb(1000);
 		} else if (size > 1) {
 			for (int i = 0; i < currentMsgList.size(); i++) {
 				fb += currentMsgList.get(i) + "\n";
 			}
-			countdown2 = 500;
-			if (timer != null)
-				timer.stop();
-			timer = new Timer(1, alm);
-			timer.start();
+			infoPane.setText(currentMsgList.remove(0));
+			buttomFiller.setVisible(false);
+			infoPane.setVisible(true);
+			new Almb(1000);
 		}
 		display += fb;
 		textArea.setText(display);
@@ -405,6 +379,7 @@ public class DonGUIV3 {
 	}
 
 	private void setTypeData() {
+		noTaskPanel.setVisible(false);
 		textArea.setVisible(false);
 		scrollPane_textarea.setVisible(false);
 		editor.setVisible(false);
@@ -418,23 +393,38 @@ public class DonGUIV3 {
 			list.setListData(Arrays.copyOf(overdueList.toArray(),
 					overdueList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: overdue tasks");
-		} else if (selectedPage == 1) {
+		} else if (selectedPage == 1) {			
+			if(todayList.size() == 0){
+				noTaskPanel.setVisible(true);
+			}
 			list.setListData(Arrays.copyOf(todayList.toArray(),
 					todayList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: today tasks");
 		} else if (selectedPage == 2) {
+			if(weekList.size() == 0){
+				noTaskPanel.setVisible(true);
+			}
 			list.setListData(Arrays.copyOf(weekList.toArray(), weekList.size(),
 					IDonTask[].class));
 			lblTaskList.setText("Task List: tasks in 7 days");
 		} else if (selectedPage == 3) {
+			if(farList.size() == 0){
+				noTaskPanel.setVisible(true);
+			}
 			list.setListData(Arrays.copyOf(farList.toArray(), farList.size(),
 					IDonTask[].class));
 			lblTaskList.setText("Task List: tasks in future (after 7 days)");
 		} else if (selectedPage == 4) {
+			if(floatList.size() == 0){
+				noTaskPanel.setVisible(true);
+			}
 			list.setListData(Arrays.copyOf(floatList.toArray(),
 					floatList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: floating tasks");
 		} else if (selectedPage == 5) {
+			if(guiTaskList.size() == 0){
+				noTaskPanel.setVisible(true);
+			}
 			list.setListData(Arrays.copyOf(guiTaskList.toArray(),
 					guiTaskList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: all tasks");
@@ -460,11 +450,8 @@ public class DonGUIV3 {
 	}
 
 	private void renewList() {
-		// ArrayList<String> arr = new ArrayList<String>();
 		guiTaskList = donLogic.getTaskList();
 		sortByDate();
-		// list.setListData(Arrays.copyOf(guiTaskList.toArray(),
-		// guiTaskList.size(), IDonTask[].class));
 		parseType();
 		setTypeData();
 		typeList.setListData(placeholder);
@@ -643,74 +630,12 @@ public class DonGUIV3 {
 
 	}
 
-	ActionListener al = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			if(countdown == 1000) buttomFiller.setVisible(false);
-			countdown--;
-			if (countdown == 0) {
-				infoPane.setVisible(false);
-				buttomFiller.setVisible(true);
-				timer.stop();
-			}
-		}
-	};
-
-	ActionListener alm = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			if (countdown2 == 500) {
-				buttomFiller.setVisible(false);
-				infoPane.setText(currentMsgList.remove(0));
-				infoPane.setVisible(true);
-			}
-			if (countdown2 == 0) {
-				if (currentMsgList.size() == 0) {
-					infoPane.setVisible(false);
-					currentMsgList = null;
-					buttomFiller.setVisible(true);
-					timer.stop();
-				} else {
-					countdown2 = 501;
-				}
-			}
-			countdown2--;
-		}
-	};
-	
-	ActionListener alf = new ActionListener(){
-		public void actionPerformed(ActionEvent e) {
-			if(countdown3 == 0){
-				curr = -2;
-				flashcode = -1;
-				timerf.stop();
-			}
-			else countdown3--;
-		}
-	};
-	
-	ActionListener ali = new ActionListener(){
-		public void actionPerformed(ActionEvent e){
-			if(countdown4 == 0){
-				curr2 = -2;
-				flashcode2 = -1;
-				timeri.stop();
-			}
-			else countdown4--;
-		}
-	};
-	
 	ActionListener alg = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			typeList.setCellRenderer(new TypeCellRenderer());
 		}
 	};
 
-	/*
-	 * ActionListener al2 = new ActionListener() { public void
-	 * actionPerformed(ActionEvent e){ SimpleDateFormat monthyearFormat = new
-	 * SimpleDateFormat(); monthyearFormat.applyPattern("hh:mm:ss"); Calendar
-	 * current = Calendar.getInstance();
-	 * monthyearLabel.setText(monthyearFormat.format(current.getTime())); } };
-	 */
 
 	private void initialize() {
 
@@ -758,6 +683,7 @@ public class DonGUIV3 {
 		});
 		
 		timerg = new Timer(1000, alg);
+		timerg.setRepeats(true);
 		timerg.start();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -790,9 +716,22 @@ public class DonGUIV3 {
 					if (!cmdStack.isEmpty())
 						textField.setText(cmdStack.get(cmdStack.size() - 1
 								- selectedCmd));
-				} else if (e.getKeyCode() > 111 && e.getKeyCode() < 117) {
-					typeList.setSelectedIndex(e.getKeyCode() - 112);
-					selectedPage = e.getKeyCode() - 111;
+				} else if (e.getKeyCode() > 111 && e.getKeyCode() < 118) {
+					if(e.getKeyCode() == 117){						
+						if (overdueList != null && overdueList.size() != 0) {
+							selectedPage = 0;
+							typeList.clearSelection();
+						} else {
+							buttomFiller.setVisible(false);
+							infoPane.setText("No overdue tasks!");
+							infoPane.setVisible(true);
+							new Alb(1000);
+							return;
+						}
+					} else {
+						typeList.setSelectedIndex(e.getKeyCode() - 112);
+						selectedPage = e.getKeyCode() - 111;
+					}
 					setTypeData();
 					typeList.setCellRenderer(new TypeCellRenderer());
 				}
@@ -812,15 +751,11 @@ public class DonGUIV3 {
 		};
 		panel.setBackground(new Color(159, 197, 232));
 		panel.setVisible(false);
-
+		
 		panel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				dlg.setLocationRelativeTo(frmDoornot);
 				dlg.setVisible(true);
-				selectedPage = 7;
-				list.clearSelection();
-				typeList.setListData(placeholder);
-				setTypeData();
 			}
 		});
 
@@ -897,6 +832,16 @@ public class DonGUIV3 {
 			}
 		});
 		
+		/*
+		helpButton = new JButton("?");
+		//helpButton.setHorizontalAlignment(SwingConstants.WEST);
+		GridBagConstraints gbc_helpButton = new GridBagConstraints();
+		gbc_helpButton.fill = GridBagConstraints.BOTH;
+		gbc_helpButton.gridx = 0;
+		gbc_helpButton.gridy = 4;
+		gbc_helpButton.gridwidth = 1;
+		frmDoornot.getContentPane().add(helpButton, gbc_helpButton);
+		*/
 		buttomFiller = new JLabel("DoOrNot v0.4");
 		buttomFiller.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_buttomFiller = new GridBagConstraints();
@@ -926,6 +871,27 @@ public class DonGUIV3 {
 		gbc_searchLabel.gridy = 0;
 		frmDoornot.getContentPane().add(searchLabel, gbc_searchLabel);
 
+		
+		
+		noTaskPanel = new JPanel() {
+			protected void paintComponent(Graphics g) {
+				Image resizedLogo = noTaskImage.getScaledInstance(noTaskPanel.getWidth(),
+						noTaskPanel.getHeight(), Image.SCALE_SMOOTH);
+				super.paintComponent(g);
+				g.drawImage(resizedLogo, 0, 0, null);
+			}
+		};
+		noTaskPanel.setVisible(false);
+		GridBagConstraints gbc_noTaskPanel = new GridBagConstraints();
+		gbc_noTaskPanel.fill = GridBagConstraints.BOTH;
+		gbc_noTaskPanel.insets = new Insets(0, 0, 5, 0);
+		gbc_noTaskPanel.gridheight = 2;
+		gbc_noTaskPanel.gridwidth = 3;
+		gbc_noTaskPanel.gridx = 1;
+		gbc_noTaskPanel.gridy = 1;
+		gbc_noTaskPanel.weighty = 1;
+		frmDoornot.getContentPane().add(noTaskPanel, gbc_noTaskPanel);
+		
 		
 		scrollPane_editor = new JScrollPane();
 		GridBagConstraints gbc_scrollPane_editor = new GridBagConstraints();
@@ -1048,12 +1014,10 @@ public class DonGUIV3 {
 			}
 		});
 		GridBagConstraints gbc_sendButton = new GridBagConstraints();
-		//gbc_sendButton.anchor = GridBagConstraints.WEST;
 		gbc_sendButton.insets = new Insets(0, 0, 5, 0);
 		gbc_sendButton.gridx = 3;
 		gbc_sendButton.gridy = 3;
 		gbc_sendButton.fill = GridBagConstraints.BOTH;
-		//gbc_sendButton.anchor = GridBagConstraints.EAST;
 		frmDoornot.getContentPane().add(sendButton, gbc_sendButton);
 
 		SimpleAttributeSet attribs = new SimpleAttributeSet();
@@ -1077,17 +1041,11 @@ public class DonGUIV3 {
 
 		try {
 			logo = ImageIO.read(new File("doornot.png"));
+			noTaskImage = ImageIO.read(new File("notask.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		/*
-		 * list.addListSelectionListener(new ListSelectionListener() { public
-		 * void valueChanged(ListSelectionEvent e) {
-		 * if(e.getValueIsAdjusting()){ int index =
-		 * ((JList<IDonTask>)e.getSource()).getSelectedIndex(); selectedTask =
-		 * donLogic.donStorage.getTaskList().get(index).getID(); } } });
-		 */
 		renewList();
 
 	}
@@ -1145,24 +1103,13 @@ public class DonGUIV3 {
 			
 			if(typecode == flashcode){
 				if(curr == flashcode){
-					if(countdown3 > 0) {
-						if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
-						else p.setBorder(new LineBorder(Color.red,3));
-					}
-					else {
-						if (isSelected || selectedPage - 1 == index) {
-							p.setBorder(new LineBorder(Color.white, 2));
-						} else {
-							p.setBorder(null);
-						}
-					}
+					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
+					else p.setBorder(new LineBorder(Color.red,3));	
 				} else {
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));
-					countdown3 = 1000;
 					curr = flashcode;
-					timerf = new Timer(1, alf);	
-					timerf.start();
+					new Alfb(1000);
 				}
 			} else {
 				if (isSelected || selectedPage - 1 == index) {
@@ -1219,24 +1166,6 @@ public class DonGUIV3 {
 
 	class TaskCellRenderer extends JLabel implements ListCellRenderer {
 
-		/*
-		 * JPanel panel_1 = new JPanel(); GridBagConstraints gbc_panel_1 = new
-		 * GridBagConstraints(); gbc_panel_1.anchor = GridBagConstraints.SOUTH;
-		 * gbc_panel_1.fill = GridBagConstraints.HORIZONTAL; gbc_panel_1.insets
-		 * = new Insets(0, 0, 5, 0); gbc_panel_1.gridx = 3; gbc_panel_1.gridy =
-		 * 1; frmDoornot.getContentPane().add(panel_1, gbc_panel_1);
-		 * GridBagLayout gbl_panel_1 = new GridBagLayout();
-		 * //gbl_panel_1.columnWidths = new int[]{0, 0, 4, 0};
-		 * //gbl_panel_1.rowHeights = new int[]{0, 0, 0};
-		 * gbl_panel_1.columnWeights = new double[]{1.0, 5.0, 0.0,
-		 * Double.MIN_VALUE}; gbl_panel_1.rowWeights = new double[]{1.0, 1.0,
-		 * Double.MIN_VALUE}; panel_1.setLayout(gbl_panel_1);
-		 */
-
-		// JPanel np = new JPanel();
-		// gbc_np.fill = GridBagConstraints.HORIZONTAL;
-
-		// JPanel p = new JPanel(new BorderLayout());
 		JPanel p = new JPanel();
 		JTextPane id = new JTextPane();
 		JTextPane content = new JTextPane();
@@ -1306,16 +1235,11 @@ public class DonGUIV3 {
 			
 			if(entry.getID() == flashcode2 && entry.getID() != -1){
 				if(curr2 == flashcode2){
-					if(countdown3 > 0) p.setBorder(new LineBorder(Color.green, 3));
-					else {
-						p.setBorder(null);
-					}
+					p.setBorder(new LineBorder(Color.green, 3));
 				} else {
 					p.setBorder(new LineBorder(Color.green, 3));
-					countdown4 = 1000;
-					curr2 = flashcode;
-					timeri = new Timer(1, ali);	
-					timeri.start();
+					curr2 = flashcode2;
+					new Alib(1000);
 				}
 			} else {
 				p.setBorder(null);
@@ -1380,13 +1304,11 @@ public class DonGUIV3 {
 			timerange.setBackground(Color.gray);
 			timerange.setFont(new Font("Verdana", Font.PLAIN, 12));
 			timerange.setText(timeText);
-			// content.setSize(335, 50);
 			content.setForeground(Color.white);
 			content.setFont(new Font("Arial", Font.BOLD, 16));
 			content.setText(entryText);
 			id.setFont(new Font("Verdana", Font.BOLD, 17));
 			id.setForeground(Color.white);
-			// id.setText(new Integer(entry.getID()).toString());
 			if(entry.getStatus()){
 				id.setBackground(new Color(21,161,19));
 				content.setBackground(new Color(9,222,7));
@@ -1423,11 +1345,6 @@ public class DonGUIV3 {
 			}
 			if(entry.getID() == -1){
 				realid.setText(null);
-				/*
-				id.setBackground(new Color(255,102,178));
-				content.setBackground(new Color(255,153,204));
-				label.setBackground(new Color(255,153,204));
-				*/
 				id.setBackground(Color.gray);
 				content.setBackground(Color.LIGHT_GRAY);
 				label.setBackground(Color.LIGHT_GRAY);
@@ -1444,7 +1361,6 @@ public class DonGUIV3 {
 				label.setText(tag);
 				label.setForeground(Color.white);
 				label.setFont(new Font("Arial", Font.ITALIC, 11));
-				// label.setBackground(Color.blue);
 			} else {
 				label.setText("");
 			}
@@ -1499,21 +1415,75 @@ public class DonGUIV3 {
 		}
 	}
 	
+	class Alb implements ActionListener {
+		Timer timer;
+		Alb(int delay){
+			timer = new Timer(delay, this);
+			timer.start();
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			infoPane.setVisible(false);
+			buttomFiller.setVisible(true);
+			timer.stop();			
+		}
+	}
+	
+	class Almb implements ActionListener {
+		Timer timer;
+		Almb(int delay){
+			timer = new Timer(delay, this);
+			timer.setRepeats(true);
+			timer.start();
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if(currentMsgList == null || currentMsgList.size() == 0){
+				infoPane.setVisible(false);
+				buttomFiller.setVisible(true);
+				timer.stop();
+			} else {
+				infoPane.setText(currentMsgList.remove(0));
+			}
+		}
+	}
+	
+	class Alfb implements ActionListener {
+		Timer timer;
+		Alfb(int delay){
+			timer = new Timer(delay, this);
+			timer.start();
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			curr = -2;
+			flashcode = -1;
+			timer.stop();
+		}
+	}
+	
+	class Alib implements ActionListener {
+		Timer timer;
+		Alib(int delay){
+			timer = new Timer(delay, this);
+			timer.start();
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			curr2 = -2;
+			flashcode2 = -1;
+			timer.stop();
+		}
+	}
+	
 	class MyDialog extends JDialog {
 		  public MyDialog(JFrame parent) {
 		    super(parent, "About", true);
 		    Container cp = getContentPane();
-		    cp.setLayout(new FlowLayout());
+		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
 		    JTextPane tt = new JTextPane();
 		    tt.setText("Developers:\nEu Yong Xue\nHaritha Ramesh\nHu Yifei\nLin Daqi");
 		    tt.setEditable(false);
-		    /*
-		    cp.add(new JLabel("Developers:"));
-		    cp.add(new JLabel("Eu Yong Xue"));
-		    cp.add(new JLabel("Haritha Ramesh"));
-		    cp.add(new JLabel("Hu Yifei"));
-		    cp.add(new JLabel("Lin Daqi"));
-		    */
 		    cp.add(tt);
 		    JButton ok = new JButton("OK");
 		    ok.addActionListener(new ActionListener() {
@@ -1522,7 +1492,7 @@ public class DonGUIV3 {
 		      }
 		    });
 		    cp.add(ok);
-		    setSize(150, 150);
+		    setSize(150, 200);
 		    music();
 		  }
 	}
