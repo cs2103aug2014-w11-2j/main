@@ -205,6 +205,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_MATCHING_RESULTS,
+					searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 
@@ -300,6 +302,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_MATCHING_RESULTS,
+					searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 			response.setTaskList(foundTasks);
@@ -388,6 +392,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_MATCHING_RESULTS,
+					searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 			response.setTaskList(foundTasks);

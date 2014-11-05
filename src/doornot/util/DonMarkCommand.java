@@ -117,7 +117,7 @@ public class DonMarkCommand extends DonEditCommand {
 	 */
 	private IDonResponse toggleStatusFloating(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> tasks = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, true);
+		List<IDonTask> tasks = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, true);
 		if (tasks.isEmpty()) {
 			// No overdue task
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);

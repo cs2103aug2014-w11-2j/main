@@ -107,6 +107,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 
 		if (foundList.size() > 1) {
 			response.setResponseType(ResponseType.DEL_FAILURE);
+			response.addMessage(String.format(MSG_MATCHING_RESULTS,
+					searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 			response.setTaskList(foundList);
@@ -159,7 +161,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	private IDonResponse deleteFloatingTasks(IDonStorage donStorage) {
 		assert searchTitle!=null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> foundList = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, true);
+		List<IDonTask> foundList = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, true);
 		
 		if (foundList.isEmpty()) {
 			// No floating tasks

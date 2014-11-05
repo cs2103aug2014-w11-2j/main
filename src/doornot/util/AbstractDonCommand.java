@@ -30,6 +30,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed.";
 	protected static final String MSG_LABEL_ALL_REMOVED = "All labels have been removed.";
 	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
+	protected static final String MSG_MATCHING_RESULTS = "Matching results for '%1$s'";
 	protected static final String MSG_NO_FLOATING = "No floating tasks found!";
 	protected static final String MSG_NO_LABEL_TASKS = "No tasks with the label '%1$s' found!";
 	protected static final String MSG_NO_UNDONE_OVERDUE = "No undone overdue tasks found!";
@@ -74,7 +75,7 @@ public abstract class AbstractDonCommand {
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;
 	protected static final int FIND_ALL = 2;
-	
+	/*
 	//TODO Should only contain types denoting validity and global commands like undo/redo
 	public static enum CommandType {
 		ADD_FLOAT, 
@@ -131,12 +132,12 @@ public abstract class AbstractDonCommand {
 		EXIT,
 		HELP
 	}
-	
+	*/
 	public static enum GeneralCommandType {
 		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
 	}
 	
-	protected CommandType commandType;
+	//protected CommandType commandType;
 	
 	protected GeneralCommandType generalCommandType;
 	
@@ -168,11 +169,11 @@ public abstract class AbstractDonCommand {
 		response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, searchString));
 		return response;
 	}
-	
+	/*
 	public void setType(CommandType type){
 		commandType = type;
 	}
-	/*
+	
 	public CommandType getType() {
 		return commandType;
 	}

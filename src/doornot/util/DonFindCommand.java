@@ -147,7 +147,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findTaskByDate(IDonStorage donStorage) {
 		assert searchStartDate != null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate);
+		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate, false);
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
@@ -300,9 +300,9 @@ public class DonFindCommand extends AbstractDonCommand {
 	private IDonResponse findFreeTime(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
 		// Get all tasks with deadlines or events that end after today
-		List<IDonTask> taskList = SearchHelper.getTaskByType(donStorage,
+		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
 				IDonTask.TaskType.DEADLINE, false, false);
-		taskList.addAll(SearchHelper.getTaskByType(donStorage, IDonTask.TaskType.DURATION,
+		taskList.addAll(SearchHelper.findTaskByType(donStorage, IDonTask.TaskType.DURATION,
 				false, false));
 		Collections.sort(taskList);
 
@@ -430,7 +430,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	
 	protected IDonResponse findFloat(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.getTaskByType(donStorage, TaskType.FLOATING, true, false);
+		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
 		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_FLOAT);

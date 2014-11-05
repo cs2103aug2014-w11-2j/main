@@ -181,7 +181,7 @@ public class DonGUIV3 {
     
 	
 	private void sortByDate() {
-		Collections.sort(guiTaskList, new TimeComparator());
+		Collections.sort(guiTaskList);
 	}
 
 	private void branchToPage(String cmd) {

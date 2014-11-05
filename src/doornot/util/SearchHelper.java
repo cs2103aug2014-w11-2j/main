@@ -59,11 +59,13 @@ public class SearchHelper {
 	/**
 	 * Find tasks starting/occurring on a given date
 	 * 
-	 * @param date
+	 * @param donStorage the storage containing the tasks
+	 * @param searchStartDate
 	 *            the date to search for
+	 * @param exact whether the task must happen at the same date and time as searchStartDate
 	 * @return the response containing the tasks
 	 */
-	public static List<IDonTask> findTaskByDate(IDonStorage donStorage, Calendar searchStartDate) {
+	public static List<IDonTask> findTaskByDate(IDonStorage donStorage, Calendar searchStartDate, boolean exact) {
 		assert searchStartDate != null;
 		List<IDonTask> response = new ArrayList<IDonTask>();
 		List<IDonTask> taskList = donStorage.getTaskList();
@@ -78,12 +80,21 @@ public class SearchHelper {
 			Calendar taskEndDate = task.getEndDate();
 			// If the date falls within the start and end date of an event, the
 			// event is returned as well
-			if (CalHelper.isSameDay(taskDate, searchStartDate)
-					|| (taskType == TaskType.DURATION && CalHelper
-							.isBetweenDates(searchStartDate, taskDate,
-									taskEndDate))) {
-				response.add(task);
+			if (exact) {
+				if ((taskType == TaskType.DEADLINE && CalHelper.relevantEquals(taskDate, searchStartDate))
+						|| (taskType == TaskType.DURATION && CalHelper.isBetweenDates(searchStartDate, taskDate,
+										taskEndDate))) {
+					response.add(task);
+				}
+			} else {
+				if (CalHelper.isSameDay(taskDate, searchStartDate)
+						|| (taskType == TaskType.DURATION && CalHelper
+								.isBetweenDates(searchStartDate, taskDate,
+										taskEndDate))) {
+					response.add(task);
+				}
 			}
+			
 		}
 		return response;
 	}
@@ -204,7 +215,7 @@ public class SearchHelper {
 	 *            true if completed tasks are allowed
 	 * @return the list of tasks
 	 */
-	public static List<IDonTask> getTaskByType(IDonStorage donStorage,
+	public static List<IDonTask> findTaskByType(IDonStorage donStorage,
 			IDonTask.TaskType type, boolean allowOverdue, boolean allowFinished) {
 		List<IDonTask> taskList = donStorage.getTaskList();
 		List<IDonTask> resultList = new ArrayList<IDonTask>();

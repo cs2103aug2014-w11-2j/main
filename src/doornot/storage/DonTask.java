@@ -165,6 +165,9 @@ public class DonTask implements IDonTask {
 	@Override
 	public int compareTo(IDonTask otherTask) {
 		if (this.getType() == TaskType.FLOATING) {
+			if (otherTask.getType() != TaskType.FLOATING) {
+				return 1;
+			}
 			// For floating tasks the title will be compared based on
 			// lexicographic ordering
 			return compareTitle(otherTask);
@@ -174,7 +177,7 @@ public class DonTask implements IDonTask {
 			if (otherTask.getType() == TaskType.FLOATING) {
 				// If a deadline task is being compared to a floating one,
 				// only the title can be compared.
-				return compareTitle(otherTask);
+				return -1;
 			}
 			int startDateComp = compareStartDate(otherTask);
 			if (startDateComp == 0) {
@@ -192,7 +195,7 @@ public class DonTask implements IDonTask {
 			if (otherTask.getType() == TaskType.FLOATING) {
 				// If a duration task is being compared to a floating one,
 				// only the title can be compared.
-				return compareTitle(otherTask);
+				return -1;
 			} else if (otherTask.getType() == TaskType.DEADLINE) {
 				// If a duration task is being compared to a deadline task,
 				// only the start date and title can be compared.

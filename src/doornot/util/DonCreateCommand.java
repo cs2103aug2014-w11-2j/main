@@ -116,7 +116,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskByDate(donStorage, startDate).size()>1) {
+			if (SearchHelper.findTaskByDate(donStorage, startDate, true).size()>1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
 			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
@@ -205,7 +205,10 @@ public class DonCreateCommand extends AbstractDonCommand {
 		boolean deleteSuccess = donStorage.removeTask(createdTask.getID());
 		IDonResponse response = null;
 		if(deleteSuccess) {
+			response = new DonResponse();
 			response = createUndoSuccessResponse(1);
+			response.addTask(createdTask);
+			response.setResponseType(ResponseType.DEL_SUCCESS);
 			executed = false;
 		} else {
 			response = createUndoFailureResponse();
