@@ -434,7 +434,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_FLOAT);
-			response.getMessages().set(0, MSG_SEARCH_RESULT_FLOAT);
+			response.addMessage(MSG_SEARCH_RESULT_FLOAT);
 			response.addMessage(String.format(MSG_SEARCH_FOUND, taskList.size()));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
