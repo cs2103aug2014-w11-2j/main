@@ -40,8 +40,8 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_FOUND = "%1$d task(s) found";
 	protected static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
 	protected static final String MSG_SEARCH_ID_FOUND = "Task %1$d found";
-	protected static final String MSG_SEARCH_RESULT_NAME = "Search results for '%1$s'.";
-	protected static final String MSG_SEARCH_RESULT_ID = "Search results for ID %1$d.";
+	protected static final String MSG_SEARCH_RESULT_NAME = "Search results for '%1$s'";
+	protected static final String MSG_SEARCH_RESULT_ID = "Search results for ID %1$d";
 	protected static final String MSG_SEARCH_RESULT_UNDONE = "Undone tasks";
 	protected static final String MSG_SEARCH_RESULT_TODAY = "Today's tasks";
 	protected static final String MSG_SEARCH_RESULT_FREE_TIME = "Free time";
@@ -52,7 +52,7 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_SEARCH_RESULT_FLOAT = "Floating tasks";
 	protected static final String MSG_SEARCH_RESULT_DONE = "Completed tasks";
 	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
-	protected static final String MSG_SEARCH_LABEL_FOUND = "%1$d tasks with label '%2%s' found.";
+	protected static final String MSG_SEARCH_LABEL_FOUND = "%1$d tasks with label '%2$s' found.";
 	protected static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
 	protected static final String MSG_SEARCH_NAME_FOUND = "%1$d task(s) containing '%2$s' found";
 	protected static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";

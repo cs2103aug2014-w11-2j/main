@@ -281,7 +281,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
 			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, "#"+searchTitle));
-			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND, taskList.size(), searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND, taskList.size(), "#"+searchTitle));
 		}
 
 		return response;
