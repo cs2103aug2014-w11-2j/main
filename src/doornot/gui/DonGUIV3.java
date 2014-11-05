@@ -334,16 +334,17 @@ public class DonGUIV3 {
 				countdown3 = 1000;
 				delflag = true;
 			}
-			int selected = -1;
+
 			if (searchList != null) {
-				for (int i = 0; i < searchList.size(); i++) {
-					if (searchList.get(i).getID() == rp.getTasks().get(0)
-							.getID()) {
-						selected = i;
+				for(int j=0; j < rp.getTasks().size(); j++) {
+					for (int i = 0; i < searchList.size(); i++) {
+						if (searchList.get(i).getID() == rp.getTasks().get(j)
+								.getID()) {
+							searchList.remove(i);
+							break;
+						}
 					}
 				}
-				if (selected != -1)
-					searchList.remove(selected);
 			}
 			size++;
 			currentMsgList = new ArrayList<String>();
