@@ -344,7 +344,7 @@ public class DonLogicTester {
 		int taskID2 = addResponse2.getTasks().get(0).getID();
 
 		IDonResponse undoResponse = logic.runCommand("undo");
-		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
 				undoResponse.getResponseType());
 		
 		IDonResponse searchResponse = logic.runCommand("s " + taskID2);
@@ -352,7 +352,7 @@ public class DonLogicTester {
 				searchResponse.getResponseType());
 		
 		IDonResponse undoResponse2 = logic.runCommand("undo");
-		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
 				undoResponse2.getResponseType());
 
 		IDonResponse searchResponse2 = logic.runCommand("s " + taskID);
