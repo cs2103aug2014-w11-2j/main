@@ -323,10 +323,6 @@ public class DonGUIV3 {
 					}
 				}
 			}
-			size++;
-			currentMsgList = new ArrayList<String>();
-			currentMsgList.add(lastMsg);
-			currentMsgList.add("Type \"undo\" to undo");
 		}
 		if (size == 1) {
 			fb += lastMsg;
