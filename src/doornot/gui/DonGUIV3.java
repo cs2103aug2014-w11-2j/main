@@ -161,8 +161,8 @@ public class DonGUIV3 {
 
         try
         {
-            InputStream test = DonGUIV3.class.getResourceAsStream("ring.wav");//new FileInputStream("ring.wav");
-            BGM = new AudioStream(test);
+            InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");//new FileInputStream("ring.wav");
+            BGM = new AudioStream(ringStream);
             AudioPlayer.player.start(BGM);
         }
         catch(FileNotFoundException e){
@@ -643,7 +643,7 @@ public class DonGUIV3 {
 				donLogic.saveToDrive();
 			}
 		});
-		frmDoornot.setTitle("DoOrNot v0.4");
+		frmDoornot.setTitle("DoOrNot v0.5");
 		frmDoornot.setBounds(100, 100, 646, 528);
 		//frmDoornot.setUndecorated(true);
 		frmDoornot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -838,7 +838,7 @@ public class DonGUIV3 {
 		gbc_helpButton.gridwidth = 1;
 		frmDoornot.getContentPane().add(helpButton, gbc_helpButton);
 		*/
-		buttomFiller = new JLabel("DoOrNot v0.4");
+		buttomFiller = new JLabel("DoOrNot v0.5");
 		buttomFiller.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_buttomFiller = new GridBagConstraints();
 		//gbc_buttomFiller.anchor = GridBagConstraints.SOUTH;
@@ -1036,8 +1036,8 @@ public class DonGUIV3 {
 		frmDoornot.getContentPane().add(infoPane, gbc_infoPane);
 
 		try {
-			logo = ImageIO.read(new File("doornot.png"));
-			noTaskImage = ImageIO.read(new File("notask.png"));
+			logo = ImageIO.read(DonGUIV3.class.getResource("DoOrNot.png"));
+			noTaskImage = ImageIO.read(DonGUIV3.class.getResource("notask.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
