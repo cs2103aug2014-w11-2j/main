@@ -75,7 +75,7 @@ import java.awt.Insets;
 
 import sun.audio.*;
 
-public class DonGUIV3 {
+public class DonGUI {
 
 	private JFrame frmDoornot;
 	DonLogic donLogic = new DonLogic();
@@ -132,7 +132,7 @@ public class DonGUIV3 {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					DonGUIV3 window = new DonGUIV3();
+					DonGUI window = new DonGUI();
 					window.frmDoornot.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -144,7 +144,7 @@ public class DonGUIV3 {
 	/**
 	 * Create the application.
 	 */
-	public DonGUIV3() {
+	public DonGUI() {
 		initialize();
 	}
 
@@ -160,7 +160,7 @@ public class DonGUIV3 {
 
         try
         {
-		    InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");
+		    InputStream ringStream = DonGUI.class.getResourceAsStream("ring.wav");
             BGM = new AudioStream(ringStream);
             AudioPlayer.player.start(BGM);
         }
@@ -1030,8 +1030,8 @@ public class DonGUIV3 {
 		frmDoornot.getContentPane().add(infoPane, gbc_infoPane);
 
 		try {
-			logo = ImageIO.read(DonGUIV3.class.getResource("DoOrNot.png"));
-			noTaskImage = ImageIO.read(DonGUIV3.class.getResource("notask.png"));
+			logo = ImageIO.read(DonGUI.class.getResource("DoOrNot.png"));
+			noTaskImage = ImageIO.read(DonGUI.class.getResource("notask.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
