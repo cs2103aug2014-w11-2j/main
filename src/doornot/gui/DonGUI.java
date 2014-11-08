@@ -122,7 +122,7 @@ public class DonGUI {
 	private int currentHighlightedTask = -2;
 	private boolean delflag = false;
 	private String curSearchString = "";
-	private AboutDialog dlg = new AboutDialog(frmDoornot);
+	private AboutDialog aboutDialog = new AboutDialog(frmDoornot);
 
 	/**
 	 * Launch the application.
@@ -704,8 +704,8 @@ public class DonGUI {
 		
 		panel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				dlg.setLocationRelativeTo(frmDoornot);
-				dlg.setVisible(true);
+				aboutDialog.setLocationRelativeTo(frmDoornot);
+				aboutDialog.setVisible(true);
 			}
 		});
 
