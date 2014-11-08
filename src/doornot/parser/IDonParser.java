@@ -12,7 +12,8 @@ public interface IDonParser {
 
 	/**
 	 * Initialises and returns DonCommand object with the respective properties.
-	 * Calls setDonCommand(String command).
+	 * Calls setDonCommand(String command) to create the respective
+	 * AbstractDonCommand according to the user input.
 	 * 
 	 * @param command
 	 *            string from user
