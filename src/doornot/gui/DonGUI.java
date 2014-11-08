@@ -561,11 +561,11 @@ public class DonGUI {
 	}
 	
 	private void parseType(){
-		overdueList = donLogic.runCommand("overdue").getTasks();
-		todayList = donLogic.runCommand("today").getTasks();
-		weekList = donLogic.runCommand("week").getTasks();
-		farList = donLogic.runCommand("future").getTasks();
-		floatList = donLogic.runCommand("float").getTasks();
+		overdueList = donLogic.getOverdueTasks();
+		todayList = donLogic.getTodayTasks();
+		weekList = donLogic.getWeekTasks();
+		farList = donLogic.getFutureTasks();
+		floatList = donLogic.getFloatingTasks();
 	}
 
 
