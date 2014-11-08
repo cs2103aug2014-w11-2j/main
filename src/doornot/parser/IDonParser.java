@@ -17,11 +17,6 @@ public interface IDonParser {
 	 * @return DonCommand
 	 */
 	public AbstractDonCommand parseCommand(String command);
-	
-	/**
-	 * Creates the respective dCommand according to the user input.
-	 * Requires parseCommand(String command) to initialise DonCommand object.
-	 */
-	public void setDonCommand();
+
 
 }

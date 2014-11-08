@@ -32,7 +32,8 @@ import doornot.util.DonMarkCommand.MarkType;
  * DonParser parses the commands and creates a DonCommand
  * 
  */
-// @author A0115503W
+//@author A0115503W
+
 public class DonParser implements IDonParser {
 
 	public DonParser() {
@@ -42,7 +43,7 @@ public class DonParser implements IDonParser {
 	private String userCommand;
 	private AbstractDonCommand dCommand;
 	private String commandWord;
-	
+
 	// for natty parser
 	private Parser nattyParser = new Parser();
 	private List<DateGroup> groups;
@@ -52,20 +53,18 @@ public class DonParser implements IDonParser {
 	// name must be between " "
 	private String taskNameReg = "^\".+\"$";
 
-	// allow "blah" by 
+	// allow "blah" by
 	private String deadlineTaskReg = ".+(by\\s.+){1}";
 
 	// allow "blah" from
 	private String eventTaskReg = ".+(from\\s.+){1}";
-	
+
 	// allow "blah"/ID to
 	private String editToNameReg = ".+(to\\s\".+\"){1}";
 
 	// for to "
 	private String editNameSpaceReg = "to \"";
-	// number
-	private String getIDReg = "^[0-9]+$";
-	
+
 	// allow xx "BLAH"
 	private String labelNameReg = "^#.+$";
 
@@ -82,8 +81,7 @@ public class DonParser implements IDonParser {
 
 	}
 
-	@Override
-	public void setDonCommand() {
+	private void setDonCommand() {
 		commandWord = getFirstWord(userCommand);
 
 		if (commandWord.equalsIgnoreCase("a")
@@ -92,7 +90,7 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("addf")
 				|| commandWord.equalsIgnoreCase("af")) {
 			setAddFloatCommand();
-		}else if (commandWord.equalsIgnoreCase("e")
+		} else if (commandWord.equalsIgnoreCase("e")
 				|| commandWord.equalsIgnoreCase("ed")
 				|| commandWord.equalsIgnoreCase("edit")) {
 			setEditCommand();
@@ -129,23 +127,23 @@ public class DonParser implements IDonParser {
 			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
 		} else if (commandWord.equalsIgnoreCase("free")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
-		}else if (commandWord.equalsIgnoreCase("today")) {
+		} else if (commandWord.equalsIgnoreCase("today")) {
 			dCommand = new DonFindCommand(SearchType.TODAY);
 		} else if (commandWord.equalsIgnoreCase("od")
 				|| commandWord.equalsIgnoreCase("overdue")) {
 			dCommand = new DonFindCommand(SearchType.OVERDUE);
-		}else if (commandWord.equalsIgnoreCase("week")) {
+		} else if (commandWord.equalsIgnoreCase("week")) {
 			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
-		}else if (commandWord.equalsIgnoreCase("future")) {
+		} else if (commandWord.equalsIgnoreCase("future")) {
 			dCommand = new DonFindCommand(SearchType.FUTURE);
 		} else if (commandWord.equalsIgnoreCase("float")
 				|| commandWord.equalsIgnoreCase("fl")
 				|| commandWord.equalsIgnoreCase("floating")) {
-			dCommand = new DonFindCommand(SearchType.FLOAT);		
+			dCommand = new DonFindCommand(SearchType.FLOAT);
 		} else if (commandWord.equalsIgnoreCase("results")
 				|| commandWord.equalsIgnoreCase("result")) {
 			dCommand = new DonFindCommand(SearchType.RESULTS);
-		}else if (commandWord.equalsIgnoreCase("undo")
+		} else if (commandWord.equalsIgnoreCase("undo")
 				|| commandWord.equalsIgnoreCase("un")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
 		} else if (commandWord.equalsIgnoreCase("redo")
@@ -156,7 +154,8 @@ public class DonParser implements IDonParser {
 		} else if (commandWord.equalsIgnoreCase("exit")) {
 			dCommand = new DonGeneralCommand(GeneralCommandType.EXIT);
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_COMMAND, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_COMMAND,
+					commandWord);
 		}
 
 	}
@@ -167,93 +166,99 @@ public class DonParser implements IDonParser {
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		if (isRightCommand(parameters, deadlineTaskReg) && isRightCommand(parameters, eventTaskReg)) {
-			//check which is later.
+		if (isRightCommand(parameters, deadlineTaskReg)
+				&& isRightCommand(parameters, eventTaskReg)) {
+			// check which is later.
 			int byIndex = parameters.lastIndexOf(" by ");
 			int fromIndex = parameters.lastIndexOf(" from ");
-			
-			if(byIndex > fromIndex){
+
+			if (byIndex > fromIndex) {
 				createAddDeadlineCommand(parameters);
-			}else{
+			} else {
 				createAddEventCommand(parameters);
 			}
-		}else if (isRightCommand(parameters, deadlineTaskReg)){
+		} else if (isRightCommand(parameters, deadlineTaskReg)) {
 			createAddDeadlineCommand(parameters);
-			
-		}else if (isRightCommand(parameters, eventTaskReg)){
+
+		} else if (isRightCommand(parameters, eventTaskReg)) {
 			createAddEventCommand(parameters);
-			
-		} else{
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
 	}
-			
+
 	private void createAddDeadlineCommand(String param) {
 		int byIndex = param.lastIndexOf(" by ");
-		String taskDate = param.substring(byIndex+1);
-		String taskName = param.substring(0, byIndex+1).trim();
-		
-		if(isWithinInvertedCommas(taskName)){
+		String taskDate = param.substring(byIndex + 1);
+		String taskName = param.substring(0, byIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
 			taskName = extractName(taskName);
 		}
-		
+
 		if (isGoodName(taskName)) {
-			
+
 			Calendar deadline = Calendar.getInstance();
 			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
-			//if dCommand is not null setNewDeadlineForCommand must have set INVALID_DATE
-			if(dCommand==null) {
-				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);					
+			// if dCommand is not null setNewDeadlineForCommand must have set
+			// INVALID_DATE
+			if (dCommand == null) {
+				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);
 			}
 
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
 
 	}
-	
+
 	private void createAddEventCommand(String param) {
 		int fromIndex = param.lastIndexOf(" from ");
-		String taskDates = param.substring(fromIndex+1);
-		String taskName = param.substring(0, fromIndex+1).trim();
-		
-		if(isWithinInvertedCommas(taskName)){
+		String taskDates = param.substring(fromIndex + 1);
+		String taskName = param.substring(0, fromIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
 			taskName = extractName(taskName);
 		}
-		
+
 		if (isGoodName(taskName)) {
-			
+
 			Calendar startDate = Calendar.getInstance(), endDate = Calendar
 					.getInstance();
 			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
 					endDate);
-			
-			if(dCommand==null) {
+
+			if (dCommand == null) {
 				dCommand = new DonCreateCommand(taskName, startDate, endDate,
-					hasSetTime);
+						hasSetTime);
 			}
-			
+
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
-		
-		
+
 	}
+
 	/**
-	 * Creates the add floating command. 
+	 * Creates the add floating command.
 	 * 
 	 */
 	private void setAddFloatCommand() {
 		String parameters = removeFirstWord(userCommand);
 
-		if(isWithinInvertedCommas(parameters)){
+		if (isWithinInvertedCommas(parameters)) {
 			parameters = extractName(parameters);
 		}
-		
+
 		if (isGoodName(parameters)) {
 			dCommand = new DonCreateCommand(parameters);
-		} else{
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
 	}
 
@@ -264,72 +269,76 @@ public class DonParser implements IDonParser {
 		String parameters = removeFirstWord(userCommand);
 
 		if (isRightCommand(parameters, editToNameReg)) {
-			
+
 			String[] taskNames = getTaskNameArr(parameters, editNameSpaceReg);
 
 			String oldName = taskNames[0];
 			String newName = taskNames[1];
-			
-			if(isWithinInvertedCommas(oldName)){
+
+			if (isWithinInvertedCommas(oldName)) {
 				oldName = extractName(oldName);
 			}
-			
+
 			if (isGoodName(oldName) && isGoodName(newName)) {
 				dCommand = new DonEditCommand(oldName, newName);
-				
-			}else if (isGoodName(newName)){
+
+			} else if (isGoodName(newName)) {
 				try {
-					
+
 					int ID = Integer.parseInt(oldName);
 					dCommand = new DonEditCommand(ID, newName);
-					
-				} catch (Exception e){
-					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
 				}
 
 			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 
-		} else if (isRightCommand(parameters, deadlineTaskReg) && isRightCommand(parameters, eventTaskReg)) {
-			//check which is later.
+		} else if (isRightCommand(parameters, deadlineTaskReg)
+				&& isRightCommand(parameters, eventTaskReg)) {
+			// check which is later.
 			int byIndex = parameters.lastIndexOf(" by ");
 			int fromIndex = parameters.lastIndexOf(" from ");
-			
-			if(byIndex > fromIndex){
+
+			if (byIndex > fromIndex) {
 				createEditDeadlineCommand(parameters);
-			}else{
+			} else {
 				createEditEventCommand(parameters);
 			}
-			
-		}else if (isRightCommand(parameters, deadlineTaskReg)){
+
+		} else if (isRightCommand(parameters, deadlineTaskReg)) {
 			createEditDeadlineCommand(parameters);
-			
-		}else if (isRightCommand(parameters, eventTaskReg)){
+
+		} else if (isRightCommand(parameters, eventTaskReg)) {
 			createEditEventCommand(parameters);
-			
-		} else{
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
-			
+
 	}
 
 	private void createEditDeadlineCommand(String param) {
 		int byIndex = param.lastIndexOf(" by ");
-		String taskDate = param.substring(byIndex+1);
-		String taskName = param.substring(0, byIndex+1).trim();
-		
-		if(isWithinInvertedCommas(taskName)){
+		String taskDate = param.substring(byIndex + 1);
+		String taskName = param.substring(0, byIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
 			taskName = extractName(taskName);
 		}
-		
+
 		if (isGoodName(taskName)) {
-			
+
 			Calendar deadline = Calendar.getInstance();
 			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
-			
-			if(dCommand==null) {
-				dCommand = new DonEditCommand(taskName, deadline, hasSetTime);					
+
+			if (dCommand == null) {
+				dCommand = new DonEditCommand(taskName, deadline, hasSetTime);
 			}
 
 		} else {
@@ -337,13 +346,15 @@ public class DonParser implements IDonParser {
 
 				int ID = Integer.parseInt(taskName);
 				Calendar deadline = Calendar.getInstance();
-				boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
-				
-				if(dCommand==null) {
-					dCommand = new DonEditCommand(ID, deadline, hasSetTime);					
+				boolean hasSetTime = setNewDeadlineForCommand(taskDate,
+						deadline);
+
+				if (dCommand == null) {
+					dCommand = new DonEditCommand(ID, deadline, hasSetTime);
 				}
-			} catch (Exception e){
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 		}
 
@@ -351,38 +362,40 @@ public class DonParser implements IDonParser {
 
 	private void createEditEventCommand(String param) {
 		int fromIndex = param.lastIndexOf(" from ");
-		String taskDates = param.substring(fromIndex+1);
-		String taskName = param.substring(0, fromIndex+1).trim();
-		
-		if(isWithinInvertedCommas(taskName)){
+		String taskDates = param.substring(fromIndex + 1);
+		String taskName = param.substring(0, fromIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
 			taskName = extractName(taskName);
 		}
-		
+
 		if (isGoodName(taskName)) {
-			
+
 			Calendar startDate = Calendar.getInstance(), endDate = Calendar
 					.getInstance();
 			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
 					endDate);
-			
-			if(dCommand==null) {
+
+			if (dCommand == null) {
 				dCommand = new DonEditCommand(taskName, startDate, endDate,
-					hasSetTime);
+						hasSetTime);
 			}
-			
+
 		} else {
 			try {
 				int ID = Integer.parseInt(taskName);
 				Calendar startDate = Calendar.getInstance(), endDate = Calendar
 						.getInstance();
-				boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
-						endDate);
-				
-				if(dCommand==null) {
-					dCommand = new DonEditCommand(ID, startDate, endDate, hasSetTime);					
+				boolean hasSetTime = setStartAndEndForCommand(taskDates,
+						startDate, endDate);
+
+				if (dCommand == null) {
+					dCommand = new DonEditCommand(ID, startDate, endDate,
+							hasSetTime);
 				}
-			} catch (Exception e){
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 		}
 	}
@@ -392,33 +405,33 @@ public class DonParser implements IDonParser {
 	 */
 	private void setMarkCommand() {
 		String parameters = removeFirstWord(userCommand);
-		
-		if(parameters.equalsIgnoreCase("overdue")
-				|| parameters.equalsIgnoreCase("od")){
+
+		if (parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")) {
 			dCommand = new DonMarkCommand(MarkType.MARK_OVERDUE);
-			
-		} else if(parameters.equalsIgnoreCase("float")
+
+		} else if (parameters.equalsIgnoreCase("float")
 				|| parameters.equalsIgnoreCase("fl")
-				|| parameters.equalsIgnoreCase("floating")){
+				|| parameters.equalsIgnoreCase("floating")) {
 			dCommand = new DonMarkCommand(MarkType.MARK_FLOAT);
-			
+
 		} else if (isGoodName(parameters)) {
-			
-			if(isWithinInvertedCommas(parameters)){
+
+			if (isWithinInvertedCommas(parameters)) {
 				parameters = extractName(parameters);
 			}
-			
+
 			dCommand = new DonMarkCommand(parameters);
-			
+
 		} else {
-			
+
 			try {
 				int ID = Integer.parseInt(parameters);
 				dCommand = new DonMarkCommand(ID);
-				
 
 			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 		}
 
@@ -429,36 +442,37 @@ public class DonParser implements IDonParser {
 	 */
 	private void setDeleteCommand() {
 		String parameters = removeFirstWord(userCommand);
-		
-		if(parameters.equalsIgnoreCase("overdue")
-				|| parameters.equalsIgnoreCase("od")){
+
+		if (parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")) {
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_OVERDUE);
-			
-		} else if(parameters.equalsIgnoreCase("float")
+
+		} else if (parameters.equalsIgnoreCase("float")
 				|| parameters.equalsIgnoreCase("fl")
-				|| parameters.equalsIgnoreCase("floating")){
+				|| parameters.equalsIgnoreCase("floating")) {
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
-			
-		} else if(parameters.equalsIgnoreCase("done")){
+
+		} else if (parameters.equalsIgnoreCase("done")) {
 			dCommand = new DonDeleteCommand(DeleteType.DELETE_DONE);
-			
-		}else if (isRightCommand(parameters, labelNameReg)) {
-			dCommand = new DonDeleteCommand(extractLabelName(parameters), DeleteType.DELETE_LABEL);
-			
-		}else if (isGoodName(parameters)) {
-			if(isWithinInvertedCommas(parameters)){
+
+		} else if (isRightCommand(parameters, labelNameReg)) {
+			dCommand = new DonDeleteCommand(extractLabelName(parameters),
+					DeleteType.DELETE_LABEL);
+
+		} else if (isGoodName(parameters)) {
+			if (isWithinInvertedCommas(parameters)) {
 				parameters = extractName(parameters);
 			}
 			dCommand = new DonDeleteCommand(parameters, DeleteType.DELETE_TITLE);
-			
+
 		} else {
 			try {
 				int ID = Integer.parseInt(parameters);
 				dCommand = new DonDeleteCommand(ID);
-				
 
 			} catch (Exception e) {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 		}
 
@@ -475,18 +489,20 @@ public class DonParser implements IDonParser {
 
 		} else {
 			if (isGoodName(parameters)) {
-				if(isWithinInvertedCommas(parameters)){
+				if (isWithinInvertedCommas(parameters)) {
 					parameters = extractName(parameters);
 				}
-				dCommand = new DonFindCommand(parameters, SearchType.SEARCH_NAME);
+				dCommand = new DonFindCommand(parameters,
+						SearchType.SEARCH_NAME);
 
 			} else {
-				try{
+				try {
 					int ID = Integer.parseInt(parameters);
 					dCommand = new DonFindCommand(ID);
-					
-				} catch (Exception e){
-					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
 				}
 			}
 		}
@@ -498,27 +514,27 @@ public class DonParser implements IDonParser {
 	private void setSearchDatesCommand(SearchType type) {
 		String parameters = removeFirstWord(userCommand);
 
-		
 		Calendar searchDate = Calendar.getInstance();
 		boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
-		if(dCommand==null) {
-			dCommand = new DonFindCommand(searchDate, hasSetTime,
-				type);
+		if (dCommand == null) {
+			dCommand = new DonFindCommand(searchDate, hasSetTime, type);
 		}
 
 	}
+
 	/**
 	 * Creates the search label CommandType
 	 */
 	private void setSlabelCommand() {
 		String parameters = removeFirstWord(userCommand);
-		
+
 		if (isRightCommand(parameters, labelNameReg)) {
 			dCommand = new DonFindCommand(extractLabelName(parameters),
 					SearchType.SEARCH_LABEL);
-			
+
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
 
 	}
@@ -531,38 +547,42 @@ public class DonParser implements IDonParser {
 
 		if (isRightCommand(parameters, labelReg)) {
 			int byIndex = parameters.lastIndexOf(" #");
-			String labelName = parameters.substring(byIndex+1);
-			String taskName = parameters.substring(0, byIndex+1).trim();
-			
-			if(isWithinInvertedCommas(taskName)){
+			String labelName = parameters.substring(byIndex + 1);
+			String taskName = parameters.substring(0, byIndex + 1).trim();
+
+			if (isWithinInvertedCommas(taskName)) {
 				taskName = extractName(taskName);
 			}
-			
-			if(isGoodName(taskName)){
-				dCommand = new DonDelabelCommand(taskName, extractLabelName(labelName));
+
+			if (isGoodName(taskName)) {
+				dCommand = new DonDelabelCommand(taskName,
+						extractLabelName(labelName));
 			} else {
-				try{
+				try {
 					int ID = Integer.parseInt(taskName);
-					dCommand = new DonDelabelCommand(ID, extractLabelName(labelName));
-					
-				} catch (Exception e){
-					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+					dCommand = new DonDelabelCommand(ID,
+							extractLabelName(labelName));
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
 				}
 			}
-			
+
 		} else {
-			if(isGoodName(parameters)){
-				if(isWithinInvertedCommas(parameters)){
+			if (isGoodName(parameters)) {
+				if (isWithinInvertedCommas(parameters)) {
 					parameters = extractName(parameters);
 				}
 				dCommand = new DonDelabelCommand(parameters);
 			} else {
-				try{
+				try {
 					int ID = Integer.parseInt(parameters);
 					dCommand = new DonDelabelCommand(ID);
-					
-				} catch (Exception e){
-					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
 				}
 			}
 		}
@@ -577,27 +597,31 @@ public class DonParser implements IDonParser {
 
 		if (isRightCommand(parameters, labelReg)) {
 			int byIndex = parameters.lastIndexOf(" #");
-			String labelName = parameters.substring(byIndex+1);
-			String taskName = parameters.substring(0, byIndex+1).trim();
-			
-			if(isWithinInvertedCommas(taskName)){
+			String labelName = parameters.substring(byIndex + 1);
+			String taskName = parameters.substring(0, byIndex + 1).trim();
+
+			if (isWithinInvertedCommas(taskName)) {
 				taskName = extractName(taskName);
 			}
-			
-			if(isGoodName(taskName)){
-				dCommand = new DonAddLabelCommand(taskName, extractLabelName(labelName));
+
+			if (isGoodName(taskName)) {
+				dCommand = new DonAddLabelCommand(taskName,
+						extractLabelName(labelName));
 			} else {
-				try{
+				try {
 					int ID = Integer.parseInt(taskName);
-					dCommand = new DonAddLabelCommand(ID, extractLabelName(labelName));
-					
-				} catch (Exception e){
-					dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+					dCommand = new DonAddLabelCommand(ID,
+							extractLabelName(labelName));
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
 				}
 			}
-			
+
 		} else {
-			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
 		}
 
 	}
@@ -647,7 +671,8 @@ public class DonParser implements IDonParser {
 			} else if (parameters.equalsIgnoreCase("redo")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_REDO);
 			} else {
-				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT, commandWord);
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
 			}
 		}
 
@@ -662,7 +687,6 @@ public class DonParser implements IDonParser {
 		return matcher.find();
 	}
 
-
 	/**
 	 * Sets new deadlines for dCommand
 	 * 
@@ -674,7 +698,6 @@ public class DonParser implements IDonParser {
 	private boolean setNewDeadlineForCommand(String parameters,
 			Calendar deadlineOut) {
 		boolean hasSetTime = false;
-
 
 		try {
 			Date date = getTimeFromParser(parameters);
@@ -690,7 +713,7 @@ public class DonParser implements IDonParser {
 		} catch (Exception e) {
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 		}
-		
+
 		return hasSetTime;
 	}
 
@@ -717,17 +740,16 @@ public class DonParser implements IDonParser {
 	 * 
 	 * @param parameters
 	 * @return
-	 * @throws WrongDateException 
+	 * @throws WrongDateException
 	 */
 	private Date getTimeFromParser(String parameters) throws WrongDateException {
 		groups = nattyParser.parse(parameters);
-		
+
 		Date date = groups.get(0).getDates().get(0);
-		
-		if (groups.get(0).getDates().size() != 1
-				|| groups.get(0).isRecurring()){
+
+		if (groups.get(0).getDates().size() != 1 || groups.get(0).isRecurring()) {
 			throw new WrongDateException();
-			
+
 		} else {
 			return date;
 		}
@@ -739,16 +761,16 @@ public class DonParser implements IDonParser {
 	 * 
 	 * @param parameters
 	 * @return
-	 * @throws WrongDateException 
+	 * @throws WrongDateException
 	 */
-	private Date[] getTimingsFromParser(String parameters) throws WrongDateException {
+	private Date[] getTimingsFromParser(String parameters)
+			throws WrongDateException {
 		groups = nattyParser.parse(parameters);
-		
-		if (groups.get(0).getDates().size() != 2
-				|| groups.get(0).isRecurring()){
-			
+
+		if (groups.get(0).getDates().size() != 2 || groups.get(0).isRecurring()) {
+
 			throw new WrongDateException();
-			
+
 		} else {
 			Date[] dates = new Date[2];
 			dates[0] = groups.get(0).getDates().get(0);
@@ -765,7 +787,7 @@ public class DonParser implements IDonParser {
 			Date[] dates = getTimingsFromParser(parameters);
 			Calendar[] calArr = new Calendar[2];
 			Calendar cal = new GregorianCalendar();
-			
+
 			cal.setTime(dates[0]);
 			calArr[0] = cal;
 			Calendar cal2 = new GregorianCalendar();
@@ -777,28 +799,14 @@ public class DonParser implements IDonParser {
 				CalHelper.copyCalendar(calArr[0], startDate);
 				CalHelper.copyCalendar(calArr[1], endDate);
 			} else {
-				CalHelper.copyCalendar(createDateNatty(calArr[0]),
-						startDate);
+				CalHelper.copyCalendar(createDateNatty(calArr[0]), startDate);
 				CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
 			}
 		} catch (Exception e) {
 			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
 		}
-		
-		return hasSetTime;
-	}
 
-	/**
-	 * Gets the id string
-	 * 
-	 * @param param
-	 * @return id string
-	 */
-	private String getID(String param) {
-		Pattern pattern = Pattern.compile(getIDReg);
-		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		return matcher.group().trim();
+		return hasSetTime;
 	}
 
 	/**
@@ -826,10 +834,9 @@ public class DonParser implements IDonParser {
 	 */
 	private boolean isGoodName(String name) {
 		// ensures semi colon not in name
-		if (!name.contains(";") 
-				&& !name.contains("#")
+		if (!name.contains(";") && !name.contains("#")
 				&& !name.matches("^[0-9]+$")) {
-			
+
 			return true;
 		} else {
 			return false;
@@ -851,12 +858,14 @@ public class DonParser implements IDonParser {
 	private String extractName(String param) {
 		return param.substring(1, param.length() - 1).trim();
 	}
+
 	/**
 	 * Removes #
 	 */
 	private String extractLabelName(String param) {
 		return param.substring(1, param.length()).trim();
 	}
+
 	public class WrongDateException extends Exception {
 
 		public WrongDateException() {
