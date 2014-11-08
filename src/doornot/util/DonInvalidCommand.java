@@ -17,15 +17,22 @@ public class DonInvalidCommand extends AbstractDonCommand{
 	private String command;
 	private InvalidType type;
 	
+	/**
+	 * Creates an InvalidCommand 
+	 * @param type the type of invalid command
+	 */
 	public DonInvalidCommand(InvalidType type) {
 		this.type = type;
-		error = true;
 	}
 	
+	/**
+	 * Creates an InvalidCommand with the given command
+	 * @param type the type of InvalidCommand
+	 * @param str the command string
+	 */
 	public DonInvalidCommand(InvalidType type, String str) {
 		this.type = type;
 		command = str;
-		error = true;
 	}
 	
 	public InvalidType getType() {

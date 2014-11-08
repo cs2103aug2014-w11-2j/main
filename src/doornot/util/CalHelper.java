@@ -184,6 +184,11 @@ public class CalHelper {
 				&& c1.get(Calendar.MINUTE) == c2.get(Calendar.MINUTE);
 	}
 	
+	/**
+	 * Gets the Calendar object set to the given number of days after today's date
+	 * @param numDays the number of days after today
+	 * @return the Calendar object
+	 */
 	public static Calendar getDaysFromNow(int numDays) {
 		Parser nattyParser = new Parser();
 		List<DateGroup> dateGroup = nattyParser.parse(numDays+" days from today");

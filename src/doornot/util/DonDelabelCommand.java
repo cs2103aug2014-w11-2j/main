@@ -19,6 +19,11 @@ public class DonDelabelCommand extends DonEditCommand {
 	private DelabelType type;
 	private String searchLabel;
 	
+	/**
+	 * Creates a DelabelCommand that removes the given label from a task with an ID
+	 * @param id the ID of the task
+	 * @param label the label to remove
+	 */
 	public DonDelabelCommand(int id, String label) {
 		searchID = id;
 		searchLabel = label;
@@ -26,6 +31,11 @@ public class DonDelabelCommand extends DonEditCommand {
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
+	/**
+	 * Creates a DelabelCommand that removes the given label from a task containing the title
+	 * @param title the title of the task to remove the label from
+	 * @param label the label to remove
+	 */
 	public DonDelabelCommand(String title, String label) {
 		searchTitle = title;
 		searchLabel = label;
@@ -33,11 +43,20 @@ public class DonDelabelCommand extends DonEditCommand {
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
+	/**
+	 * Removes all labels from a task with a title containing the search title
+	 * @param title the title of the task
+	 */
 	public DonDelabelCommand(String title) {
 		searchTitle = title;
 		type = DelabelType.LABEL_ALL_NAME;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
+	
+	/**
+	 * Removes all labels from the task with the given ID
+	 * @param ID the ID of the task
+	 */
 	public DonDelabelCommand(int ID) {
 		searchID = ID;
 		type = DelabelType.LABEL_ALL_ID;

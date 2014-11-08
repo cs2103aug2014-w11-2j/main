@@ -115,8 +115,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks with the given name
 	 * 
-	 * @param name
-	 *            the name to search for
+	 * @param donStorage the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByName(IDonStorage donStorage) {
@@ -140,8 +139,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks starting/occurring on a given date
 	 * 
-	 * @param date
-	 *            the date to search for
+	 * @param donStorage the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByDate(IDonStorage donStorage) {
@@ -175,6 +173,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * endDate is null, all tasks beginning after 9th of October 2014 will be
 	 * returned.
 	 * 
+	 * @param donStorage the storage object containing the tasks
 	 * @param startDate
 	 *            the date to start searching from (inclusive)
 	 * @param endDate
@@ -204,8 +203,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks given the ID
 	 * 
-	 * @param id
-	 *            the id to search for
+	 * @param donStorage the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByID(IDonStorage donStorage) {
@@ -227,6 +225,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find all undone/incomplete tasks
 	 * 
+	 * @param donStorage the storage object containing the tasks
 	 * @return the response containing incomplete tasks
 	 */
 	private IDonResponse findUndone(IDonStorage donStorage) {
@@ -266,8 +265,6 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @param labelName
-	 *            the label to search for
 	 * @return the response containing tasks with the given label
 	 */
 	private IDonResponse findLabel(IDonStorage donStorage) {
@@ -292,11 +289,11 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find free time in the user's schedule based on existing task and events.
 	 * For dates with no time stated, it is assumed that the user means that the
-	 * whole day is taken up.
+	 * whole day is taken up. The free time periods are stored as tasks title "Free Time"
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @return the response containing the free time.
+	 * @return the response containing the free time
 	 */
 	private IDonResponse findFreeTime(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
@@ -313,7 +310,6 @@ public class DonFindCommand extends AbstractDonCommand {
 			return response;
 		}
 
-		// TODO handle the case where there are no tasks
 		// Find free period between now and the start time of the earliest task
 		// if possible
 		Calendar now = Calendar.getInstance();
@@ -364,7 +360,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @return
+	 * @return the response containing all the tasks
 	 */
 	private IDonResponse findAll(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
@@ -384,7 +380,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @return
+	 * @return the response containing all the tasks occurring within 7 days
 	 */
 	private IDonResponse findSevenDays(IDonStorage donStorage) {
 		Calendar start = CalHelper.getTodayStart();
@@ -401,7 +397,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @return
+	 * @return the response containing all the tasks happening after 7 days
 	 */
 	protected IDonResponse findFuture(IDonStorage donStorage) {
 		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
@@ -412,6 +408,11 @@ public class DonFindCommand extends AbstractDonCommand {
 		return response;
 	}
 
+	/**
+	 * Get overdue tasks
+	 * @param donStorage the storage in which the tasks are located
+	 * @return the response containing all the overdue tasks
+	 */
 	protected IDonResponse findOverdue(IDonStorage donStorage) {
 		IDonResponse response = findTaskRange(donStorage, null,
 				Calendar.getInstance(), FIND_INCOMPLETE);
@@ -429,6 +430,11 @@ public class DonFindCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Get all floating tasks
+	 * @param donStorage the storage in which the tasks are located
+	 * @return the response containing all the floating tasks
+	 */
 	protected IDonResponse findFloat(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
 		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
@@ -449,7 +455,7 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
-	 * @return
+	 * @return the response containing all the completed tasks
 	 */
 	private IDonResponse findDone(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
@@ -505,8 +511,7 @@ public class DonFindCommand extends AbstractDonCommand {
 
 	@Override
 	public IDonResponse undoCommand(IDonStorage donStorage) {
-		// Find cannot be undone
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 }

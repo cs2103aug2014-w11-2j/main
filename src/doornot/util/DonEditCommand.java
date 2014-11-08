@@ -441,9 +441,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			return null;
 		}
 		IDonResponse response = null;
-
-		//IDonTask changedTask = donStorage.getTask(searchID);
-		
+	
 		int count = 0;
 		for(IDonTask task : unchangedTask) {
 			int id = task.getID();

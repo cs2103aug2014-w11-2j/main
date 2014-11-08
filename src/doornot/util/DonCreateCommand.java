@@ -25,12 +25,22 @@ public class DonCreateCommand extends AbstractDonCommand {
 	private boolean timeUsed = false;
 	private IDonTask createdTask = null; //To be used only after command has been executed.
 	
+	/**
+	 * Creates a CreateCommand that adds a floating task
+	 * @param title the title of the new task
+	 */
 	public DonCreateCommand(String title) {
 		type = AddType.FLOATING;
 		taskTitle = title;
 		generalCommandType = GeneralCommandType.ADD;
 	}
 
+	/**
+	 * Creates a CreateCommand that adds a deadline task
+	 * @param title the title of the new task
+	 * @param deadline the deadline of the task
+	 * @param timeUsed whether a time is specified
+	 */
 	public DonCreateCommand(String title, Calendar deadline, boolean timeUsed) {
 		type = AddType.DEADLINE;
 		taskTitle = title;
@@ -39,6 +49,13 @@ public class DonCreateCommand extends AbstractDonCommand {
 		generalCommandType = GeneralCommandType.ADD;
 	}
 	
+	/**
+	 * Creates a CreateCommand that adds an event task
+	 * @param title the title of the new task
+	 * @param startDate the start date of the task
+	 * @param endDate the end date of a task
+	 * @param timeUsed whether a time is specified
+	 */
 	public DonCreateCommand(String title, Calendar startDate, Calendar endDate, boolean timeUsed) {
 		type = AddType.EVENT;
 		taskTitle = title;
@@ -160,6 +177,11 @@ public class DonCreateCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Recreates the task after it has been added and removed through executeCommand and undoCommand
+	 * @param donStorage the storage to add tasks to 
+	 * @return the response after re-adding the task
+	 */
 	private IDonResponse recreateTask(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
 		int taskID = donStorage.addTask(createdTask);

@@ -19,6 +19,11 @@ public class DonAddLabelCommand extends DonEditCommand {
 	private String newLabel;
 	private static int MAX_LABEL = 3;
 	
+	/**
+	 * Creates an add label command that adds to the task with the given ID
+	 * @param id the id of the task
+	 * @param label the label to add
+	 */
 	public DonAddLabelCommand(int id, String label) {
 		searchID = id;
 		newLabel = label;
@@ -26,6 +31,11 @@ public class DonAddLabelCommand extends DonEditCommand {
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
+	/**
+	 * Creates an add label command that adds to a task with the given title
+	 * @param title
+	 * @param label
+	 */
 	public DonAddLabelCommand(String title, String label) {
 		searchTitle = title;
 		newLabel = label;
@@ -33,10 +43,18 @@ public class DonAddLabelCommand extends DonEditCommand {
 		generalCommandType = GeneralCommandType.LABEL;
 	}
 	
+	/**
+	 * Gets the specific type of command this AddLabelCommand is
+	 * @return the type of this command
+	 */
 	public AddLabelType getAddLabelType() {
 		return type;
 	}
 	
+	/**
+	 * Gets the label to be added to the task
+	 * @return 
+	 */
 	public String getNewLabel() {
 		return newLabel;
 	}
