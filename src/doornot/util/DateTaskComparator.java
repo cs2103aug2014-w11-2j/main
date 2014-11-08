@@ -9,7 +9,7 @@ import doornot.storage.IDonTask.TaskType;
  * Comparator to put deadline tasks in front of duration tasks for the Today
  * panel
  */
-// @author A0111995
+//@author A0111995Y
 public class DateTaskComparator implements Comparator<IDonTask> {
 
 	@Override
