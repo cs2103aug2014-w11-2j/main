@@ -14,7 +14,9 @@ import doornot.storage.IDonTask.TaskType;
 import doornot.util.AbstractDonCommand;
 import doornot.util.CalHelper;
 import doornot.util.SearchHelper;
+import doornot.util.TodayTaskComparator;
 import doornot.util.AbstractDonCommand.GeneralCommandType;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * DonLogic - Class for handling the logic of the program
@@ -174,33 +176,43 @@ public class DonLogic implements IDonLogic {
 
 	@Override
 	public List<IDonTask> getTaskList() {
-		return donStorage.getTaskList();
+		List<IDonTask> taskList = new ArrayList<IDonTask>(donStorage.getTaskList());
+		Collections.sort(taskList);
+		return taskList;
 	}
 
 	@Override
 	public List<IDonTask> getTodayTasks() {
-		return SearchHelper.findTaskRange(donStorage, CalHelper.getTodayStart(),
+		List<IDonTask> todayTasks = SearchHelper.findTaskRange(donStorage, CalHelper.getTodayStart(),
 				CalHelper.getTodayEnd(), SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(todayTasks, new TodayTaskComparator());
+		return todayTasks;
 	}
 
 	@Override
 	public List<IDonTask> getWeekTasks() {
 		Calendar start = CalHelper.getTodayStart();
 		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
-		return SearchHelper.findTaskRange(donStorage, start, end,
+		List<IDonTask> weekTasks = SearchHelper.findTaskRange(donStorage, start, end,
 				SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(weekTasks);
+		return weekTasks;
 	}
 
 	@Override
 	public List<IDonTask> getFutureTasks() {
 		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
-		return SearchHelper.findTaskRange(donStorage, start, null,
+		List<IDonTask> futureTasks = SearchHelper.findTaskRange(donStorage, start, null,
 				SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(futureTasks);
+		return futureTasks;
 	}
 
 	@Override
 	public List<IDonTask> getFloatingTasks() {
-		return SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
+		List<IDonTask> floatingTasks = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
+		Collections.sort(floatingTasks);
+		return floatingTasks;
 	}
 
 	@Override
@@ -215,6 +227,7 @@ public class DonLogic implements IDonLogic {
 				resultList.add(task);
 			}
 		}
+		Collections.sort(taskList);
 		return resultList;
 	}
 

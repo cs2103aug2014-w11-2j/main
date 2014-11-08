@@ -507,6 +507,20 @@ public class DonFindCommand extends AbstractDonCommand {
 		return response;
 	}
 
+	private IDonResponse findResults() {
+		IDonResponse response = new DonResponse();
+		response.addMessage("6");
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+	
+	private IDonResponse findConsole() {
+		IDonResponse response = new DonResponse();
+		response.addMessage("7");
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		IDonResponse response = null;
@@ -539,6 +553,10 @@ public class DonFindCommand extends AbstractDonCommand {
 			response = findFloat(donStorage);
 		} else if (type == SearchType.SEARCH_DONE) {
 			response = findDone(donStorage);
+		} else if (type == SearchType.RESULTS) {
+			response = findResults();
+		} else if (type == SearchType.CONSOLE) {
+			response = findConsole();
 		}
 
 		if (type == SearchType.TODAY) {
