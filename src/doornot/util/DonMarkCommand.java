@@ -8,48 +8,49 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonMarkCommand extends DonEditCommand {
 
 	public enum MarkType {
-		MARK_ID,
-		MARK_STRING,
-		MARK_OVERDUE,
-		MARK_FLOAT
+		MARK_ID, MARK_STRING, MARK_OVERDUE, MARK_FLOAT
 	}
+
 	private MarkType type;
-	
+
 	/**
 	 * Mark a task with the given id
-	 * @param id the id of the task
+	 * 
+	 * @param id
+	 *            the id of the task
 	 */
 	public DonMarkCommand(int id) {
 		searchID = id;
 		type = MarkType.MARK_ID;
 		generalCommandType = GeneralCommandType.MARK;
 	}
-	
+
 	/**
 	 * Mark a task with the given title
-	 * @param string the title of the task
+	 * 
+	 * @param string
+	 *            the title of the task
 	 */
 	public DonMarkCommand(String string) {
 		searchTitle = string;
 		type = MarkType.MARK_STRING;
 		generalCommandType = GeneralCommandType.MARK;
 	}
-	
+
 	public DonMarkCommand(MarkType marktype) {
 		type = marktype;
 		generalCommandType = GeneralCommandType.MARK;
 	}
-	
+
 	public MarkType getMarkType() {
 		return type;
 	}
-	
+
 	/**
 	 * Toggles the "done" status of the task with the given ID
 	 * 
@@ -72,13 +73,14 @@ public class DonMarkCommand extends DonEditCommand {
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS, searchID,
-					(taskCompleted ? PHRASE_COMPLETE : PHRASE_INCOMPLETE)));
-			
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS,
+					searchID, (taskCompleted ? PHRASE_COMPLETE
+							: PHRASE_INCOMPLETE)));
+
 		}
 		return response;
 	}
-	
+
 	/**
 	 * Toggles the "done" status of the task with the given ID
 	 * 
@@ -95,19 +97,20 @@ public class DonMarkCommand extends DonEditCommand {
 			response.addMessage(MSG_NO_UNDONE_OVERDUE);
 
 		} else {
-			for(IDonTask task : tasks) {
+			for (IDonTask task : tasks) {
 				unchangedTask.add(task.clone());
 				boolean taskCompleted = !task.getStatus();
 				task.setStatus(taskCompleted);
 				response.addTask(task);
 			}
-			
-			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
-			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS,
+					tasks.size()));
 		}
 		return response;
 	}
-	
+
 	/**
 	 * Toggles the "done" status of the task with the given ID
 	 * 
@@ -117,21 +120,23 @@ public class DonMarkCommand extends DonEditCommand {
 	 */
 	private IDonResponse toggleStatusFloating(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> tasks = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, true);
+		List<IDonTask> tasks = SearchHelper.findTaskByType(donStorage,
+				TaskType.FLOATING, true, true);
 		if (tasks.isEmpty()) {
 			// No overdue task
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(MSG_NO_FLOATING);
 
 		} else {
-			for(IDonTask task : tasks) {
+			for (IDonTask task : tasks) {
 				unchangedTask.add(task.clone());
 				boolean taskCompleted = !task.getStatus();
 				task.setStatus(taskCompleted);
 				response.addTask(task);
 			}
-			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);			
-			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS, tasks.size()));
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS,
+					tasks.size()));
 		}
 		return response;
 	}
@@ -144,7 +149,7 @@ public class DonMarkCommand extends DonEditCommand {
 	 * @return the response
 	 */
 	private IDonResponse toggleStatusByTitle(IDonStorage donStorage) {
-		assert searchTitle!=null;
+		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
 
@@ -164,7 +169,7 @@ public class DonMarkCommand extends DonEditCommand {
 
 		return response;
 	}
-	
+
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		IDonResponse response = null;
@@ -177,12 +182,12 @@ public class DonMarkCommand extends DonEditCommand {
 		} else if (type == MarkType.MARK_FLOAT) {
 			response = toggleStatusFloating(donStorage);
 		}
-		
-		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {
+
+		if (response.getResponseType() == ResponseType.EDIT_SUCCESS) {
 			response.sortTask();
 			executed = true;
 		}
-		
+
 		return response;
 	}
 

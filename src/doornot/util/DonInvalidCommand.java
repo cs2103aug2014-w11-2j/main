@@ -6,43 +6,46 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 
 //@author A0111995Y
-public class DonInvalidCommand extends AbstractDonCommand{
-	
+public class DonInvalidCommand extends AbstractDonCommand {
+
 	public enum InvalidType {
-		INVALID_DATE,
-		INVALID_FORMAT,
-		INVALID_COMMAND
+		INVALID_DATE, INVALID_FORMAT, INVALID_COMMAND
 	}
-	
+
 	private String command;
 	private InvalidType type;
-	
+
 	/**
-	 * Creates an InvalidCommand 
-	 * @param type the type of invalid command
+	 * Creates an InvalidCommand
+	 * 
+	 * @param type
+	 *            the type of invalid command
 	 */
 	public DonInvalidCommand(InvalidType type) {
 		this.type = type;
 	}
-	
+
 	/**
 	 * Creates an InvalidCommand with the given command
-	 * @param type the type of InvalidCommand
-	 * @param str the command string
+	 * 
+	 * @param type
+	 *            the type of InvalidCommand
+	 * @param str
+	 *            the command string
 	 */
 	public DonInvalidCommand(InvalidType type, String str) {
 		this.type = type;
 		command = str;
 	}
-	
+
 	public InvalidType getType() {
 		return type;
 	}
-	
+
 	public String getStringInput() {
 		return command;
 	}
-	
+
 	/**
 	 * Creates a response for user entered commands with invalid formatting
 	 * 
@@ -78,16 +81,16 @@ public class DonInvalidCommand extends AbstractDonCommand{
 		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
 		return response;
 	}
-	
+
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
-	
+
 		IDonResponse response = null;
-		if(type==InvalidType.INVALID_COMMAND) {
+		if (type == InvalidType.INVALID_COMMAND) {
 			response = createInvalidCommandResponse();
-		} else if(type == InvalidType.INVALID_DATE) {
+		} else if (type == InvalidType.INVALID_DATE) {
 			response = createInvalidDateResponse();
-		} else if(type == InvalidType.INVALID_FORMAT) {
+		} else if (type == InvalidType.INVALID_FORMAT) {
 			response = createInvalidFormatResponse();
 		}
 		return response;

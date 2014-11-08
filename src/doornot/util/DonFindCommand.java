@@ -18,10 +18,8 @@ import doornot.util.SearchHelper;
 //@author A0111995Y
 public class DonFindCommand extends AbstractDonCommand {
 
-
 	public enum SearchType {
-		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, 
-		SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE;
+		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE;
 	}
 
 	private SearchType type;
@@ -115,18 +113,22 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks with the given name
 	 * 
-	 * @param donStorage the storage object containing the tasks
+	 * @param donStorage
+	 *            the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByName(IDonStorage donStorage) {
 		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findTaskByName(donStorage, searchTitle);//donStorage.getTaskList();
+		List<IDonTask> taskList = SearchHelper.findTaskByName(donStorage,
+				searchTitle);// donStorage.getTaskList();
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, searchTitle));
-			response.addMessage(String.format(MSG_SEARCH_NAME_FOUND, response.getTasks().size(), searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME,
+					searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_NAME_FOUND, response
+					.getTasks().size(), searchTitle));
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 			response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED,
@@ -139,19 +141,23 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks starting/occurring on a given date
 	 * 
-	 * @param donStorage the storage object containing the tasks
+	 * @param donStorage
+	 *            the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByDate(IDonStorage donStorage) {
 		assert searchStartDate != null;
 		IDonResponse response = new DonResponse();
 		boolean exactSearch = (isTimeUsed ? true : false);
-		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage, searchStartDate, exactSearch);
+		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage,
+				searchStartDate, exactSearch);
 		response.setTaskList(taskList);
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, searchStartDate.getTime().toString()));
-			response.addMessage(String.format(MSG_SEARCH_FOUND, response.getTasks().size()));
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME,
+					searchStartDate.getTime().toString()));
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 			String dateString = searchStartDate.get(Calendar.DATE)
@@ -173,7 +179,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * endDate is null, all tasks beginning after 9th of October 2014 will be
 	 * returned.
 	 * 
-	 * @param donStorage the storage object containing the tasks
+	 * @param donStorage
+	 *            the storage object containing the tasks
 	 * @param startDate
 	 *            the date to start searching from (inclusive)
 	 * @param endDate
@@ -187,12 +194,14 @@ public class DonFindCommand extends AbstractDonCommand {
 			Calendar startDate, Calendar endDate, int completeType) {
 		assert !(startDate == null && endDate == null);
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage, startDate, endDate, completeType);
+		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage,
+				startDate, endDate, completeType);
 		response.setTaskList(taskList);
 
 		if (response.getTasks().size() > 0) {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
-			response.addMessage(String.format(MSG_SEARCH_FOUND, response.getTasks().size()));
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
 		} else {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 			response.addMessage(MSG_SEARCH_FAILED);
@@ -203,7 +212,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find tasks given the ID
 	 * 
-	 * @param donStorage the storage object containing the tasks
+	 * @param donStorage
+	 *            the storage object containing the tasks
 	 * @return the response containing the tasks
 	 */
 	private IDonResponse findTaskByID(IDonStorage donStorage) {
@@ -225,7 +235,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	/**
 	 * Find all undone/incomplete tasks
 	 * 
-	 * @param donStorage the storage object containing the tasks
+	 * @param donStorage
+	 *            the storage object containing the tasks
 	 * @return the response containing incomplete tasks
 	 */
 	private IDonResponse findUndone(IDonStorage donStorage) {
@@ -235,7 +246,8 @@ public class DonFindCommand extends AbstractDonCommand {
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
 			response.addMessage(MSG_SEARCH_RESULT_UNDONE);
-			response.addMessage(String.format(MSG_SEARCH_UNDONE_FOUND, taskList.size()));
+			response.addMessage(String.format(MSG_SEARCH_UNDONE_FOUND,
+					taskList.size()));
 		} else {
 			response.addMessage(MSG_NO_UNDONE_TASKS);
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
@@ -269,7 +281,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse findLabel(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findLabel(donStorage, searchTitle);
+		List<IDonTask> taskList = SearchHelper.findLabel(donStorage,
+				searchTitle);
 		response.setTaskList(taskList);
 		if (!response.hasTasks()) {
 			// No task with given label found
@@ -278,18 +291,20 @@ public class DonFindCommand extends AbstractDonCommand {
 					searchTitle));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
-			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, "#"+searchTitle));
-			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND, taskList.size(), "#"+searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, "#"
+					+ searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND,
+					taskList.size(), "#" + searchTitle));
 		}
 
 		return response;
 	}
 
-
 	/**
 	 * Find free time in the user's schedule based on existing task and events.
 	 * For dates with no time stated, it is assumed that the user means that the
-	 * whole day is taken up. The free time periods are stored as tasks title "Free Time"
+	 * whole day is taken up. The free time periods are stored as tasks title
+	 * "Free Time"
 	 * 
 	 * @param donStorage
 	 *            the storage in which the tasks are located
@@ -300,8 +315,8 @@ public class DonFindCommand extends AbstractDonCommand {
 		// Get all tasks with deadlines or events that end after today
 		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
 				IDonTask.TaskType.DEADLINE, false, false);
-		taskList.addAll(SearchHelper.findTaskByType(donStorage, IDonTask.TaskType.DURATION,
-				false, false));
+		taskList.addAll(SearchHelper.findTaskByType(donStorage,
+				IDonTask.TaskType.DURATION, false, false));
 		Collections.sort(taskList);
 
 		if (taskList.size() <= 0) {
@@ -336,8 +351,9 @@ public class DonFindCommand extends AbstractDonCommand {
 					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
 					free.setStartDate(currentTask.getStartDate());
 					free.setEndDate(nextTask.getStartDate());
-					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
-					response.addTask(free);		
+					free.setTimeUsed(currentTask.isTimeUsed()
+							|| nextTask.isTimeUsed());
+					response.addTask(free);
 				}
 			} else {
 				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
@@ -345,7 +361,8 @@ public class DonFindCommand extends AbstractDonCommand {
 					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
 					free.setStartDate(currentTask.getEndDate());
 					free.setEndDate(nextTask.getStartDate());
-					free.setTimeUsed(currentTask.isTimeUsed() || nextTask.isTimeUsed());
+					free.setTimeUsed(currentTask.isTimeUsed()
+							|| nextTask.isTimeUsed());
 					response.addTask(free);
 				}
 			}
@@ -410,7 +427,9 @@ public class DonFindCommand extends AbstractDonCommand {
 
 	/**
 	 * Get overdue tasks
-	 * @param donStorage the storage in which the tasks are located
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
 	 * @return the response containing all the overdue tasks
 	 */
 	protected IDonResponse findOverdue(IDonStorage donStorage) {
@@ -418,26 +437,29 @@ public class DonFindCommand extends AbstractDonCommand {
 				Calendar.getInstance(), FIND_INCOMPLETE);
 		List<IDonTask> taskList = new ArrayList<IDonTask>();
 		for (IDonTask task : response.getTasks()) {
-			if ((task.getEndDate() != null
-					&& CalHelper.dateEqualOrBefore(task.getEndDate(),
-							Calendar.getInstance())) || task.getEndDate()==null) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
 				taskList.add(task);
-			} 
+			}
 		}
 		response.getMessages().set(0, MSG_SEARCH_RESULT_OVERDUE);
 		response.setResponseType(ResponseType.SEARCH_OVERDUE);
 		response.setTaskList(taskList);
 		return response;
 	}
-	
+
 	/**
 	 * Get all floating tasks
-	 * @param donStorage the storage in which the tasks are located
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
 	 * @return the response containing all the floating tasks
 	 */
 	protected IDonResponse findFloat(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
+		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
+				TaskType.FLOATING, true, false);
 		response.setTaskList(taskList);
 		if (response.hasTasks()) {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_FLOAT);
@@ -449,7 +471,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		}
 		return response;
 	}
-	
+
 	/**
 	 * Return all the tasks
 	 * 
@@ -467,7 +489,8 @@ public class DonFindCommand extends AbstractDonCommand {
 		} else {
 			response.setResponseType(ResponseType.SEARCH_SUCCESS);
 			response.addMessage(MSG_SEARCH_RESULT_DONE);
-			response.addMessage(String.format(MSG_SEARCH_FOUND, response.getTasks().size()));
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
 		}
 
 		return response;
@@ -506,8 +529,8 @@ public class DonFindCommand extends AbstractDonCommand {
 		} else if (type == SearchType.SEARCH_DONE) {
 			response = findDone(donStorage);
 		}
-		
-		if( type==SearchType.TODAY ) {
+
+		if (type == SearchType.TODAY) {
 			response.sortTask(new TodayTaskComparator());
 		} else {
 			response.sortTask();

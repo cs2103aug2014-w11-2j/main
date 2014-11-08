@@ -14,15 +14,18 @@ public class DonAddLabelCommand extends DonEditCommand {
 	public enum AddLabelType {
 		LABEL_ID, LABEL_NAME
 	}
-	
+
 	private AddLabelType type;
 	private String newLabel;
 	private static int MAX_LABEL = 3;
-	
+
 	/**
 	 * Creates an add label command that adds to the task with the given ID
-	 * @param id the id of the task
-	 * @param label the label to add
+	 * 
+	 * @param id
+	 *            the id of the task
+	 * @param label
+	 *            the label to add
 	 */
 	public DonAddLabelCommand(int id, String label) {
 		searchID = id;
@@ -30,9 +33,10 @@ public class DonAddLabelCommand extends DonEditCommand {
 		type = AddLabelType.LABEL_ID;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	/**
 	 * Creates an add label command that adds to a task with the given title
+	 * 
 	 * @param title
 	 * @param label
 	 */
@@ -42,27 +46,32 @@ public class DonAddLabelCommand extends DonEditCommand {
 		type = AddLabelType.LABEL_NAME;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	/**
 	 * Gets the specific type of command this AddLabelCommand is
+	 * 
 	 * @return the type of this command
 	 */
 	public AddLabelType getAddLabelType() {
 		return type;
 	}
-	
+
 	/**
 	 * Gets the label to be added to the task
-	 * @return 
+	 * 
+	 * @return
 	 */
 	public String getNewLabel() {
 		return newLabel;
 	}
-	
+
 	/**
 	 * Add a label to a task with the given id
-	 * @param id the task's id to search for and add a label to
-	 * @param labelName the name of the label to add
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
+	 * @param labelName
+	 *            the name of the label to add
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse addLabelByID(IDonStorage donStorage) {
@@ -76,36 +85,41 @@ public class DonAddLabelCommand extends DonEditCommand {
 			List<String> currentLabels = task.getLabels();
 			if (currentLabels.size() >= MAX_LABEL) {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_FAILED);
-				response.addMessage(String.format(MSG_LABEL_OVERLOAD, MAX_LABEL));
+				response.addMessage(String
+						.format(MSG_LABEL_OVERLOAD, MAX_LABEL));
 			} else {
 				unchangedTask.add(task.clone());
 				if (currentLabels.contains(newLabel)) {
 					response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
-					response.addMessage(String.format(MSG_LABEL_EXISTS, newLabel));
+					response.addMessage(String.format(MSG_LABEL_EXISTS,
+							newLabel));
 				} else {
 					task.addLabel(newLabel);
 					response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
-					response.addMessage(String.format(MSG_LABEL_ADDED_ID, newLabel, searchID));
+					response.addMessage(String.format(MSG_LABEL_ADDED_ID,
+							newLabel, searchID));
 					response.addTask(task);
 				}
 			}
-			
 
 		}
-		
+
 		return response;
 	}
-	
+
 	/**
-	 * Add a label to a task with the given name
-	 * If more than 1 task has the name, it will not add the label
-	 * @param id the task's id to search for and add a label to
-	 * @param labelName the name of the label to add
+	 * Add a label to a task with the given name If more than 1 task has the
+	 * name, it will not add the label
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
+	 * @param labelName
+	 *            the name of the label to add
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse addLabelByTitle(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		
+
 		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
 
 		if (foundTasks.size() > 1) {
@@ -122,7 +136,7 @@ public class DonAddLabelCommand extends DonEditCommand {
 			searchID = foundTasks.get(0).getID();
 			response = addLabelByID(donStorage);
 		}
-		
+
 		return response;
 	}
 
@@ -134,13 +148,12 @@ public class DonAddLabelCommand extends DonEditCommand {
 		} else if (type == AddLabelType.LABEL_NAME) {
 			response = addLabelByTitle(donStorage);
 		}
-		
+
 		if (response.getResponseType() == ResponseType.LABEL_ADDED) {
 			executed = true;
 		}
-		
+
 		return response;
 	}
-
 
 }

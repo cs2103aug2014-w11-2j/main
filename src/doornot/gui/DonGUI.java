@@ -84,7 +84,6 @@ public class DonGUI {
 	private String lastMsg = "";
 	private JTextField textField;
 	private JButton sendButton;
-	//private JButton helpButton;
 	private JScrollPane scrollPane_textarea;
 	private JTextArea textArea;
 	private JList<IDonTask> list;
@@ -174,19 +173,12 @@ public class DonGUI {
         MGP.start(loop);
     }
     
-	
-	private void sortByDate() {
-		Collections.sort(guiTaskList);
-	}
-
 	private void branchToPage(String cmd) {
-		// typeList.clearSelection();
 		switch (cmd) {
 		case "c":
 		case "console":
 			selectedPage = 7;
 			list.clearSelection();
-			// typeList.setListData(placeholder);
 			break;
 		case "t":
 		case "today":
@@ -253,6 +245,7 @@ public class DonGUI {
 		if (cmd.equals("c") || cmd.equals("console") || cmd.equals("t") || cmd.equals("today") || cmd.equals("w") || cmd.equals("week")
 				|| cmd.equals("u") || cmd.equals("future") || cmd.equals("f") || cmd.equals("float") || cmd.equals("l")
 				|| cmd.equals("all") || cmd.equals("o") || cmd.equals("overdue") || cmd.equals("r") || cmd.equals("results")) {
+			textField.setText("");
 			branchToPage(cmd);
 			return;
 		}
@@ -446,7 +439,6 @@ public class DonGUI {
 
 	private void renewList() {
 		guiTaskList = donLogic.getTaskList();
-		sortByDate();
 		parseType();
 		setTypeData();
 		typeList.setListData(placeholder);
@@ -626,7 +618,6 @@ public class DonGUI {
 		});
 		frmDoornot.setTitle("DoOrNot v0.5");
 		frmDoornot.setBounds(100, 100, 646, 528);
-		//frmDoornot.setUndecorated(true);
 		frmDoornot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmDoornot.addWindowListener(new WindowEventHandler());
 		frmDoornot.addMouseListener(new MouseAdapter() {
@@ -671,7 +662,6 @@ public class DonGUI {
 		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0,
 				Double.MIN_VALUE };
 		frmDoornot.getContentPane().setLayout(gridBagLayout);
-		// frmDoornot.getContentPane().add(helpButton);
 
 		textField = new JTextField();
 		textField.addKeyListener(new KeyAdapter() {
@@ -730,7 +720,6 @@ public class DonGUI {
 		});
 		
 		panel = new JPanel() {
-			private static final long serialVersionUID = 1L;
 
 			protected void paintComponent(Graphics g) {
 				Image resizedLogo = logo.getScaledInstance(panel.getWidth(),
@@ -767,11 +756,9 @@ public class DonGUI {
 		gbc_datePanel.gridx = 0;
 		gbc_datePanel.gridy = 0;
 		frmDoornot.getContentPane().add(datePanel, gbc_datePanel);
-		// monthyearFormat.applyPattern("hh:mm:ss");
 		GridBagLayout gbl_datePanel = new GridBagLayout();
 		gbl_datePanel.columnWidths = new int[] { 80, 0 };
 		gbl_datePanel.rowHeights = new int[] { 50, 30 };
-		// gbl_datePanel.columnWeights = new double[]{5, 3};
 		gbl_datePanel.rowWeights = new double[] { 5, 3 };
 		datePanel.setLayout(gbl_datePanel);
 
@@ -822,20 +809,9 @@ public class DonGUI {
 			}
 		});
 		
-		/*
-		helpButton = new JButton("?");
-		//helpButton.setHorizontalAlignment(SwingConstants.WEST);
-		GridBagConstraints gbc_helpButton = new GridBagConstraints();
-		gbc_helpButton.fill = GridBagConstraints.BOTH;
-		gbc_helpButton.gridx = 0;
-		gbc_helpButton.gridy = 4;
-		gbc_helpButton.gridwidth = 1;
-		frmDoornot.getContentPane().add(helpButton, gbc_helpButton);
-		*/
 		buttomFiller = new JLabel("DoOrNot v0.5");
 		buttomFiller.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_buttomFiller = new GridBagConstraints();
-		//gbc_buttomFiller.anchor = GridBagConstraints.SOUTH;
 		gbc_buttomFiller.fill = GridBagConstraints.BOTH;
 		gbc_buttomFiller.gridx = 0;
 		gbc_buttomFiller.gridy = 4;
@@ -1033,7 +1009,6 @@ public class DonGUI {
 			logo = ImageIO.read(DonGUI.class.getResource("DoOrNot.png"));
 			noTaskImage = ImageIO.read(DonGUI.class.getResource("notask.png"));
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		renewList();
@@ -1173,8 +1148,6 @@ public class DonGUI {
 			gbl.rowHeights = new int[] { 50, 20 };
 			gbl.columnWeights = new double[] { 67, 268, 67, 38, 39 };
 			gbl.rowWeights = new double[] { 5.0, 2.0 };
-			// GridBagConstraints gbc = new GridBagConstraints();
-			// gbc.insets = new Insets(0,5,0,0);
 			p.setLayout(gbl);
 			setOpaque(true);
 			setIconTextGap(12);
@@ -1184,7 +1157,6 @@ public class DonGUI {
 
 			GridBagConstraints gbc_id = new GridBagConstraints();
 			gbc_id.gridheight = 2;
-			// gbc_textArea_2.insets = new Insets(0, 0, 0, 5);
 			gbc_id.fill = GridBagConstraints.BOTH;
 			gbc_id.gridx = 0;
 			gbc_id.gridy = 0;
@@ -1264,7 +1236,6 @@ public class DonGUI {
 				if (entry.getType() == IDonTask.TaskType.DURATION) {
 					if (isSameDay(entry.getEndDate(), current)) {
 						id.setText("last d\n"+printTodayTime(entry.getEndDate()));
-						//id.setText(printTodayTime(entry.getEndDate()));
 					} else {
 						int day = dateDiff(current, entry.getStartDate()) + 1;
 						if (day % 10 == 1 && day % 100 != 11)
@@ -1365,50 +1336,6 @@ public class DonGUI {
 		}
 	}
 
-	public static class TimeComparator implements Comparator<IDonTask> {
-		@Override
-		public int compare(IDonTask task1, IDonTask task2) {
-			if (task1.getType() == IDonTask.TaskType.FLOATING) {
-				if (task2.getType() == IDonTask.TaskType.FLOATING) {
-					return task1.getTitle().compareTo(task2.getTitle());
-				} else {
-					return 1;
-				}
-			} else if (task1.getType() == IDonTask.TaskType.DEADLINE) {
-				if (task2.getType() == IDonTask.TaskType.FLOATING) {
-					return -1;
-				} else if (task2.getType() == IDonTask.TaskType.DEADLINE) {
-					int startDateComp = task1.getStartDate().compareTo(
-							task2.getStartDate());
-					return (startDateComp == 0) ? task1.getTitle().compareTo(
-							task2.getTitle()) : startDateComp;
-				} else {
-					int mixDateComp = task1.getStartDate().compareTo(
-							task2.getEndDate());
-					return (mixDateComp == 0) ? -1 : mixDateComp;
-				}
-			} else {
-				if (task2.getType() == IDonTask.TaskType.FLOATING) {
-					return -1;
-				} else if (task2.getType() == IDonTask.TaskType.DEADLINE) {
-					int mixDateComp = task1.getEndDate().compareTo(
-							task2.getStartDate());
-					return (mixDateComp == 0) ? 1 : mixDateComp;
-				} else {
-					int endDateComp = task1.getEndDate().compareTo(
-							task2.getEndDate());
-					if (endDateComp == 0) {
-						int startDateComp = task1.getStartDate().compareTo(
-								task2.getStartDate());
-						return (startDateComp == 0) ? task1.getTitle()
-								.compareTo(task2.getTitle()) : startDateComp;
-					} else {
-						return endDateComp;
-					}
-				}
-			}
-		}
-	}
 	
 	class Alb implements ActionListener {
 		Timer timer;

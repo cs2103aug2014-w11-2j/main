@@ -18,7 +18,6 @@ import doornot.util.DonHelpCommand;
 import doornot.util.DonInvalidCommand;
 import doornot.util.DonInvalidCommand.InvalidType;
 import doornot.util.DonMarkCommand;
-import doornot.util.AbstractDonCommand.GeneralCommandType;
 import doornot.util.DonAddLabelCommand.AddLabelType;
 import doornot.util.DonCreateCommand.AddType;
 import doornot.util.DonDelabelCommand.DelabelType;

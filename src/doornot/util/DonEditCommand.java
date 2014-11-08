@@ -25,7 +25,7 @@ public class DonEditCommand extends AbstractDonCommand {
 	private Calendar newDeadline, newStartDate, newEndDate;
 	private boolean isTimeUsed, isStartDate = true;
 	protected List<IDonTask> unchangedTask = new ArrayList<IDonTask>();
-	
+
 	protected DonEditCommand() {
 		generalCommandType = GeneralCommandType.EDIT;
 	}
@@ -131,31 +131,31 @@ public class DonEditCommand extends AbstractDonCommand {
 		this.isTimeUsed = isTimeUsed;
 		generalCommandType = GeneralCommandType.EDIT;
 	}
-	
+
 	public String getNewTitle() {
 		return newTitle;
 	}
-	
+
 	public int getSearchID() {
 		return searchID;
 	}
-	
+
 	public String getSearchTitle() {
 		return searchTitle;
 	}
-	
+
 	public Calendar getNewDeadline() {
 		return newDeadline;
 	}
-	
+
 	public Calendar getNewStartDate() {
 		return newStartDate;
 	}
-	
+
 	public Calendar getNewEndDate() {
 		return newEndDate;
 	}
-	
+
 	public EditType getType() {
 		return type;
 	}
@@ -205,8 +205,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
-			response.addMessage(String.format(MSG_MATCHING_RESULTS,
-					searchTitle));
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 
@@ -246,14 +246,17 @@ public class DonEditCommand extends AbstractDonCommand {
 			Calendar oldDate = null;
 			String dateType = "";
 			if (task.getType() == IDonTask.TaskType.FLOATING) {
-				// If a user edits the (non-existent) deadline of a floating task, the deadline is added
-				// This can be undone but no command exists to remove the deadline to turn it back to a 
+				// If a user edits the (non-existent) deadline of a floating
+				// task, the deadline is added
+				// This can be undone but no command exists to remove the
+				// deadline to turn it back to a
 				// floating task
 				dateType = PHRASE_DEADLINE;
 				task.setStartDate(newDeadline);
 				task.setTimeUsed(isTimeUsed);
-				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
-						dateType, newDeadline.getTime().toString()));
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, dateType, newDeadline
+								.getTime().toString()));
 			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
 				dateType = PHRASE_DEADLINE;
 				oldDate = task.getStartDate();
@@ -302,8 +305,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
-			response.addMessage(String.format(MSG_MATCHING_RESULTS,
-					searchTitle));
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 			response.setTaskList(foundTasks);
@@ -339,17 +342,22 @@ public class DonEditCommand extends AbstractDonCommand {
 		} else {
 			unchangedTask.add(task.clone());
 			Calendar oldStartDate = null, oldEndDate = null;
-			if (task.getType() == IDonTask.TaskType.FLOATING || task.getType() == IDonTask.TaskType.DEADLINE) {
-				// If a user edits the (non-existent) start+end date of a floating/deadline task, they are added
-				// This can be undone but no command exists to remove the dates to turn it back to a 
+			if (task.getType() == IDonTask.TaskType.FLOATING
+					|| task.getType() == IDonTask.TaskType.DEADLINE) {
+				// If a user edits the (non-existent) start+end date of a
+				// floating/deadline task, they are added
+				// This can be undone but no command exists to remove the dates
+				// to turn it back to a
 				// floating task
 				task.setStartDate(newStartDate);
 				task.setEndDate(newEndDate);
 				task.setTimeUsed(isTimeUsed);
-				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
-						PHRASE_START_DATE, newStartDate.getTime().toString()));
-				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_ADD_SUCCESS,
-						PHRASE_END_DATE, newEndDate.getTime().toString()));
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, PHRASE_START_DATE,
+						newStartDate.getTime().toString()));
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, PHRASE_END_DATE,
+						newEndDate.getTime().toString()));
 			} else if (task.getType() == IDonTask.TaskType.DURATION) {
 				oldStartDate = task.getStartDate();
 				task.setStartDate(newStartDate);
@@ -358,7 +366,7 @@ public class DonEditCommand extends AbstractDonCommand {
 				task.setEndDate(newEndDate);
 
 				task.setTimeUsed(isTimeUsed);
-				
+
 				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
 						PHRASE_START_DATE, oldStartDate.getTime().toString(),
 						newStartDate.getTime().toString()));
@@ -369,7 +377,6 @@ public class DonEditCommand extends AbstractDonCommand {
 
 			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
 			response.addTask(task);
-			
 
 		}
 		return response;
@@ -392,8 +399,8 @@ public class DonEditCommand extends AbstractDonCommand {
 
 		if (foundTasks.size() > 1) {
 			response.setResponseType(ResponseType.EDIT_FAILURE);
-			response.addMessage(String.format(MSG_MATCHING_RESULTS,
-					searchTitle));
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
 			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
 					searchTitle));
 			response.setTaskList(foundTasks);
@@ -441,19 +448,19 @@ public class DonEditCommand extends AbstractDonCommand {
 			return null;
 		}
 		IDonResponse response = null;
-	
+
 		int count = 0;
-		for(IDonTask task : unchangedTask) {
+		for (IDonTask task : unchangedTask) {
 			int id = task.getID();
 			IDonTask changedTask = donStorage.getTask(id);
-			if(changedTask == null) {
-				
+			if (changedTask == null) {
+
 			} else {
 				changedTask.copyTaskDetails(task);
 				count++;
 			}
 		}
-		if(count!=unchangedTask.size()) {
+		if (count != unchangedTask.size()) {
 			// Could not find for some reason.
 			response = createUndoFailureResponse();
 		} else {
@@ -461,7 +468,7 @@ public class DonEditCommand extends AbstractDonCommand {
 			executed = false;
 			unchangedTask.clear();
 		}
-		
+
 		return response;
 	}
 
