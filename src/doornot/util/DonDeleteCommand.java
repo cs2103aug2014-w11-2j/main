@@ -313,7 +313,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		}
 		
 		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {
-			Collections.sort(response.getTasks());
+			response.sortTask();
 			executed = true;
 		}
 		return response;

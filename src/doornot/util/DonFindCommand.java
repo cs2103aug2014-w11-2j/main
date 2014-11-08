@@ -508,9 +508,9 @@ public class DonFindCommand extends AbstractDonCommand {
 		}
 		
 		if( type==SearchType.TODAY ) {
-			Collections.sort(response.getTasks(), new DateTaskComparator());
+			response.sortTask(new TodayTaskComparator());
 		} else {
-			Collections.sort(response.getTasks());
+			response.sortTask();
 		}
 		return response;
 	}

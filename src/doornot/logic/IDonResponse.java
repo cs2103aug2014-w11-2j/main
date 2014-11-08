@@ -1,8 +1,10 @@
 package doornot.logic;
 
+import java.util.Comparator;
 import java.util.List;
 
 import doornot.storage.IDonTask;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Interface defining the methods that the GUI needs from a IDonResponse object
@@ -93,4 +95,8 @@ public interface IDonResponse {
 	 *            the response to copy tasks from
 	 */
 	public void copyTasks(IDonResponse response);
+	
+	public void sortTask(Comparator<IDonTask> comp);
+	
+	public void sortTask();
 }

@@ -1,9 +1,11 @@
 package doornot.logic;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import doornot.storage.IDonTask;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Class defining a response object
@@ -71,6 +73,16 @@ public class DonResponse implements IDonResponse {
 	@Override
 	public void setTaskList(List<IDonTask> tasks) {
 		this.tasks = tasks;
+	}
+	
+	@Override
+	public void sortTask(Comparator<IDonTask> comp) {
+		Collections.sort(tasks, comp);
+	}
+	
+	@Override
+	public void sortTask() {
+		Collections.sort(tasks);
 	}
 
 }

@@ -179,7 +179,7 @@ public class DonMarkCommand extends DonEditCommand {
 		}
 		
 		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {
-			Collections.sort(response.getTasks());
+			response.sortTask();
 			executed = true;
 		}
 		

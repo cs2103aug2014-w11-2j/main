@@ -1,5 +1,6 @@
- * DonGUI - Graphic interface of DoOrNot V0.4
-
+/**
+* DonGUI - Graphic interface of DoOrNot V0.4
+**/
 package doornot.gui;
 
 import java.awt.Component;

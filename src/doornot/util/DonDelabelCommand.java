@@ -192,7 +192,7 @@ public class DonDelabelCommand extends DonEditCommand {
 		}
 		
 		if (response.getResponseType() == ResponseType.LABEL_REMOVED) {
-			Collections.sort(response.getTasks());
+			response.sortTask();
 			executed = true;
 		}
 		
