@@ -115,14 +115,14 @@ public class DonGUI {
 	private int selectedPage = 1;
 	private int selectedCmd = -1;
 	private JLabel searchLabel;
-	private Timer timerg;
-	private int flashcode = -1;
-	private int curr = -2;
-	private int flashcode2 = -1;
-	private int curr2 = -2;
+	private Timer globalTimer;
+	private int flashcode_panel = -1;
+	private int currentHighlightedPanel = -2;
+	private int flashcode_task = -1;
+	private int currentHighlightedTask = -2;
 	private boolean delflag = false;
 	private String curSearchString = "";
-	private MyDialog dlg = new MyDialog(frmDoornot);
+	private AboutDialog aboutDialog = new AboutDialog(frmDoornot);
 
 	/**
 	 * Launch the application.
@@ -251,8 +251,8 @@ public class DonGUI {
 		if (rp.hasTasks() && (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || 
 				rp.getResponseType() == IDonResponse.ResponseType.EDIT_SUCCESS)){
 			delflag = false;
-			flashcode = judgeType(rp.getTasks().get(0));
-			flashcode2 = rp.getTasks().get(0).getID();			
+			flashcode_panel = judgeType(rp.getTasks().get(0));
+			flashcode_task = rp.getTasks().get(0).getID();			
 		}
 		if (rp.hasTasks()
 				&& (rp.getResponseType() == IDonResponse.ResponseType.SEARCH_SUCCESS
@@ -272,7 +272,7 @@ public class DonGUI {
 		}
 		if (rp.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
 			if(rp.getTasks().size() > 0){
-				flashcode = judgeType(rp.getTasks().get(0));
+				flashcode_panel = judgeType(rp.getTasks().get(0));
 				delflag = true;
 			}
 			if (searchList != null) {
@@ -569,7 +569,7 @@ public class DonGUI {
 	}
 
 
-	ActionListener alg = new ActionListener(){
+	ActionListener globalTimerListener = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			typeList.setCellRenderer(new TypeCellRenderer());
 			textField.requestFocusInWindow();
@@ -621,9 +621,9 @@ public class DonGUI {
 			}
 		});
 		
-		timerg = new Timer(1000, alg);
-		timerg.setRepeats(true);
-		timerg.start();
+		globalTimer = new Timer(1000, globalTimerListener);
+		globalTimer.setRepeats(true);
+		globalTimer.start();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 63, 386, 69, 50, 10,0 };
@@ -704,8 +704,8 @@ public class DonGUI {
 		
 		panel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				dlg.setLocationRelativeTo(frmDoornot);
-				dlg.setVisible(true);
+				aboutDialog.setLocationRelativeTo(frmDoornot);
+				aboutDialog.setVisible(true);
 			}
 		});
 
@@ -1041,15 +1041,15 @@ public class DonGUI {
 				p.setBorder(null);
 			}
 			
-			if(typecode == flashcode){
-				if(curr == flashcode){
+			if(typecode == flashcode_panel){
+				if(currentHighlightedPanel == flashcode_panel){
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));	
 				} else {
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));
-					curr = flashcode;
-					new PanelHightlightTimer(1000);
+					currentHighlightedPanel = flashcode_panel;
+					new PanelHighlightTimer(1000);
 				}
 			} else {
 				if (isSelected || selectedPage - 1 == index) {
@@ -1170,13 +1170,13 @@ public class DonGUI {
 			Calendar current = Calendar.getInstance();
 			IDonTask entry = (IDonTask) value;
 			
-			if(entry.getID() == flashcode2 && entry.getID() != -1){
-				if(curr2 == flashcode2){
+			if(entry.getID() == flashcode_task && entry.getID() != -1){
+				if(currentHighlightedTask == flashcode_task){
 					p.setBorder(new LineBorder(Color.green, 3));
 				} else {
 					p.setBorder(new LineBorder(Color.green, 3));
-					curr2 = flashcode2;
-					new TaskHightlightTimer(1000);
+					currentHighlightedTask = flashcode_task;
+					new TaskHighlightTimer(1000);
 				}
 			} else {
 				p.setBorder(null);
@@ -1341,36 +1341,36 @@ public class DonGUI {
 		}
 	}
 	
-	class PanelHightlightTimer implements ActionListener {
+	class PanelHighlightTimer implements ActionListener {
 		Timer timer;
-		PanelHightlightTimer(int delay){
+		PanelHighlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			curr = -2;
-			flashcode = -1;
+			currentHighlightedPanel = -2;
+			flashcode_panel = -1;
 			timer.stop();
 		}
 	}
 	
-	class TaskHightlightTimer implements ActionListener {
+	class TaskHighlightTimer implements ActionListener {
 		Timer timer;
-		TaskHightlightTimer(int delay){
+		TaskHighlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			curr2 = -2;
-			flashcode2 = -1;
+			currentHighlightedTask = -2;
+			flashcode_task = -1;
 			timer.stop();
 		}
 	}
 	
-	class MyDialog extends JDialog {
-		  public MyDialog(JFrame parent) {
+	class AboutDialog extends JDialog {
+		  public AboutDialog(JFrame parent) {
 		    super(parent, "About", true);
 		    Container cp = getContentPane();
 		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
