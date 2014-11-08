@@ -76,14 +76,15 @@ all
 
 
 === MISC ===
-{fl || float || floating}
-{od || overdue}
-{result || results}
-week
-today
-future
-undo
-redo
+{f || fl || float || floating}
+{o || od || overdue}
+{r || result || results}
+{c || console}
+{w || week}
+{t || today}
+{u || future}
+{un || undo}
+{re || redo}
 exit
 
 === HELP ===
