@@ -1,8 +1,6 @@
 /**
- * DonGUI - Graphic interface of DoOrNot V0.4
- * @author Lin Daqi (A0119423L)
- */
-
+* DonGUI - Graphic interface of DoOrNot V0.5
+**/
 package doornot.gui;
 
 import java.awt.Component;
@@ -18,6 +16,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.ListCellRenderer;
@@ -76,7 +75,7 @@ import java.awt.Insets;
 
 import sun.audio.*;
 
-public class DonGUIV3 {
+public class DonGUI {
 
 	private JFrame frmDoornot;
 	DonLogic donLogic = new DonLogic();
@@ -133,7 +132,7 @@ public class DonGUIV3 {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					DonGUIV3 window = new DonGUIV3();
+					DonGUI window = new DonGUI();
 					window.frmDoornot.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -145,7 +144,7 @@ public class DonGUIV3 {
 	/**
 	 * Create the application.
 	 */
-	public DonGUIV3() {
+	public DonGUI() {
 		initialize();
 	}
 
@@ -161,7 +160,7 @@ public class DonGUIV3 {
 
         try
         {
-            InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");//new FileInputStream("ring.wav");
+		    InputStream ringStream = DonGUI.class.getResourceAsStream("ring.wav");
             BGM = new AudioStream(ringStream);
             AudioPlayer.player.start(BGM);
         }
@@ -597,38 +596,20 @@ public class DonGUIV3 {
 			return 5;
 		}
 	}
-
-	private void parseType() {
-		overdueList = new ArrayList<IDonTask>();
-		todayList = new ArrayList<IDonTask>();
-		weekList = new ArrayList<IDonTask>();
-		farList = new ArrayList<IDonTask>();
-		floatList = new ArrayList<IDonTask>();
-
-		for (IDonTask task : guiTaskList) {
-			if (!task.getStatus()) {
-				if (dued(task)) {
-					overdueList.add(task);
-				} else {
-					if (isToday(task)) {
-						todayList.add(task);
-						weekList.add(task);
-					} else if (isWithinWeek(task)) {
-						weekList.add(task);
-					} else if (task.getStartDate() == null) {
-						floatList.add(task);
-					} else {
-						farList.add(task);
-					}
-				}
-			}
-		}
-
+	
+	private void parseType(){
+		overdueList = donLogic.runCommand("overdue").getTasks();
+		todayList = donLogic.runCommand("today").getTasks();
+		weekList = donLogic.runCommand("week").getTasks();
+		farList = donLogic.runCommand("future").getTasks();
+		floatList = donLogic.runCommand("float").getTasks();
 	}
+
 
 	ActionListener alg = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			typeList.setCellRenderer(new TypeCellRenderer());
+			textField.requestFocusInWindow();
 		}
 	};
 
@@ -732,6 +713,19 @@ public class DonGUIV3 {
 					typeList.setCellRenderer(new TypeCellRenderer());
 				}
 
+			}
+		});
+		textField.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_PAGE_UP){
+					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
+					vs.setValue(vs.getValue() - 20);
+				}
+
+				if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN){
+					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
+					vs.setValue(vs.getValue() + 20);
+				}
 			}
 		});
 		
@@ -931,7 +925,7 @@ public class DonGUIV3 {
 		gbc_scrollPane_list.gridx = 1;
 		gbc_scrollPane_list.gridy = 1;
 		gbc_scrollPane_list.weighty = 1;
-		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);
+		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);		
 
 		list = new JList<IDonTask>();
 		scrollPane_list.setViewportView(list);
@@ -1036,8 +1030,8 @@ public class DonGUIV3 {
 		frmDoornot.getContentPane().add(infoPane, gbc_infoPane);
 
 		try {
-			logo = ImageIO.read(DonGUIV3.class.getResource("DoOrNot.png"));
-			noTaskImage = ImageIO.read(DonGUIV3.class.getResource("notask.png"));
+			logo = ImageIO.read(DonGUI.class.getResource("DoOrNot.png"));
+			noTaskImage = ImageIO.read(DonGUI.class.getResource("notask.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1047,6 +1041,10 @@ public class DonGUIV3 {
 	}
 
 	class WindowEventHandler extends WindowAdapter {
+	    public void windowOpened(WindowEvent e) {
+	        textField.requestFocusInWindow();
+	    }			
+
 		public void windowClosing(WindowEvent e) {
 			donLogic.saveToDrive();
 		}
@@ -1265,7 +1263,8 @@ public class DonGUIV3 {
 			if (isToday(entry) && selectedPage == 1) {
 				if (entry.getType() == IDonTask.TaskType.DURATION) {
 					if (isSameDay(entry.getEndDate(), current)) {
-						id.setText(printTodayTime(entry.getEndDate()));
+						id.setText("last d\n"+printTodayTime(entry.getEndDate()));
+						//id.setText(printTodayTime(entry.getEndDate()));
 					} else {
 						int day = dateDiff(current, entry.getStartDate()) + 1;
 						if (day % 10 == 1 && day % 100 != 11)

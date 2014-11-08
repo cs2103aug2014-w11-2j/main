@@ -7,6 +7,7 @@ import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonDelabelCommand extends DonEditCommand {
@@ -191,6 +192,7 @@ public class DonDelabelCommand extends DonEditCommand {
 		}
 		
 		if (response.getResponseType() == ResponseType.LABEL_REMOVED) {
+			response.sortTask();
 			executed = true;
 		}
 		

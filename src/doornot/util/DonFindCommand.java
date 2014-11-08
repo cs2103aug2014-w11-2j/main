@@ -506,6 +506,12 @@ public class DonFindCommand extends AbstractDonCommand {
 		} else if (type == SearchType.SEARCH_DONE) {
 			response = findDone(donStorage);
 		}
+		
+		if( type==SearchType.TODAY ) {
+			response.sortTask(new TodayTaskComparator());
+		} else {
+			response.sortTask();
+		}
 		return response;
 	}
 
