@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import doornot.DonStorageTestStub;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
@@ -145,16 +146,6 @@ public class UtilityUnitTest {
 		boolean result3 = CalHelper.relevantEquals(new GregorianCalendar(2012, 2, 2, 9, 1),
 				new GregorianCalendar(2012, 2, 1, 9, 1));
 		assertFalse(result3);
-	}
-	
-	@Test
-	public void testCalendarDaysFromToday() {
-		Calendar result = CalHelper.getDaysFromNow(4);
-		Calendar expected = new GregorianCalendar();
-		expected.add(Calendar.DAY_OF_MONTH, 4);
-		
-		assertEquals(expected, result);
-
 	}
 
 	private class DonTaskTestStub implements IDonTask {
@@ -304,55 +295,6 @@ public class UtilityUnitTest {
 		public Calendar getEndDate() {
 			return end;
 		}
-	}
-
-	private class DonStorageTestStub implements IDonStorage {
-		private List<IDonTask> taskList;
-
-		@Override
-		public int addTask(IDonTask task) {
-			return 0;
-		}
-
-		@Override
-		public boolean removeTask(int taskID) {
-			return false;
-		}
-
-		@Override
-		public int getNextID() {
-			return 0;
-		}
-
-		@Override
-		public IDonTask getTask(int ID) {
-			return null;
-		}
-
-		@Override
-		public List<IDonTask> getTaskByName(String name) {
-			return null;
-		}
-
-		@Override
-		public boolean saveToDisk() {
-			return false;
-		}
-
-		@Override
-		public boolean loadFromDisk() {
-			return false;
-		}
-
-		@Override
-		public List<IDonTask> getTaskList() {
-			return taskList;
-		}
-
-		public void setTaskList(List<IDonTask> taskList) {
-			this.taskList = taskList;
-		}
-
 	}
 
 }
