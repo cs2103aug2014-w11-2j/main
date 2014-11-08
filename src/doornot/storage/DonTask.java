@@ -230,7 +230,7 @@ public class DonTask implements IDonTask {
 	 *         other task is larger
 	 */
 	private int compareTitle(IDonTask otherTask) {
-		return this.getTitle().compareTo(otherTask.getTitle());
+		return this.getTitle().compareToIgnoreCase(otherTask.getTitle());
 	}
 
 	/**

@@ -28,7 +28,7 @@ public class TodayTaskComparator implements Comparator<IDonTask> {
 			int startDateComp = task1.getStartDate().compareTo(
 					task2.getStartDate());
 			if (startDateComp == 0) {
-				return task1.getTitle().compareTo(task2.getTitle());
+				return task1.getTitle().compareToIgnoreCase(task2.getTitle());
 			}
 
 			return startDateComp;
@@ -47,7 +47,7 @@ public class TodayTaskComparator implements Comparator<IDonTask> {
 			if (startDateComp != 0 && endDateComp == 0) {
 				return startDateComp;
 			} else if (startDateComp == 0 && endDateComp == 0) {
-				return task1.getTitle().compareTo(task2.getTitle());
+				return task1.getTitle().compareToIgnoreCase(task2.getTitle());
 			}
 
 			return endDateComp;

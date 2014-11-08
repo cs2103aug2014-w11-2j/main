@@ -1,5 +1,5 @@
 /**
-* DonGUI - Graphic interface of DoOrNot V0.4
+* DonGUI - Graphic interface of DoOrNot V0.5
 **/
 package doornot.gui;
 
@@ -624,7 +624,7 @@ public class DonGUIV3 {
 				donLogic.saveToDrive();
 			}
 		});
-		frmDoornot.setTitle("DoOrNot v0.4");
+		frmDoornot.setTitle("DoOrNot v0.5");
 		frmDoornot.setBounds(100, 100, 646, 528);
 		//frmDoornot.setUndecorated(true);
 		frmDoornot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -832,7 +832,7 @@ public class DonGUIV3 {
 		gbc_helpButton.gridwidth = 1;
 		frmDoornot.getContentPane().add(helpButton, gbc_helpButton);
 		*/
-		buttomFiller = new JLabel("DoOrNot v0.4");
+		buttomFiller = new JLabel("DoOrNot v0.5");
 		buttomFiller.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_buttomFiller = new GridBagConstraints();
 		//gbc_buttomFiller.anchor = GridBagConstraints.SOUTH;
