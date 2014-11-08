@@ -75,80 +75,33 @@ public abstract class AbstractDonCommand {
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;
 	protected static final int FIND_ALL = 2;
-	/*
-	//TODO Should only contain types denoting validity and global commands like undo/redo
-	public static enum CommandType {
-		ADD_FLOAT, 
-		ADD_TASK, 
-		ADD_EVENT, 
-		
-		EDIT_ID_NAME, 
-		EDIT_ID_DATE, 
-		EDIT_ID_EVENT,
-		EDIT_NAME, 
-		EDIT_DATE, 
-		EDIT_EVENT, 
-		
-		DELETE_ID, 
-		DELETE, 
-		
-		SEARCH_NAME, 
-		SEARCH_DATE, 
-		SEARCH_ID,
-		
-		SEARCH_LABEL,
-		SEARCH_FREE,
-		SEARCH_UNDONE,
-		SEARCH_ALL,
-		SEARCH_AFTDATE,
-		TODAY,
-		OVERDUE,
-		
-		MARK_ID, 
-		MARK,
-		
-		HELP_ADD,
-		HELP_EDIT,
-		HELP_SEARCH,
-		HELP_DELETE,
-		HELP_MARK,
-		HELP_UNDO,
-		HELP_REDO,
-		// for help with all commands in general. I think undo goes here
-		HELP_GENERAL,
-		
-		LABEL_ID,
-		LABEL_NAME,
-		DELABEL_ID,
-		DELABEL_NAME,
-		
-		UNDO,
-		REDO,
-		
-		INVALID_COMMAND,
-		// when format of command is wrongly typed
-		INVALID_FORMAT,
-		INVALID_DATE,
-		EXIT,
-		HELP
-	}
-	*/
+	
 	public static enum GeneralCommandType {
 		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
 	}
-	
-	//protected CommandType commandType;
-	
+
 	protected GeneralCommandType generalCommandType;
 	
 	protected boolean executed = false; //Set to true when execution has finished to allow undo to take place
 	
-	protected boolean error = false;
-	
+	/**
+	 * Runs the AbstractDonCommand on tasks stored in donStorage
+	 * @param donStorage the storage object containing the user's tasks
+	 * @return the response produced by execution of the command
+	 */
 	public abstract IDonResponse executeCommand(IDonStorage donStorage);
 	
+	/**
+	 * Reverses the action performed by the AbstractDonCommand in executeCommand
+	 * @param donStorage the storage object containing the user's tasks
+	 * @return the response produced by reversing the command
+	 */
 	public abstract IDonResponse undoCommand(IDonStorage donStorage);
 	
+	/**
+	 * Creates a standard failure response for the undo function
+	 * @return the undo failure response
+	 */
 	protected IDonResponse createUndoFailureResponse() {
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
@@ -156,6 +109,11 @@ public abstract class AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Creates a standard success response for the undo function
+	 * @param num the number of changes reversed
+	 * @return the undo failure response
+	 */
 	protected IDonResponse createUndoSuccessResponse(int num) {
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
@@ -163,32 +121,32 @@ public abstract class AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Creates a standard search failure response
+	 * @param searchString the search string which failed the search
+	 * @return the search failure response
+	 */
 	protected IDonResponse createSearchFailedResponse(String searchString) {
 		IDonResponse response = new DonResponse();
 		response.setResponseType(ResponseType.SEARCH_EMPTY);
 		response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, searchString));
 		return response;
 	}
-	/*
-	public void setType(CommandType type){
-		commandType = type;
-	}
 	
-	public CommandType getType() {
-		return commandType;
-	}
-	*/
-	
+	/**
+	 * Gets the general command type of the AbstractDonCommand
+	 * @return the general type
+	 */
 	public GeneralCommandType getGeneralType() {
 		return generalCommandType;
 	}
 	
+	/**
+	 * Returns whether the AbstractDonCommand object has been executed
+	 * @return
+	 */
 	public boolean hasExecuted() {
 		return executed;
-	}
-	
-	public boolean hasError() {
-		return error;
 	}
 	
 }

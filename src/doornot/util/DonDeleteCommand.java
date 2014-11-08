@@ -28,7 +28,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	private List<IDonTask> deletedTasks = new ArrayList<IDonTask>();
 	
 	/**
-	 * Set a delete command by id
+	 * Creates a DeleteCommand that removes the task with the id
 	 * @param id the id of the task to delete
 	 */
 	public DonDeleteCommand(int id) {
@@ -37,12 +37,21 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		generalCommandType = GeneralCommandType.DELETE;
 	}
 	
+	/**
+	 * Creates a DeleteCommand that removes the task with the search title in its name of label
+	 * @param title the name of the title or label to search for
+	 * @param delType the type of deletion to perform. This should be either DeleteType.DELETE_TITLE or DeleteType.DELETE_LABEL
+	 */
 	public DonDeleteCommand(String title, DeleteType delType) {
 		searchTitle = title;
 		type = delType;
 		generalCommandType = GeneralCommandType.DELETE;
 	}
 	
+	/**
+	 * Creates a DeleteCommand that removes multiple tasks that fit the given DeleteType
+	 * @param deltype the type of deletion to perform.
+	 */
 	public DonDeleteCommand(DeleteType deltype) {
 		type = deltype;
 		generalCommandType = GeneralCommandType.DELETE;
@@ -63,9 +72,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	/**
 	 * Deletes the task with the given ID
 	 * 
-	 * @param id
-	 *            the id of the task to delete
-	 * @return the response containing the deletion status
+	 * @param donStorage the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted task
 	 */
 	private IDonResponse deleteTaskByID(IDonStorage donStorage) {
 		DonResponse response = new DonResponse();
@@ -95,9 +103,8 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	 * Deletes the task with the given title. If more than 1 task is found, the
 	 * search results will be returned and nothing will be deleted.
 	 * 
-	 * @param title
-	 *            the title of the task to search for to delete
-	 * @return the response containing the deletion status
+	 * @param donStorage the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted task
 	 */
 	private IDonResponse deleteTaskByTitle(IDonStorage donStorage) {
 		assert searchTitle!=null;
@@ -124,6 +131,11 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Deletes all overdue tasks
+	 * @param donStorage the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
 	private IDonResponse deleteOverdueTasks(IDonStorage donStorage) {
 		assert searchTitle!=null;
 		IDonResponse response = new DonResponse();
@@ -158,6 +170,11 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Deletes all floating tasks
+	 * @param donStorage the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
 	private IDonResponse deleteFloatingTasks(IDonStorage donStorage) {
 		assert searchTitle!=null;
 		IDonResponse response = new DonResponse();
@@ -192,6 +209,11 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		return response;
 	}
 	
+	/**
+	 * Deletes all tasks with the given label
+	 * @param donStorage the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
 	private IDonResponse deleteLabelTasks(IDonStorage donStorage) {
 		assert searchTitle!=null;
 		IDonResponse response = new DonResponse();

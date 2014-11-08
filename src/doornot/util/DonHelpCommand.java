@@ -38,7 +38,6 @@ public class DonHelpCommand extends AbstractDonCommand {
 	 * @return response containing help messages
 	 */
 	private IDonResponse getHelp(HelpType commandType) {
-		// TODO: decide the format of the help
 		IDonResponse response = new DonResponse();
 		response.setResponseType(IDonResponse.ResponseType.HELP);
 
@@ -146,8 +145,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 
 	@Override
 	public IDonResponse undoCommand(IDonStorage donStorage) {
-		// not supposed to be run
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 }

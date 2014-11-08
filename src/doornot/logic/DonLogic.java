@@ -28,11 +28,9 @@ public class DonLogic implements IDonLogic {
 	
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
-
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
 	private static final String MSG_UNDO_REMINDER = "You can undo your action with the undo command.";
 	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
-
 	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
 
 	private IDonStorage donStorage;
