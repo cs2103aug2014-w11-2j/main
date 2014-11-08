@@ -161,7 +161,7 @@ public class DonGUIV3 {
 
         try
         {
-            InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");//new FileInputStream("ring.wav");
+            InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");
             BGM = new AudioStream(ringStream);
             AudioPlayer.player.start(BGM);
         }
