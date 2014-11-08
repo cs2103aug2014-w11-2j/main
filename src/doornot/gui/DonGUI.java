@@ -183,7 +183,7 @@ public class DonGUI {
 				buttomFiller.setVisible(false);
 				infoPane.setText("No overdue tasks!");
 				infoPane.setVisible(true);
-				new Alb(1000);
+				new InfoTimer(1000);
 				return;
 			}
 		} else if (index > 0 && index < 6){
@@ -197,7 +197,7 @@ public class DonGUI {
 				buttomFiller.setVisible(false);
 				infoPane.setText("No search results!");
 				infoPane.setVisible(true);
-				new Alb(1000);
+				new InfoTimer(1000);
 				return;
 			}
 		} else if (index == 7){
@@ -294,7 +294,7 @@ public class DonGUI {
 			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
 			
-			new Alb(1000);
+			new InfoTimer(1000);
 		} else if (size > 1) {
 			for (int i = 0; i < currentMsgList.size(); i++) {
 				fb += currentMsgList.get(i) + "\n";
@@ -302,7 +302,7 @@ public class DonGUI {
 			infoPane.setText(currentMsgList.remove(0));
 			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
-			new Almb(1000);
+			new MultiInfoTimer(1000);
 		}
 		display += fb;
 		textArea.setText(display);
@@ -663,7 +663,7 @@ public class DonGUI {
 							buttomFiller.setVisible(false);
 							infoPane.setText("No overdue tasks!");
 							infoPane.setVisible(true);
-							new Alb(1000);
+							new InfoTimer(1000);
 							return;
 						}
 					} else {
@@ -1049,7 +1049,7 @@ public class DonGUI {
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));
 					curr = flashcode;
-					new Alfb(1000);
+					new PanelHightlightTimer(1000);
 				}
 			} else {
 				if (isSelected || selectedPage - 1 == index) {
@@ -1176,7 +1176,7 @@ public class DonGUI {
 				} else {
 					p.setBorder(new LineBorder(Color.green, 3));
 					curr2 = flashcode2;
-					new Alib(1000);
+					new TaskHightlightTimer(1000);
 				}
 			} else {
 				p.setBorder(null);
@@ -1308,9 +1308,9 @@ public class DonGUI {
 	}
 
 	
-	class Alb implements ActionListener {
+	class InfoTimer implements ActionListener {
 		Timer timer;
-		Alb(int delay){
+		InfoTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
@@ -1322,9 +1322,9 @@ public class DonGUI {
 		}
 	}
 	
-	class Almb implements ActionListener {
+	class MultiInfoTimer implements ActionListener {
 		Timer timer;
-		Almb(int delay){
+		MultiInfoTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.setRepeats(true);
 			timer.start();
@@ -1341,9 +1341,9 @@ public class DonGUI {
 		}
 	}
 	
-	class Alfb implements ActionListener {
+	class PanelHightlightTimer implements ActionListener {
 		Timer timer;
-		Alfb(int delay){
+		PanelHightlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
@@ -1355,9 +1355,9 @@ public class DonGUI {
 		}
 	}
 	
-	class Alib implements ActionListener {
+	class TaskHightlightTimer implements ActionListener {
 		Timer timer;
-		Alib(int delay){
+		TaskHightlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
