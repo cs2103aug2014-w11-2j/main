@@ -16,7 +16,7 @@ import java.util.List;
  * (save/read/retrieve of tasks)
  * 
  */
-//@author A0100493R
+// @author A0100493R
 public class DonStorage implements IDonStorage {
 
 	private static String FILE_NAME = "DoorNot_current.txt";
@@ -37,6 +37,7 @@ public class DonStorage implements IDonStorage {
 		return task.getID();
 	}
 
+	// This function used only for testing
 	public void clear() {
 		tasks.clear();
 		saveToDisk();
@@ -67,6 +68,7 @@ public class DonStorage implements IDonStorage {
 		}
 	}
 
+	// Creates an array of int that represents the tasks` ID usage
 	private int[] constructIDArray() {
 		int maxID = findMaxID();
 		int IDArray[] = new int[maxID + 1];
@@ -95,13 +97,7 @@ public class DonStorage implements IDonStorage {
 			return null;
 	}
 
-	/**
-	 * Find tasks with the given name
-	 * 
-	 * @param name
-	 *            the name to search for
-	 * @return the response containing the tasks
-	 */
+	@Override
 	public List<IDonTask> getTaskByName(String name) {
 		assert name != null;
 		List<IDonTask> foundTasks = new ArrayList<IDonTask>();
@@ -119,8 +115,9 @@ public class DonStorage implements IDonStorage {
 	private int searchTask(int ID) {
 		if (!tasks.isEmpty()) {
 			for (int i = 0; i < tasks.size(); i++) {
-				if (tasks.get(i).getID() == ID)
+				if (tasks.get(i).getID() == ID) {
 					return i;
+				}
 			}
 		}
 		return -1;
@@ -132,47 +129,7 @@ public class DonStorage implements IDonStorage {
 			File file = new File(FILE_NAME);
 			FileWriter myWriter = new FileWriter(file);
 			if (!tasks.isEmpty()) {
-				SimpleDateFormat formatter = new SimpleDateFormat(
-						"ddMMyyyy_HHmm");
-				for (int i = 0; i < tasks.size(); i++) {
-					String taskTitle, taskStartDate = "null", taskEndDate = "null";
-					String taskStatus = "Undone";
-					String taskTimeUsage = "False";
-					int taskID = 0;
-					List<String> taskLabels = new ArrayList<String>();
-
-					taskTitle = tasks.get(i).getTitle();
-					if (tasks.get(i).getStartDate() != null) {
-						taskStartDate = formatter.format(tasks.get(i)
-								.getStartDate().getTime());
-					}
-					if (tasks.get(i).getEndDate() != null) {
-						taskEndDate = formatter.format(tasks.get(i)
-								.getEndDate().getTime());
-					}
-					if (tasks.get(i).getStatus() == true) {
-						taskStatus = "Done";
-					}
-					taskID = tasks.get(i).getID();
-					if (tasks.get(i).isTimeUsed()) {
-						taskTimeUsage = "True";
-					}
-					if (!tasks.get(i).getLabels().isEmpty()) {
-						taskLabels = tasks.get(i).getLabels();
-					} else {
-						taskLabels.add("null");
-					}
-
-					String taskInfo = taskTitle + ";" + taskStartDate + ";"
-							+ taskEndDate + ";" + taskStatus + ";" + taskID
-							+ ";" + taskTimeUsage + ";";
-
-					for (int j = 0; j < taskLabels.size(); j++) {
-						taskInfo = taskInfo + taskLabels.get(j) + ";";
-					}
-					taskInfo = taskInfo + "\n";
-					myWriter.write(taskInfo);
-				}
+				writeIntoFile(myWriter);
 			}
 			myWriter.close();
 			return true;
@@ -180,6 +137,52 @@ public class DonStorage implements IDonStorage {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	private void writeIntoFile(FileWriter myWriter) throws IOException {
+		SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyy_HHmm");
+		for (int i = 0; i < tasks.size(); i++) {
+			String taskInfo = constructSavingInfo(formatter, i);
+			taskInfo = taskInfo + "\n";
+			myWriter.write(taskInfo);
+		}
+	}
+
+	private String constructSavingInfo(SimpleDateFormat formatter, int i) {
+		String taskTitle, taskStartDate = "null", taskEndDate = "null";
+		String taskStatus = "Undone";
+		String taskTimeUsage = "False";
+		int taskID = 0;
+		List<String> taskLabels = new ArrayList<String>();
+
+		taskTitle = tasks.get(i).getTitle();
+		if (tasks.get(i).getStartDate() != null) {
+			taskStartDate = formatter.format(tasks.get(i).getStartDate()
+					.getTime());
+		}
+		if (tasks.get(i).getEndDate() != null) {
+			taskEndDate = formatter.format(tasks.get(i).getEndDate().getTime());
+		}
+		if (tasks.get(i).getStatus() == true) {
+			taskStatus = "Done";
+		}
+		taskID = tasks.get(i).getID();
+		if (tasks.get(i).isTimeUsed()) {
+			taskTimeUsage = "True";
+		}
+		if (!tasks.get(i).getLabels().isEmpty()) {
+			taskLabels = tasks.get(i).getLabels();
+		} else {
+			taskLabels.add("null");
+		}
+
+		String taskInfo = taskTitle + ";" + taskStartDate + ";" + taskEndDate
+				+ ";" + taskStatus + ";" + taskID + ";" + taskTimeUsage + ";";
+
+		for (int j = 0; j < taskLabels.size(); j++) {
+			taskInfo = taskInfo + taskLabels.get(j) + ";";
+		}
+		return taskInfo;
 	}
 
 	@Override
@@ -197,6 +200,7 @@ public class DonStorage implements IDonStorage {
 		}
 	}
 
+	// Only for testing
 	public void changeFileName(String newFileName) {
 		FILE_NAME = newFileName;
 	}
@@ -209,38 +213,7 @@ public class DonStorage implements IDonStorage {
 			while ((textLine = myReader.readLine()) != null) {
 				String[] taskInfo = textLine.split(";");
 				List<String> taskLabels = new ArrayList<String>();
-				IDonTask task = null;
-				int taskID = Integer.parseInt(taskInfo[POSITION_OF_TASK_ID]);
-				if (taskInfo[POSITION_OF_TASK_START_DATE]
-						.equalsIgnoreCase("null")) {
-					task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE], taskID);
-				} else {
-					if (taskInfo[POSITION_OF_TASK_END_DATE]
-							.equalsIgnoreCase("null")) {
-						Calendar deadline = convertToDate(taskInfo[POSITION_OF_TASK_START_DATE]);
-						task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE],
-								deadline, taskID);
-					} else {
-						Calendar startDate = convertToDate(taskInfo[POSITION_OF_TASK_START_DATE]);
-						Calendar endDate = convertToDate(taskInfo[POSITION_OF_TASK_END_DATE]);
-						task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE],
-								startDate, endDate, taskID);
-					}
-				}
-				if (taskInfo[POSITION_OF_TASK_STATUS].equalsIgnoreCase("done")) {
-					task.setStatus(true);
-				}
-				if (taskInfo[POSITION_OF_TASK_TIMEUSAGE]
-						.equalsIgnoreCase("True")) {
-					task.setTimeUsed(true);
-				}
-
-				if (!taskInfo[POSITION_OF_TASK_LABELS].equalsIgnoreCase("null")) {
-					for (int i = POSITION_OF_TASK_LABELS; i < taskInfo.length; i++) {
-						taskLabels.add(taskInfo[i]);
-					}
-					task.setLabels(taskLabels);
-				}
+				IDonTask task = constructTask(taskInfo, taskLabels);
 				tasks.add(task);
 			}
 			myReader.close();
@@ -249,6 +222,40 @@ public class DonStorage implements IDonStorage {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	private IDonTask constructTask(String[] taskInfo, List<String> taskLabels) {
+
+		IDonTask task;
+		int taskID = Integer.parseInt(taskInfo[POSITION_OF_TASK_ID]);
+
+		if (taskInfo[POSITION_OF_TASK_START_DATE].equalsIgnoreCase("null")) {
+			task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE], taskID);
+		} else if (taskInfo[POSITION_OF_TASK_END_DATE].equalsIgnoreCase("null")) {
+			Calendar deadline = convertToDate(taskInfo[POSITION_OF_TASK_START_DATE]);
+			task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE], deadline,
+					taskID);
+		} else {
+			Calendar startDate = convertToDate(taskInfo[POSITION_OF_TASK_START_DATE]);
+			Calendar endDate = convertToDate(taskInfo[POSITION_OF_TASK_END_DATE]);
+			task = new DonTask(taskInfo[POSITION_OF_TASK_TITLE], startDate,
+					endDate, taskID);
+		}
+
+		if (taskInfo[POSITION_OF_TASK_STATUS].equalsIgnoreCase("done")) {
+			task.setStatus(true);
+		}
+		if (taskInfo[POSITION_OF_TASK_TIMEUSAGE].equalsIgnoreCase("True")) {
+			task.setTimeUsed(true);
+		}
+
+		if (!taskInfo[POSITION_OF_TASK_LABELS].equalsIgnoreCase("null")) {
+			for (int i = POSITION_OF_TASK_LABELS; i < taskInfo.length; i++) {
+				taskLabels.add(taskInfo[i]);
+			}
+			task.setLabels(taskLabels);
+		}
+		return task;
 	}
 
 	private Calendar convertToDate(String date) {
