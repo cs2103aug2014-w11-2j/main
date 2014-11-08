@@ -174,39 +174,8 @@ public class DonGUI {
     }
     
 	private void branchToPage(String cmd) {
-		switch (cmd) {
-		case "c":
-		case "console":
-			selectedPage = 7;
-			list.clearSelection();
-			break;
-		case "t":
-		case "today":
-			selectedPage = 1;
-			typeList.setSelectedIndex(0);
-			break;
-		case "w":
-		case "week":
-			selectedPage = 2;
-			typeList.setSelectedIndex(1);
-			break;
-		case "u":
-		case "future":
-			selectedPage = 3;
-			typeList.setSelectedIndex(2);
-			break;
-		case "f":
-		case "float":
-			selectedPage = 4;
-			typeList.setSelectedIndex(3);
-			break;
-		case "l":
-		case "all":
-			selectedPage = 5;
-			typeList.setSelectedIndex(4);
-			break;
-		case "o":
-		case "overdue":
+		int index = Integer.parseInt(cmd);
+		if(index == 0){
 			if (overdueList != null && overdueList.size() != 0) {
 				selectedPage = 0;
 				typeList.clearSelection();
@@ -217,9 +186,10 @@ public class DonGUI {
 				new Alb(1000);
 				return;
 			}
-			break;
-		case "r":
-		case "results":
+		} else if (index > 0 && index < 6){
+			selectedPage = index;
+			typeList.setSelectedIndex(index-1);
+		} else if (index == 6){
 			if (searchList != null && searchList.size() != 0) {
 				selectedPage = 6;
 				typeList.clearSelection();
@@ -230,8 +200,11 @@ public class DonGUI {
 				new Alb(1000);
 				return;
 			}
-			break;
-		default:
+		} else if (index == 7){
+			selectedPage = 7;
+			typeList.clearSelection();
+		} else {
+			return;
 		}
 		typeList.setCellRenderer(new TypeCellRenderer());
 		setTypeData();
@@ -242,17 +215,15 @@ public class DonGUI {
 			donLogic.saveToDrive();
 			System.exit(0);
 		}
-		if (cmd.equals("c") || cmd.equals("console") || cmd.equals("t") || cmd.equals("today") || cmd.equals("w") || cmd.equals("week")
-				|| cmd.equals("u") || cmd.equals("future") || cmd.equals("f") || cmd.equals("float") || cmd.equals("l")
-				|| cmd.equals("all") || cmd.equals("o") || cmd.equals("overdue") || cmd.equals("r") || cmd.equals("results")) {
-			textField.setText("");
-			branchToPage(cmd);
-			return;
-		}
 		IDonResponse rp = donLogic.runCommand(cmd);
 		assert rp != null;
 		String fb = "";
 		int size = 0;
+		if(rp.getResponseType() == IDonResponse.ResponseType.SWITCH_PANEL){
+			textField.setText("");
+			branchToPage(rp.getMessages().get(0));
+			return;
+		}
 		if (rp.hasMessages() && rp.getResponseType() != IDonResponse.ResponseType.HELP) {
 			lastMsg = rp.getMessages().get(0);
 			currentMsgList = new ArrayList<String>();
