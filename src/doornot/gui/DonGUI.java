@@ -245,6 +245,7 @@ public class DonGUI {
 		if (cmd.equals("c") || cmd.equals("console") || cmd.equals("t") || cmd.equals("today") || cmd.equals("w") || cmd.equals("week")
 				|| cmd.equals("u") || cmd.equals("future") || cmd.equals("f") || cmd.equals("float") || cmd.equals("l")
 				|| cmd.equals("all") || cmd.equals("o") || cmd.equals("overdue") || cmd.equals("r") || cmd.equals("results")) {
+			textField.setText("");
 			branchToPage(cmd);
 			return;
 		}
