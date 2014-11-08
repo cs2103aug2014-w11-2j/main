@@ -42,4 +42,34 @@ public interface IDonLogic {
 	 * @return the list of tasks
 	 */
 	public List<IDonTask> getTaskList();
+	
+	/**
+	 * Gets today's tasks
+	 * @return the list of tasks today
+	 */
+	public List<IDonTask> getTodayTasks();
+	
+	/**
+	 * Gets the tasks happening within the week
+	 * @return the list of task in the 7 days ahead
+	 */
+	public List<IDonTask> getWeekTasks();
+	
+	/**
+	 * Gets the tasks happening after 7 days
+	 * @return the list of tasks
+	 */
+	public List<IDonTask> getFutureTasks();
+	
+	/**
+	 * Gets all floating tasks
+	 * @return the list of floating tasks
+	 */
+	public List<IDonTask> getFloatingTasks();
+	
+	/**
+	 * Gets all overdue tasks
+	 * @return the list of overdue tasks
+	 */
+	public List<IDonTask> getOverdueTasks();
 }

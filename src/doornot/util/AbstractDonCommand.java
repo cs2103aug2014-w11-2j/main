@@ -73,9 +73,7 @@ public abstract class AbstractDonCommand {
 	protected static final String PHRASE_DEADLINE = "Deadline";
 	protected static final String PHRASE_FREE_TIME = "Free time";
 
-	protected static final int FIND_INCOMPLETE = 0;
-	protected static final int FIND_COMPLETE = 1;
-	protected static final int FIND_ALL = 2;
+	
 
 	public static enum GeneralCommandType {
 		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
