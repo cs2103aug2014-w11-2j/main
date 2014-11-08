@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import doornot.storage.IDonTask;
+
 /**
  * Interface defining the methods that the GUI needs from a IDonResponse object
  * Each command call by the user should result in 1 IDonResponse object
@@ -12,8 +13,7 @@ import doornot.storage.IDonTask;
 public interface IDonResponse {
 
 	public enum ResponseType {
-		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS, EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, REDO_SUCCESS, REDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE, HELP, UNKNOWN_COMMAND,
-		LABEL_EXISTS, LABEL_ADDED, LABEL_REMOVED, LABEL_NOT_FOUND, SEARCH_WEEK, SEARCH_FUTURE, SEARCH_TODAY, SEARCH_FLOAT, SEARCH_ALL, SEARCH_OVERDUE, LABEL_FAILED
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS, EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, REDO_SUCCESS, REDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE, HELP, UNKNOWN_COMMAND, LABEL_EXISTS, LABEL_ADDED, LABEL_REMOVED, LABEL_NOT_FOUND, SEARCH_WEEK, SEARCH_FUTURE, SEARCH_TODAY, SEARCH_FLOAT, SEARCH_ALL, SEARCH_OVERDUE, LABEL_FAILED
 	}
 
 	public ResponseType getResponseType();
@@ -51,7 +51,7 @@ public interface IDonResponse {
 	 * @return true if the addition was successful
 	 */
 	public boolean addTask(IDonTask task);
-	
+
 	/**
 	 * Sets the response type of the IDonResponse object
 	 * 
@@ -59,7 +59,7 @@ public interface IDonResponse {
 	 *            the new type of response
 	 */
 	public void setResponseType(ResponseType type);
-	
+
 	/**
 	 * Sets the list of tasks of the IDonResponse object directly
 	 * 
@@ -93,13 +93,14 @@ public interface IDonResponse {
 	 *            the response to copy tasks from
 	 */
 	public void copyTasks(IDonResponse response);
-	
+
 	/**
 	 * Sorts the tasks in the response with the given comparator.
+	 * 
 	 * @param comp
 	 */
 	public void sortTask(Comparator<IDonTask> comp);
-	
+
 	/**
 	 * Sorts the tasks in the response with the the tasks default compareTo
 	 */

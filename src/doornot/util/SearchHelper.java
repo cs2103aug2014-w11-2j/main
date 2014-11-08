@@ -7,13 +7,14 @@ import java.util.List;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
+
 //@author A0111995Y
 public class SearchHelper {
-	
+
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;
 	protected static final int FIND_ALL = 2;
-	
+
 	/**
 	 * Find tasks with the given name
 	 * 
@@ -21,7 +22,8 @@ public class SearchHelper {
 	 *            the name to search for
 	 * @return the response containing the tasks
 	 */
-	public static List<IDonTask> findTaskByName(IDonStorage donStorage, String searchTitle) {
+	public static List<IDonTask> findTaskByName(IDonStorage donStorage,
+			String searchTitle) {
 		assert searchTitle != null;
 		List<IDonTask> response = new ArrayList<IDonTask>();
 		List<IDonTask> taskList = donStorage.getTaskList();
@@ -38,12 +40,14 @@ public class SearchHelper {
 	/**
 	 * Find tasks with the exact given name
 	 * 
-	 * @param donStorage the storage containing the tasks
+	 * @param donStorage
+	 *            the storage containing the tasks
 	 * @param searchTitle
 	 *            the name to search for
 	 * @return the response containing the tasks
 	 */
-	public static List<IDonTask> findTaskByExactName(IDonStorage donStorage, String searchTitle) {
+	public static List<IDonTask> findTaskByExactName(IDonStorage donStorage,
+			String searchTitle) {
 		assert searchTitle != null;
 		List<IDonTask> response = new ArrayList<IDonTask>();
 		List<IDonTask> taskList = donStorage.getTaskList();
@@ -55,17 +59,21 @@ public class SearchHelper {
 		}
 		return response;
 	}
-	
+
 	/**
 	 * Find tasks starting/occurring on a given date
 	 * 
-	 * @param donStorage the storage containing the tasks
+	 * @param donStorage
+	 *            the storage containing the tasks
 	 * @param searchStartDate
 	 *            the date to search for
-	 * @param exact whether the task must happen at the same date and time as searchStartDate
+	 * @param exact
+	 *            whether the task must happen at the same date and time as
+	 *            searchStartDate
 	 * @return the response containing the tasks
 	 */
-	public static List<IDonTask> findTaskByDate(IDonStorage donStorage, Calendar searchStartDate, boolean exact) {
+	public static List<IDonTask> findTaskByDate(IDonStorage donStorage,
+			Calendar searchStartDate, boolean exact) {
 		assert searchStartDate != null;
 		List<IDonTask> response = new ArrayList<IDonTask>();
 		List<IDonTask> taskList = donStorage.getTaskList();
@@ -81,8 +89,10 @@ public class SearchHelper {
 			// If the date falls within the start and end date of an event, the
 			// event is returned as well
 			if (exact) {
-				if ((taskType == TaskType.DEADLINE && CalHelper.relevantEquals(taskDate, searchStartDate))
-						|| (taskType == TaskType.DURATION && CalHelper.isBetweenDates(searchStartDate, taskDate,
+				if ((taskType == TaskType.DEADLINE && CalHelper.relevantEquals(
+						taskDate, searchStartDate))
+						|| (taskType == TaskType.DURATION && CalHelper
+								.isBetweenDates(searchStartDate, taskDate,
 										taskEndDate))) {
 					response.add(task);
 				}
@@ -94,7 +104,7 @@ public class SearchHelper {
 					response.add(task);
 				}
 			}
-			
+
 		}
 		return response;
 	}
@@ -172,7 +182,7 @@ public class SearchHelper {
 				response.add(task.clone());
 			}
 		}
-		
+
 		return response;
 	}
 
@@ -185,7 +195,8 @@ public class SearchHelper {
 	 *            the label to search for
 	 * @return the response containing tasks with the given label
 	 */
-	public static List<IDonTask> findLabel(IDonStorage donStorage, String searchTitle) {
+	public static List<IDonTask> findLabel(IDonStorage donStorage,
+			String searchTitle) {
 		List<IDonTask> response = new ArrayList<IDonTask>();
 		List<IDonTask> taskList = donStorage.getTaskList();
 
@@ -244,7 +255,9 @@ public class SearchHelper {
 
 	/**
 	 * Get all overdue tasks
-	 * @param donStorage the storage in which the tasks are located
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
 	 * @return the list of overdue tasks
 	 */
 	public static List<IDonTask> findOverdue(IDonStorage donStorage) {
@@ -252,26 +265,28 @@ public class SearchHelper {
 				Calendar.getInstance(), FIND_ALL);
 		List<IDonTask> taskList = new ArrayList<IDonTask>();
 		for (IDonTask task : response) {
-			if ((task.getEndDate() != null
-					&& CalHelper.dateEqualOrBefore(task.getEndDate(),
-							Calendar.getInstance())) || task.getEndDate()==null) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
 				taskList.add(task);
-			} 
+			}
 		}
 
 		return taskList;
 	}
-	
+
 	/**
 	 * Get the list of all completed tasks
-	 * @param donStorage the storage in which the tasks are located
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
 	 * @return the list of completed tasks
 	 */
 	public static List<IDonTask> findDone(IDonStorage donStorage) {
 		List<IDonTask> taskList = donStorage.getTaskList();
 		List<IDonTask> outputList = new ArrayList<IDonTask>();
 		for (IDonTask task : taskList) {
-			if(task.getStatus()) {
+			if (task.getStatus()) {
 				outputList.add(task);
 			}
 		}

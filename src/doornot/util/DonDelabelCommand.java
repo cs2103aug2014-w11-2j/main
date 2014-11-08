@@ -7,23 +7,25 @@ import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonDelabelCommand extends DonEditCommand {
-	
 
 	public enum DelabelType {
 		LABEL_ID, LABEL_NAME, LABEL_ALL_NAME, LABEL_ALL_ID
 	}
-	
+
 	private DelabelType type;
 	private String searchLabel;
-	
+
 	/**
-	 * Creates a DelabelCommand that removes the given label from a task with an ID
-	 * @param id the ID of the task
-	 * @param label the label to remove
+	 * Creates a DelabelCommand that removes the given label from a task with an
+	 * ID
+	 * 
+	 * @param id
+	 *            the ID of the task
+	 * @param label
+	 *            the label to remove
 	 */
 	public DonDelabelCommand(int id, String label) {
 		searchID = id;
@@ -31,11 +33,15 @@ public class DonDelabelCommand extends DonEditCommand {
 		type = DelabelType.LABEL_ID;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	/**
-	 * Creates a DelabelCommand that removes the given label from a task containing the title
-	 * @param title the title of the task to remove the label from
-	 * @param label the label to remove
+	 * Creates a DelabelCommand that removes the given label from a task
+	 * containing the title
+	 * 
+	 * @param title
+	 *            the title of the task to remove the label from
+	 * @param label
+	 *            the label to remove
 	 */
 	public DonDelabelCommand(String title, String label) {
 		searchTitle = title;
@@ -43,38 +49,44 @@ public class DonDelabelCommand extends DonEditCommand {
 		type = DelabelType.LABEL_NAME;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	/**
 	 * Removes all labels from a task with a title containing the search title
-	 * @param title the title of the task
+	 * 
+	 * @param title
+	 *            the title of the task
 	 */
 	public DonDelabelCommand(String title) {
 		searchTitle = title;
 		type = DelabelType.LABEL_ALL_NAME;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	/**
 	 * Removes all labels from the task with the given ID
-	 * @param ID the ID of the task
+	 * 
+	 * @param ID
+	 *            the ID of the task
 	 */
 	public DonDelabelCommand(int ID) {
 		searchID = ID;
 		type = DelabelType.LABEL_ALL_ID;
 		generalCommandType = GeneralCommandType.LABEL;
 	}
-	
+
 	public DelabelType getDelabelType() {
 		return type;
 	}
-	
+
 	public String getSearchLabel() {
 		return searchLabel;
 	}
-	
+
 	/**
 	 * Removes a label from a task with the given id
-	 * @param id the task's id to search for and remove the label from
+	 * 
+	 * @param id
+	 *            the task's id to search for and remove the label from
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeLabelByID(IDonStorage donStorage) {
@@ -89,21 +101,25 @@ public class DonDelabelCommand extends DonEditCommand {
 			List<String> currentLabels = task.getLabels();
 			if (currentLabels.remove(searchLabel)) {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
-				response.addMessage(String.format(MSG_LABEL_NAME_REMOVED, searchLabel));			
+				response.addMessage(String.format(MSG_LABEL_NAME_REMOVED,
+						searchLabel));
 				response.addTask(task);
 			} else {
 				response.setResponseType(IDonResponse.ResponseType.LABEL_NOT_FOUND);
-				response.addMessage(String.format(MSG_LABEL_STRING_DOES_NOT_EXIST, searchLabel));
+				response.addMessage(String.format(
+						MSG_LABEL_STRING_DOES_NOT_EXIST, searchLabel));
 			}
 
 		}
-		
+
 		return response;
 	}
-	
+
 	/**
 	 * Removes a label from a task with the given name
-	 * @param id the task's id to search for and remove the label from
+	 * 
+	 * @param id
+	 *            the task's id to search for and remove the label from
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeLabelByTitle(IDonStorage donStorage) {
@@ -124,13 +140,15 @@ public class DonDelabelCommand extends DonEditCommand {
 			searchID = foundTasks.get(0).getID();
 			response = removeLabelByID(donStorage);
 		}
-		
+
 		return response;
 	}
-	
+
 	/**
 	 * Removes all labels from a task with the given id
-	 * @param id the task's id to search for remove all labels from
+	 * 
+	 * @param id
+	 *            the task's id to search for remove all labels from
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeAllLabelsByID(IDonStorage donStorage) {
@@ -144,16 +162,18 @@ public class DonDelabelCommand extends DonEditCommand {
 			unchangedTask.add(task.clone());
 			task.getLabels().clear();
 			response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
-			response.addMessage(MSG_LABEL_ALL_REMOVED);			
+			response.addMessage(MSG_LABEL_ALL_REMOVED);
 			response.addTask(task);
 		}
-		
+
 		return response;
 	}
-	
+
 	/**
 	 * Removes all labels from a task with the given name
-	 * @param id the task's id to search for and add a label to
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
 	 * @return the response containing the affected task
 	 */
 	private IDonResponse removeAllLabelsByTitle(IDonStorage donStorage) {
@@ -174,7 +194,7 @@ public class DonDelabelCommand extends DonEditCommand {
 			searchID = foundTasks.get(0).getID();
 			response = removeAllLabelsByID(donStorage);
 		}
-		
+
 		return response;
 	}
 
@@ -190,14 +210,13 @@ public class DonDelabelCommand extends DonEditCommand {
 		} else if (type == DelabelType.LABEL_ALL_NAME) {
 			response = removeAllLabelsByTitle(donStorage);
 		}
-		
+
 		if (response.getResponseType() == ResponseType.LABEL_REMOVED) {
 			response.sortTask();
 			executed = true;
 		}
-		
+
 		return response;
 	}
-
 
 }

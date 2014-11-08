@@ -8,30 +8,22 @@ import doornot.storage.IDonStorage;
 public class DonHelpCommand extends AbstractDonCommand {
 
 	public enum HelpType {
-		HELP_ADD,
-		HELP_EDIT,
-		HELP_SEARCH,
-		HELP_DELETE,
-		HELP_MARK,
-		HELP_UNDO,
-		HELP_REDO,
-		HELP_LABEL,
-		HELP_DELABEL,
+		HELP_ADD, HELP_EDIT, HELP_SEARCH, HELP_DELETE, HELP_MARK, HELP_UNDO, HELP_REDO, HELP_LABEL, HELP_DELABEL,
 		// for help with all commands in general. I think undo goes here
 		HELP_GENERAL,
 	}
-	
+
 	private HelpType requestedCommand;
-	
+
 	public DonHelpCommand(HelpType command) {
 		requestedCommand = command;
 		generalCommandType = GeneralCommandType.HELP;
 	}
-	
+
 	public HelpType getRequestedCommand() {
 		return requestedCommand;
 	}
-	
+
 	/**
 	 * Show the user help information
 	 * 
@@ -109,7 +101,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("Examples:");
 			response.addMessage("label 22 #work <-- Adds the \"work\" label to task 22");
 			response.addMessage("label Buy paper #personal <-- Adds the \"personal\" label to the task with \"Buy paper\" in the title");
-			
+
 			response.addMessage("delabel / dl: Removes a given label from a task");
 			response.addMessage("Command format: delabel Task_id");
 			response.addMessage("Command format: delabel Task_id #Label title");
@@ -118,13 +110,14 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("delabel 21 <-- Removes all labels from task 21");
 			response.addMessage("delabel 22 #work <-- Removes the \"work\" label from task 22");
 			response.addMessage("delabel Buy paper #personal <-- Removes the \"personal\" label from the task with \"Buy paper\" in the title");
-			
+
 			response.addMessage("slabel / sl: Searches for tasks with the given label");
 			response.addMessage("Command format: slabel #Label name");
 			response.addMessage("Examples:");
 			response.addMessage("slabel #work <-- Searches for all tasks with the \"work\" label");
-		} else if (commandType == HelpType.HELP_UNDO || commandType == HelpType.HELP_REDO) {
-			//Help for undo
+		} else if (commandType == HelpType.HELP_UNDO
+				|| commandType == HelpType.HELP_REDO) {
+			// Help for undo
 			response.addMessage("undo : Undoes the previous action");
 			response.addMessage("redo : Performs the last undone action");
 			response.addMessage("Command format: undo/redo");
@@ -136,7 +129,7 @@ public class DonHelpCommand extends AbstractDonCommand {
 
 		return response;
 	}
-	
+
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		IDonResponse response = getHelp(requestedCommand);

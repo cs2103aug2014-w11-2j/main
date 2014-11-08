@@ -9,31 +9,35 @@ import java.util.List;
  */
 //@author A0100493R
 public interface IDonStorage {
-	
+
 	/**
-	 * Return ID of task 
-	 * @return  ID of added task
+	 * Return ID of task
+	 * 
+	 * @return ID of added task
 	 */
 	public int addTask(IDonTask task);
 
 	/**
 	 * Return response
+	 * 
 	 * @return successful
 	 */
 	public boolean removeTask(int taskID);
-	
+
 	/**
-	 *  Return the next ID for task
-	 * @return  ID
+	 * Return the next ID for task
+	 * 
+	 * @return ID
 	 */
 	public int getNextID();
-	
+
 	/**
-	 *  Return a Task
+	 * Return a Task
+	 * 
 	 * @return Task
 	 */
 	public IDonTask getTask(int ID);
-	
+
 	/**
 	 * Find tasks with the given name
 	 * 
@@ -42,19 +46,24 @@ public interface IDonStorage {
 	 * @return the response containing the tasks
 	 */
 	public List<IDonTask> getTaskByName(String name);
-	
+
 	/**
 	 * Return response
+	 * 
 	 * @return successful
 	 */
 	public boolean saveToDisk();
+
 	/**
 	 * Return response
+	 * 
 	 * @return successful
 	 */
 	public boolean loadFromDisk();
+
 	/**
 	 * Return list
+	 * 
 	 * @return List of Tasks
 	 */
 	public List<IDonTask> getTaskList();

@@ -1,17 +1,18 @@
 package doornot.util;
 
-
 import doornot.logic.DonResponse;
 import doornot.logic.IDonResponse;
 import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
+
 /**
- * Interface for DonCommand, a class for keeping track of what type of command and its parameters
- *
+ * Interface for DonCommand, a class for keeping track of what type of command
+ * and its parameters
+ * 
  */
 //@author A0115503W
 public abstract class AbstractDonCommand {
-	
+
 	protected static final String MSG_NAME_CONFLICT = "Warning: Another task with '%1$s' already exists.";
 	protected static final String MSG_DEADLINE_CONFLICT = "Warning: Another task is happening at the same time.";
 	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
@@ -64,42 +65,48 @@ public abstract class AbstractDonCommand {
 	protected static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
 	protected static final String MSG_UNKNOWN_COMMAND = "The command '%1$s' does not exist!";
 	protected static final String MSG_LABEL_OVERLOAD = "Labelling failed. A task cannot have more than %1$d labels!";
-	
+
 	protected static final String PHRASE_END_DATE = "End date";
 	protected static final String PHRASE_START_DATE = "Start date";
 	protected static final String PHRASE_COMPLETE = "complete";
 	protected static final String PHRASE_INCOMPLETE = "incomplete";
 	protected static final String PHRASE_DEADLINE = "Deadline";
 	protected static final String PHRASE_FREE_TIME = "Free time";
-	
+
 	protected static final int FIND_INCOMPLETE = 0;
 	protected static final int FIND_COMPLETE = 1;
 	protected static final int FIND_ALL = 2;
-	
+
 	public static enum GeneralCommandType {
 		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
 	}
 
 	protected GeneralCommandType generalCommandType;
-	
-	protected boolean executed = false; //Set to true when execution has finished to allow undo to take place
-	
+
+	protected boolean executed = false; // Set to true when execution has
+										// finished to allow undo to take place
+
 	/**
 	 * Runs the AbstractDonCommand on tasks stored in donStorage
-	 * @param donStorage the storage object containing the user's tasks
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the user's tasks
 	 * @return the response produced by execution of the command
 	 */
 	public abstract IDonResponse executeCommand(IDonStorage donStorage);
-	
+
 	/**
 	 * Reverses the action performed by the AbstractDonCommand in executeCommand
-	 * @param donStorage the storage object containing the user's tasks
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the user's tasks
 	 * @return the response produced by reversing the command
 	 */
 	public abstract IDonResponse undoCommand(IDonStorage donStorage);
-	
+
 	/**
 	 * Creates a standard failure response for the undo function
+	 * 
 	 * @return the undo failure response
 	 */
 	protected IDonResponse createUndoFailureResponse() {
@@ -108,10 +115,12 @@ public abstract class AbstractDonCommand {
 		response.addMessage(MSG_UNDO_NO_ACTIONS);
 		return response;
 	}
-	
+
 	/**
 	 * Creates a standard success response for the undo function
-	 * @param num the number of changes reversed
+	 * 
+	 * @param num
+	 *            the number of changes reversed
 	 * @return the undo failure response
 	 */
 	protected IDonResponse createUndoSuccessResponse(int num) {
@@ -120,33 +129,38 @@ public abstract class AbstractDonCommand {
 		response.addMessage(String.format(MSG_UNDO_SUCCESS, num));
 		return response;
 	}
-	
+
 	/**
 	 * Creates a standard search failure response
-	 * @param searchString the search string which failed the search
+	 * 
+	 * @param searchString
+	 *            the search string which failed the search
 	 * @return the search failure response
 	 */
 	protected IDonResponse createSearchFailedResponse(String searchString) {
 		IDonResponse response = new DonResponse();
 		response.setResponseType(ResponseType.SEARCH_EMPTY);
-		response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED, searchString));
+		response.addMessage(String
+				.format(MSG_SEARCH_TITLE_FAILED, searchString));
 		return response;
 	}
-	
+
 	/**
 	 * Gets the general command type of the AbstractDonCommand
+	 * 
 	 * @return the general type
 	 */
 	public GeneralCommandType getGeneralType() {
 		return generalCommandType;
 	}
-	
+
 	/**
 	 * Returns whether the AbstractDonCommand object has been executed
+	 * 
 	 * @return
 	 */
 	public boolean hasExecuted() {
 		return executed;
 	}
-	
+
 }

@@ -11,23 +11,25 @@ import doornot.storage.IDonTask;
 
 //@author A0111995Y
 public class DonCreateCommand extends AbstractDonCommand {
-	
+
 	public enum AddType {
 		FLOATING, DEADLINE, EVENT
 	}
-	
-	
+
 	private static final int FAILURE = -1;
-	
+
 	private AddType type;
 	private String taskTitle;
 	private Calendar startDate, endDate;
 	private boolean timeUsed = false;
-	private IDonTask createdTask = null; //To be used only after command has been executed.
-	
+	private IDonTask createdTask = null; // To be used only after command has
+											// been executed.
+
 	/**
 	 * Creates a CreateCommand that adds a floating task
-	 * @param title the title of the new task
+	 * 
+	 * @param title
+	 *            the title of the new task
 	 */
 	public DonCreateCommand(String title) {
 		type = AddType.FLOATING;
@@ -37,9 +39,13 @@ public class DonCreateCommand extends AbstractDonCommand {
 
 	/**
 	 * Creates a CreateCommand that adds a deadline task
-	 * @param title the title of the new task
-	 * @param deadline the deadline of the task
-	 * @param timeUsed whether a time is specified
+	 * 
+	 * @param title
+	 *            the title of the new task
+	 * @param deadline
+	 *            the deadline of the task
+	 * @param timeUsed
+	 *            whether a time is specified
 	 */
 	public DonCreateCommand(String title, Calendar deadline, boolean timeUsed) {
 		type = AddType.DEADLINE;
@@ -48,15 +54,21 @@ public class DonCreateCommand extends AbstractDonCommand {
 		this.timeUsed = timeUsed;
 		generalCommandType = GeneralCommandType.ADD;
 	}
-	
+
 	/**
 	 * Creates a CreateCommand that adds an event task
-	 * @param title the title of the new task
-	 * @param startDate the start date of the task
-	 * @param endDate the end date of a task
-	 * @param timeUsed whether a time is specified
+	 * 
+	 * @param title
+	 *            the title of the new task
+	 * @param startDate
+	 *            the start date of the task
+	 * @param endDate
+	 *            the end date of a task
+	 * @param timeUsed
+	 *            whether a time is specified
 	 */
-	public DonCreateCommand(String title, Calendar startDate, Calendar endDate, boolean timeUsed) {
+	public DonCreateCommand(String title, Calendar startDate, Calendar endDate,
+			boolean timeUsed) {
 		type = AddType.EVENT;
 		taskTitle = title;
 		this.startDate = startDate;
@@ -64,27 +76,28 @@ public class DonCreateCommand extends AbstractDonCommand {
 		this.timeUsed = timeUsed;
 		generalCommandType = GeneralCommandType.ADD;
 	}
-	
+
 	public String getTaskTitle() {
 		return taskTitle;
 	}
-	
+
 	public Calendar getStartDate() {
 		return startDate;
 	}
-	
+
 	public Calendar getEndDate() {
 		return endDate;
 	}
-	
+
 	public AddType getType() {
 		return type;
 	}
-	
+
 	/**
 	 * Creates a floating task
 	 * 
-	 * @param donStorage the storage to add tasks to
+	 * @param donStorage
+	 *            the storage to add tasks to
 	 * @return the response
 	 */
 	private IDonResponse createFloatingTask(IDonStorage donStorage) {
@@ -101,7 +114,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
+			if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size() > 1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
@@ -113,14 +126,18 @@ public class DonCreateCommand extends AbstractDonCommand {
 	/**
 	 * Creates a deadline task
 	 * 
-	 * @param donStorage the storage to add tasks to
+	 * @param donStorage
+	 *            the storage to add tasks to
 	 * @return the response
 	 */
 	private IDonResponse createDeadlineTask(IDonStorage donStorage) {
-		assert taskTitle != null && startDate != null; // This method should only be
-													// called when both
-													// parameters are present
-		IDonTask task = new DonTask(taskTitle, startDate, donStorage.getNextID());
+		assert taskTitle != null && startDate != null; // This method should
+														// only be
+														// called when both
+														// parameters are
+														// present
+		IDonTask task = new DonTask(taskTitle, startDate,
+				donStorage.getNextID());
 		task.setTimeUsed(timeUsed);
 		int addResult = donStorage.addTask(task);
 
@@ -133,9 +150,10 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskByDate(donStorage, startDate, true).size()>1) {
+			if (SearchHelper.findTaskByDate(donStorage, startDate, true).size() > 1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
-			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle)
+					.size() > 1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
@@ -147,11 +165,12 @@ public class DonCreateCommand extends AbstractDonCommand {
 	/**
 	 * Creates a task with a duration
 	 * 
-	 * @param donStorage the storage to add tasks to
+	 * @param donStorage
+	 *            the storage to add tasks to
 	 * @return the response
 	 */
 	private IDonResponse createEventTask(IDonStorage donStorage) {
-		assert taskTitle != null && startDate != null && endDate!=null;
+		assert taskTitle != null && startDate != null && endDate != null;
 		IDonTask task = new DonTask(taskTitle, startDate, endDate,
 				donStorage.getNextID());
 		task.setTimeUsed(timeUsed);
@@ -166,9 +185,11 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
-			if (SearchHelper.findTaskRange(donStorage, startDate, endDate, FIND_INCOMPLETE).size()>1) {
+			if (SearchHelper.findTaskRange(donStorage, startDate, endDate,
+					FIND_INCOMPLETE).size() > 1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
-			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size()>1) {
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle)
+					.size() > 1) {
 				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
 			}
 			response.addTask(task);
@@ -176,16 +197,19 @@ public class DonCreateCommand extends AbstractDonCommand {
 		}
 		return response;
 	}
-	
+
 	/**
-	 * Recreates the task after it has been added and removed through executeCommand and undoCommand
-	 * @param donStorage the storage to add tasks to 
+	 * Recreates the task after it has been added and removed through
+	 * executeCommand and undoCommand
+	 * 
+	 * @param donStorage
+	 *            the storage to add tasks to
 	 * @return the response after re-adding the task
 	 */
 	private IDonResponse recreateTask(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
 		int taskID = donStorage.addTask(createdTask);
-		if(taskID != -1) {
+		if (taskID != -1) {
 			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
 			response.addTask(createdTask);
 		} else {
@@ -193,14 +217,15 @@ public class DonCreateCommand extends AbstractDonCommand {
 		}
 		return response;
 	}
-	
+
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
 		assert !executed;
 		IDonResponse response = null;
 		if (createdTask != null) {
-			//The task has previously been created. Execute is being run in the context
-			//of a redo. Simply readd the createdTask
+			// The task has previously been created. Execute is being run in the
+			// context
+			// of a redo. Simply readd the createdTask
 			response = recreateTask(donStorage);
 		} else if (type == AddType.FLOATING) {
 			response = createFloatingTask(donStorage);
@@ -209,7 +234,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 		} else if (type == AddType.EVENT) {
 			response = createEventTask(donStorage);
 		}
-		
+
 		if (response.getResponseType() == ResponseType.ADD_SUCCESS) {
 			executed = true;
 		}
@@ -218,15 +243,15 @@ public class DonCreateCommand extends AbstractDonCommand {
 
 	@Override
 	public IDonResponse undoCommand(IDonStorage donStorage) {
-		//Perform a delete
-		if(!executed) {
-			//Cannot be run until executeCommand has been called.
+		// Perform a delete
+		if (!executed) {
+			// Cannot be run until executeCommand has been called.
 			return null;
 		}
-		
+
 		boolean deleteSuccess = donStorage.removeTask(createdTask.getID());
 		IDonResponse response = null;
-		if(deleteSuccess) {
+		if (deleteSuccess) {
 			response = new DonResponse();
 			response = createUndoSuccessResponse(1);
 			response.addTask(createdTask);
@@ -235,9 +260,8 @@ public class DonCreateCommand extends AbstractDonCommand {
 		} else {
 			response = createUndoFailureResponse();
 		}
-		
+
 		return response;
 	}
-
 
 }

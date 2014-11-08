@@ -32,7 +32,7 @@ import doornot.util.DonMarkCommand.MarkType;
  * DonParser parses the commands and creates a DonCommand
  * 
  */
-// @author A0115503W
+//@author A0115503W
 public class DonParser implements IDonParser {
 
 	public DonParser() {
@@ -63,9 +63,7 @@ public class DonParser implements IDonParser {
 
 	// for to "
 	private String editNameSpaceReg = "to \"";
-	// number
-	private String getIDReg = "^[0-9]+$";
-	
+
 	// allow xx "BLAH"
 	private String labelNameReg = "^#.+$";
 
@@ -789,19 +787,6 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Gets the id string
-	 * 
-	 * @param param
-	 * @return id string
-	 */
-	private String getID(String param) {
-		Pattern pattern = Pattern.compile(getIDReg);
-		Matcher matcher = pattern.matcher(param);
-		matcher.find();
-		return matcher.group().trim();
-	}
-
-	/**
 	 * Gets the array of task names being referred to from the parameter
 	 */
 	private String[] getTaskNameArr(String param, String regex) {
@@ -858,6 +843,8 @@ public class DonParser implements IDonParser {
 		return param.substring(1, param.length()).trim();
 	}
 	public class WrongDateException extends Exception {
+
+		private static final long serialVersionUID = 95503042885547853L;
 
 		public WrongDateException() {
 			super();
