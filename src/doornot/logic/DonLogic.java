@@ -1,13 +1,7 @@
 package doornot.logic;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Stack;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
@@ -40,9 +34,6 @@ public class DonLogic implements IDonLogic {
 	// be cleared.
 	private Stack<AbstractDonCommand> commandPast, commandFuture;
 
-	private final static Logger log = Logger
-			.getLogger(DonLogic.class.getName());
-
 	public DonLogic() {
 		donStorage = new DonStorage();
 		donParser = new DonParser();
@@ -52,7 +43,6 @@ public class DonLogic implements IDonLogic {
 
 		donStorage.loadFromDisk();
 
-		initLogger();
 	}
 
 	/**
@@ -63,7 +53,7 @@ public class DonLogic implements IDonLogic {
 	 * @param parser
 	 *            the parser component
 	 */
-	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
+	public DonLogic(IDonStorage storage, IDonParser parser) {
 		donStorage = storage;
 		donParser = parser;
 
@@ -71,26 +61,7 @@ public class DonLogic implements IDonLogic {
 		commandFuture = new Stack<AbstractDonCommand>();
 
 		donStorage.loadFromDisk();
-		if (useLog) {
-			initLogger();
-		}
-	}
 
-	public static void setDebug(Level level) {
-		log.setLevel(level);
-	}
-
-	private static void initLogger() {
-		try {
-			Handler fileHandler = new FileHandler("donlogic.log");
-			fileHandler.setFormatter(new SimpleFormatter());
-			log.addHandler(fileHandler);
-			Logger.getLogger(DonLogic.class.getName()).setLevel(Level.FINE);
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
@@ -117,8 +88,6 @@ public class DonLogic implements IDonLogic {
 										// stack needs to be cleared
 			}
 		}
-
-		log.fine(command);
 
 		// Perform a save after every command
 		saveToDrive();
@@ -156,7 +125,7 @@ public class DonLogic implements IDonLogic {
 		if (commandPast.size() <= 0) {
 			response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
 			response.addMessage(MSG_UNDO_NO_ACTIONS);
-			log.fine(MSG_UNDO_NO_ACTIONS);
+
 		} else {
 			AbstractDonCommand lastCommand = commandPast.pop();
 			assert lastCommand.hasExecuted(); // The lastCommand can only be in
@@ -182,7 +151,6 @@ public class DonLogic implements IDonLogic {
 		if (commandFuture.size() <= 0) {
 			response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
 			response.addMessage(MSG_REDO_NO_ACTIONS);
-			log.fine(MSG_REDO_NO_ACTIONS);
 		} else {
 			AbstractDonCommand nextCommand = commandFuture.pop();
 			assert !nextCommand.hasExecuted(); // The lastCommand can only be in

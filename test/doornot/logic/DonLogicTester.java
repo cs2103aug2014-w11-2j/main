@@ -25,7 +25,7 @@ public class DonLogicTester {
 	public static void initLogic() {
 		storage = new DonStorage();
 		storage.changeFileName("logic_test");
-		logic = new DonLogic(storage, new DonParser(), false);
+		logic = new DonLogic(storage, new DonParser());
 	}
 	
 	@Before
