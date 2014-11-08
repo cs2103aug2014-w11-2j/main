@@ -1,5 +1,7 @@
 package doornot.logic;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Stack;
 
@@ -8,7 +10,10 @@ import doornot.parser.IDonParser;
 import doornot.storage.DonStorage;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.storage.IDonTask.TaskType;
 import doornot.util.AbstractDonCommand;
+import doornot.util.CalHelper;
+import doornot.util.SearchHelper;
 import doornot.util.AbstractDonCommand.GeneralCommandType;
 
 /**
@@ -28,6 +33,7 @@ public class DonLogic implements IDonLogic {
 
 	private IDonStorage donStorage;
 	private IDonParser donParser;
+	
 
 	// actionPast contains the actions to undo, actionFuture to redo
 	// If a new action that performs modifications is made, actionFuture has to
@@ -169,6 +175,47 @@ public class DonLogic implements IDonLogic {
 	@Override
 	public List<IDonTask> getTaskList() {
 		return donStorage.getTaskList();
+	}
+
+	@Override
+	public List<IDonTask> getTodayTasks() {
+		return SearchHelper.findTaskRange(donStorage, CalHelper.getTodayStart(),
+				CalHelper.getTodayEnd(), SearchHelper.FIND_INCOMPLETE);
+	}
+
+	@Override
+	public List<IDonTask> getWeekTasks() {
+		Calendar start = CalHelper.getTodayStart();
+		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		return SearchHelper.findTaskRange(donStorage, start, end,
+				SearchHelper.FIND_INCOMPLETE);
+	}
+
+	@Override
+	public List<IDonTask> getFutureTasks() {
+		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		return SearchHelper.findTaskRange(donStorage, start, null,
+				SearchHelper.FIND_INCOMPLETE);
+	}
+
+	@Override
+	public List<IDonTask> getFloatingTasks() {
+		return SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
+	}
+
+	@Override
+	public List<IDonTask> getOverdueTasks() {
+		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage, null,
+				Calendar.getInstance(), SearchHelper.FIND_INCOMPLETE);
+		List<IDonTask> resultList = new ArrayList<IDonTask>();
+		for (IDonTask task : taskList) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
+				resultList.add(task);
+			}
+		}
+		return resultList;
 	}
 
 }

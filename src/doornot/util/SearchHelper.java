@@ -11,9 +11,9 @@ import doornot.storage.IDonTask.TaskType;
 //@author A0111995Y
 public class SearchHelper {
 
-	protected static final int FIND_INCOMPLETE = 0;
-	protected static final int FIND_COMPLETE = 1;
-	protected static final int FIND_ALL = 2;
+	public static final int FIND_INCOMPLETE = 0;
+	public static final int FIND_COMPLETE = 1;
+	public static final int FIND_ALL = 2;
 
 	/**
 	 * Find tasks with the given name

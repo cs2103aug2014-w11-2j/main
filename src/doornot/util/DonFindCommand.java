@@ -1,6 +1,5 @@
 package doornot.util;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +11,6 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
-import doornot.storage.IDonTask.TaskType;
 import doornot.util.SearchHelper;
 
 //@author A0111995Y
@@ -264,11 +262,14 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * @return the response containing today's tasks
 	 */
 	private IDonResponse findToday(IDonStorage donStorage) {
-		IDonResponse response;
+		IDonResponse response = new DonResponse();
+		/*
 		response = findTaskRange(donStorage, CalHelper.getTodayStart(),
-				CalHelper.getTodayEnd(), FIND_INCOMPLETE);
-		response.getMessages().set(0, MSG_SEARCH_RESULT_TODAY);
-		response.setResponseType(ResponseType.SEARCH_TODAY);
+				CalHelper.getTodayEnd(), SearchHelper.FIND_INCOMPLETE);
+		*/
+		response.addMessage("1");
+		response.addMessage(MSG_SEARCH_RESULT_TODAY);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
 		return response;
 	}
 
@@ -381,12 +382,13 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse findAll(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
-		response.setTaskList(donStorage.getTaskList());
+		//response.setTaskList(donStorage.getTaskList());
 		if (donStorage.getTaskList().isEmpty()) {
 			response.setResponseType(ResponseType.SEARCH_EMPTY);
 		} else {
+			response.addMessage("5");
 			response.addMessage(MSG_SEARCH_RESULT_ALL);
-			response.setResponseType(ResponseType.SEARCH_ALL);
+			response.setResponseType(ResponseType.SWITCH_PANEL);
 		}
 
 		return response;
@@ -400,12 +402,12 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * @return the response containing all the tasks occurring within 7 days
 	 */
 	private IDonResponse findSevenDays(IDonStorage donStorage) {
-		Calendar start = CalHelper.getTodayStart();
-		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
-		IDonResponse response = findTaskRange(donStorage, start, end,
-				FIND_INCOMPLETE);
-		response.getMessages().set(0, MSG_SEARCH_RESULT_WEEK);
-		response.setResponseType(ResponseType.SEARCH_WEEK);
+		//Calendar start = CalHelper.getTodayStart();
+		//Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		IDonResponse response = new DonResponse();
+		response.addMessage("2");
+		response.addMessage(MSG_SEARCH_RESULT_WEEK);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
 		return response;
 	}
 
@@ -417,11 +419,15 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * @return the response containing all the tasks happening after 7 days
 	 */
 	protected IDonResponse findFuture(IDonStorage donStorage) {
+		/*
 		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
 		IDonResponse response = findTaskRange(donStorage, start, null,
-				FIND_INCOMPLETE);
-		response.getMessages().set(0, MSG_SEARCH_RESULT_FUTURE);
-		response.setResponseType(ResponseType.SEARCH_FUTURE);
+				SearchHelper.FIND_INCOMPLETE);
+		*/
+		IDonResponse response = new DonResponse();
+		response.addMessage("3");
+		response.addMessage(MSG_SEARCH_RESULT_FUTURE);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
 		return response;
 	}
 
@@ -433,8 +439,8 @@ public class DonFindCommand extends AbstractDonCommand {
 	 * @return the response containing all the overdue tasks
 	 */
 	protected IDonResponse findOverdue(IDonStorage donStorage) {
-		IDonResponse response = findTaskRange(donStorage, null,
-				Calendar.getInstance(), FIND_INCOMPLETE);
+		IDonResponse response = new DonResponse();/*findTaskRange(donStorage, null,
+				Calendar.getInstance(), SearchHelper.FIND_INCOMPLETE);
 		List<IDonTask> taskList = new ArrayList<IDonTask>();
 		for (IDonTask task : response.getTasks()) {
 			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
@@ -443,9 +449,11 @@ public class DonFindCommand extends AbstractDonCommand {
 				taskList.add(task);
 			}
 		}
-		response.getMessages().set(0, MSG_SEARCH_RESULT_OVERDUE);
-		response.setResponseType(ResponseType.SEARCH_OVERDUE);
-		response.setTaskList(taskList);
+		*/
+		response.addMessage("0");
+		response.addMessage(MSG_SEARCH_RESULT_OVERDUE);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		//response.setTaskList(taskList);
 		return response;
 	}
 
@@ -458,13 +466,16 @@ public class DonFindCommand extends AbstractDonCommand {
 	 */
 	protected IDonResponse findFloat(IDonStorage donStorage) {
 		IDonResponse response = new DonResponse();
+		/*
 		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
 				TaskType.FLOATING, true, false);
 		response.setTaskList(taskList);
+		*/
 		if (response.hasTasks()) {
-			response.setResponseType(IDonResponse.ResponseType.SEARCH_FLOAT);
+			response.setResponseType(IDonResponse.ResponseType.SWITCH_PANEL);
+			response.addMessage("4");
 			response.addMessage(MSG_SEARCH_RESULT_FLOAT);
-			response.addMessage(String.format(MSG_SEARCH_FOUND, taskList.size()));
+			//response.addMessage(String.format(MSG_SEARCH_FOUND, taskList.size()));
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
 			response.addMessage(MSG_SEARCH_FAILED);
@@ -505,7 +516,7 @@ public class DonFindCommand extends AbstractDonCommand {
 			response = findTaskByName(donStorage);
 		} else if (type == SearchType.SEARCH_AFTDATE) {
 			response = findTaskRange(donStorage, searchStartDate, null,
-					FIND_INCOMPLETE);
+					SearchHelper.FIND_INCOMPLETE);
 		} else if (type == SearchType.SEARCH_DATE) {
 			response = findTaskByDate(donStorage);
 		} else if (type == SearchType.SEARCH_UNDONE) {

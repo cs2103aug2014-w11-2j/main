@@ -186,7 +186,7 @@ public class DonCreateCommand extends AbstractDonCommand {
 			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
 					taskTitle));
 			if (SearchHelper.findTaskRange(donStorage, startDate, endDate,
-					FIND_INCOMPLETE).size() > 1) {
+					SearchHelper.FIND_INCOMPLETE).size() > 1) {
 				response.addMessage(MSG_DEADLINE_CONFLICT);
 			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle)
 					.size() > 1) {
