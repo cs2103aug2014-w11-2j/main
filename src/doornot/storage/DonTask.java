@@ -242,7 +242,7 @@ public class DonTask implements IDonTask {
 	 * @return -1 if the title starts earlier, 0 if they are the same, 1 if the
 	 *         other task starts later
 	 */
-	private int compareStartDate(IDonTask otherTask) {
+	protected int compareStartDate(IDonTask otherTask) {
 		return this.getStartDate().compareTo(otherTask.getStartDate());
 	}
 

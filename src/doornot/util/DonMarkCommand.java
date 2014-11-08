@@ -8,6 +8,7 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonMarkCommand extends DonEditCommand {
@@ -178,6 +179,7 @@ public class DonMarkCommand extends DonEditCommand {
 		}
 		
 		if(response.getResponseType() == ResponseType.EDIT_SUCCESS) {
+			Collections.sort(response.getTasks());
 			executed = true;
 		}
 		

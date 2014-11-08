@@ -9,6 +9,7 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
 import doornot.storage.IDonTask.TaskType;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 //@author A0111995Y
 public class DonDeleteCommand extends AbstractDonCommand {
@@ -312,6 +313,7 @@ public class DonDeleteCommand extends AbstractDonCommand {
 		}
 		
 		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {
+			Collections.sort(response.getTasks());
 			executed = true;
 		}
 		return response;
