@@ -1,11 +1,11 @@
 package doornot.logic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import doornot.storage.IDonTask;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Class defining a response object

@@ -4,8 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import doornot.storage.IDonTask;
-import edu.emory.mathcs.backport.java.util.Collections;
-
 /**
  * Interface defining the methods that the GUI needs from a IDonResponse object
  * Each command call by the user should result in 1 IDonResponse object
@@ -96,7 +94,14 @@ public interface IDonResponse {
 	 */
 	public void copyTasks(IDonResponse response);
 	
+	/**
+	 * Sorts the tasks in the response with the given comparator.
+	 * @param comp
+	 */
 	public void sortTask(Comparator<IDonTask> comp);
 	
+	/**
+	 * Sorts the tasks in the response with the the tasks default compareTo
+	 */
 	public void sortTask();
 }
