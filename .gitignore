@@ -7,3 +7,5 @@ DoorNot_current.txt
 *.log.lck
 *.log.1
 *.log.l.lck
+*.zip
+*.txt
