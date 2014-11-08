@@ -1,7 +1,4 @@
-/**
  * DonGUI - Graphic interface of DoOrNot V0.4
- * @author Lin Daqi (A0119423L)
- */
 
 package doornot.gui;
 
@@ -18,6 +15,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.ListCellRenderer;
@@ -161,7 +159,7 @@ public class DonGUIV3 {
 
         try
         {
-            InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");
+		    InputStream ringStream = DonGUIV3.class.getResourceAsStream("ring.wav");
             BGM = new AudioStream(ringStream);
             AudioPlayer.player.start(BGM);
         }
@@ -597,38 +595,20 @@ public class DonGUIV3 {
 			return 5;
 		}
 	}
-
-	private void parseType() {
-		overdueList = new ArrayList<IDonTask>();
-		todayList = new ArrayList<IDonTask>();
-		weekList = new ArrayList<IDonTask>();
-		farList = new ArrayList<IDonTask>();
-		floatList = new ArrayList<IDonTask>();
-
-		for (IDonTask task : guiTaskList) {
-			if (!task.getStatus()) {
-				if (dued(task)) {
-					overdueList.add(task);
-				} else {
-					if (isToday(task)) {
-						todayList.add(task);
-						weekList.add(task);
-					} else if (isWithinWeek(task)) {
-						weekList.add(task);
-					} else if (task.getStartDate() == null) {
-						floatList.add(task);
-					} else {
-						farList.add(task);
-					}
-				}
-			}
-		}
-
+	
+	private void parseType(){
+		overdueList = donLogic.runCommand("overdue").getTasks();
+		todayList = donLogic.runCommand("today").getTasks();
+		weekList = donLogic.runCommand("week").getTasks();
+		farList = donLogic.runCommand("future").getTasks();
+		floatList = donLogic.runCommand("float").getTasks();
 	}
+
 
 	ActionListener alg = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			typeList.setCellRenderer(new TypeCellRenderer());
+			textField.requestFocusInWindow();
 		}
 	};
 
@@ -643,7 +623,7 @@ public class DonGUIV3 {
 				donLogic.saveToDrive();
 			}
 		});
-		frmDoornot.setTitle("DoOrNot v0.5");
+		frmDoornot.setTitle("DoOrNot v0.4");
 		frmDoornot.setBounds(100, 100, 646, 528);
 		//frmDoornot.setUndecorated(true);
 		frmDoornot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -732,6 +712,19 @@ public class DonGUIV3 {
 					typeList.setCellRenderer(new TypeCellRenderer());
 				}
 
+			}
+		});
+		textField.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_PAGE_UP){
+					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
+					vs.setValue(vs.getValue() - 20);
+				}
+
+				if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN){
+					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
+					vs.setValue(vs.getValue() + 20);
+				}
 			}
 		});
 		
@@ -838,7 +831,7 @@ public class DonGUIV3 {
 		gbc_helpButton.gridwidth = 1;
 		frmDoornot.getContentPane().add(helpButton, gbc_helpButton);
 		*/
-		buttomFiller = new JLabel("DoOrNot v0.5");
+		buttomFiller = new JLabel("DoOrNot v0.4");
 		buttomFiller.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_buttomFiller = new GridBagConstraints();
 		//gbc_buttomFiller.anchor = GridBagConstraints.SOUTH;
@@ -931,7 +924,7 @@ public class DonGUIV3 {
 		gbc_scrollPane_list.gridx = 1;
 		gbc_scrollPane_list.gridy = 1;
 		gbc_scrollPane_list.weighty = 1;
-		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);
+		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);		
 
 		list = new JList<IDonTask>();
 		scrollPane_list.setViewportView(list);
@@ -1047,6 +1040,10 @@ public class DonGUIV3 {
 	}
 
 	class WindowEventHandler extends WindowAdapter {
+	    public void windowOpened(WindowEvent e) {
+	        textField.requestFocusInWindow();
+	    }			
+
 		public void windowClosing(WindowEvent e) {
 			donLogic.saveToDrive();
 		}
@@ -1265,7 +1262,8 @@ public class DonGUIV3 {
 			if (isToday(entry) && selectedPage == 1) {
 				if (entry.getType() == IDonTask.TaskType.DURATION) {
 					if (isSameDay(entry.getEndDate(), current)) {
-						id.setText(printTodayTime(entry.getEndDate()));
+						id.setText("last d\n"+printTodayTime(entry.getEndDate()));
+						//id.setText(printTodayTime(entry.getEndDate()));
 					} else {
 						int day = dateDiff(current, entry.getStartDate()) + 1;
 						if (day % 10 == 1 && day % 100 != 11)
