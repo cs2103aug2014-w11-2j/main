@@ -127,21 +127,30 @@ public class DonParser implements IDonParser {
 			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
 		} else if (commandWord.equalsIgnoreCase("free")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
-		} else if (commandWord.equalsIgnoreCase("today")) {
+		} else if (commandWord.equalsIgnoreCase("today")
+				|| commandWord.equalsIgnoreCase("t")) {
 			dCommand = new DonFindCommand(SearchType.TODAY);
 		} else if (commandWord.equalsIgnoreCase("od")
-				|| commandWord.equalsIgnoreCase("overdue")) {
+				|| commandWord.equalsIgnoreCase("overdue")
+				|| commandWord.equalsIgnoreCase("o")) {
 			dCommand = new DonFindCommand(SearchType.OVERDUE);
-		} else if (commandWord.equalsIgnoreCase("week")) {
+		} else if (commandWord.equalsIgnoreCase("week")
+				|| commandWord.equalsIgnoreCase("w")) {
 			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
-		} else if (commandWord.equalsIgnoreCase("future")) {
+		} else if (commandWord.equalsIgnoreCase("future")
+				|| commandWord.equalsIgnoreCase("u")) {
 			dCommand = new DonFindCommand(SearchType.FUTURE);
-		} else if (commandWord.equalsIgnoreCase("float")
+		} else if (commandWord.equalsIgnoreCase("c")
+				|| commandWord.equalsIgnoreCase("console")) {
+			dCommand = new DonFindCommand(SearchType.CONSOLE);
+		}else if (commandWord.equalsIgnoreCase("float")
 				|| commandWord.equalsIgnoreCase("fl")
-				|| commandWord.equalsIgnoreCase("floating")) {
+				|| commandWord.equalsIgnoreCase("floating")
+				|| commandWord.equalsIgnoreCase("f")) {
 			dCommand = new DonFindCommand(SearchType.FLOAT);
 		} else if (commandWord.equalsIgnoreCase("results")
-				|| commandWord.equalsIgnoreCase("result")) {
+				|| commandWord.equalsIgnoreCase("result")
+				|| commandWord.equalsIgnoreCase("r")) {
 			dCommand = new DonFindCommand(SearchType.RESULTS);
 		} else if (commandWord.equalsIgnoreCase("undo")
 				|| commandWord.equalsIgnoreCase("un")) {
