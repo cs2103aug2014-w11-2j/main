@@ -57,7 +57,7 @@ public class DonStorageTester {
 			storage.removeTask(ID);
 			assertEquals(null, 1, storage.getNextID());
 		}
-		
+
 	}
 
 	@Test
@@ -79,12 +79,12 @@ public class DonStorageTester {
 			storage.addTask(task);
 			tasks.add(task);
 
-			assertEquals(null,true,storage.removeTask(2));
+			assertEquals(null, true, storage.removeTask(2));
 			tasks.remove(1);
 
 			tasksTemp = storage.getTaskList();
-			boolean flag = tasksTemp.equals(tasks);
-			System.out.println(flag);
+
+			assertEquals(null, true, tasksTemp.equals(tasks));
 			storage.saveToDisk();
 		}
 
@@ -120,12 +120,14 @@ public class DonStorageTester {
 			testLabels.add("label1");
 			testLabels.add("label2");
 			testLabels.add("label3");
-			IDonTask task = new DonTask("something", null , null, storage.getNextID() ,testLabels);
+			IDonTask task = new DonTask("something", null, null,
+					storage.getNextID(), testLabels);
 			storage.addTask(task);
 			testLabels.add("label4");
 			testLabels.add("label5");
 			testLabels.add("label6");
-			task = new DonTask("something", null , null, storage.getNextID() ,testLabels);
+			task = new DonTask("something", null, null, storage.getNextID(),
+					testLabels);
 			storage.addTask(task);
 			task = new DonTask("something", storage.getNextID());
 			storage.addTask(task);
@@ -134,7 +136,7 @@ public class DonStorageTester {
 			assertEquals(null, true, storage.saveToDisk());
 		}
 	}
-	
+
 	@Test
 	public void testLabelsLoad() {
 		DonStorage storage = new DonStorage();
@@ -144,43 +146,71 @@ public class DonStorageTester {
 			storage.saveToDisk();
 		}
 	}
-	
+
 	@Test
-	public void testAddDeleteLabel(){
+	public void testAddDeleteLabel() {
 		DonStorage storage = new DonStorage();
-		storage.changeFileName("testFile6.txt");
+		DonStorage storage_output = new DonStorage();
+		storage_output.changeFileName("testFile9_AddDeleteLabel.txt");
+		storage_output.clear();
+		storage.changeFileName("testFile9.txt");
+		storage.clear();
 		if (storage.loadFromDisk()) {
-			assertEquals(null,true,storage.getTask(1).addLabel("label7"));
-			assertEquals(null,true,storage.getTask(1).deleteLabel("label1"));
-			assertEquals(null,false,storage.getTask(1).addLabel("label2"));
-			assertEquals(null,false,storage.getTask(1).deleteLabel("label8"));
-			storage.changeFileName("testFile6_AddDeleteLabel.txt");
+
+			List<String> testLabels = new ArrayList<String>();
+			testLabels.add("label1");
+			testLabels.add("label2");
+			testLabels.add("label3");
+			IDonTask task = new DonTask("something", null, null,
+					storage.getNextID(), testLabels);
+			storage.addTask(task);
+			testLabels.add("label4");
+			testLabels.add("label5");
+			testLabels.add("label6");
+			task = new DonTask("something", null, null, storage.getNextID(),
+					testLabels);
+			storage.addTask(task);
+			task = new DonTask("something", storage.getNextID());
+			storage.addTask(task);
+			task = new DonTask("something", storage.getNextID());
+			storage.addTask(task);
+			assertEquals(null, true, storage.saveToDisk());
+		}
+		
+		if (storage_output.loadFromDisk()) {
+
+			assertEquals(null, true, storage_output.getTask(1).addLabel("label7"));
+			assertEquals(null, true, storage_output.getTask(1).deleteLabel("label1"));
+			assertEquals(null, false, storage_output.getTask(1).addLabel("label2"));
+			assertEquals(null, false, storage_output.getTask(1).deleteLabel("label8"));
+			storage.changeFileName("testFile9_AddDeleteLabel.txt");
 			storage.saveToDisk();
 		}
+
 	}
-	
+
 	@Test
-	public void testMaxID(){
+	public void testMaxID() {
 		DonStorage storage = new DonStorage();
-		
+
 		storage.changeFileName("testFile8.txt");
 		storage.clear();
-		if(storage.loadFromDisk()){
+		if (storage.loadFromDisk()) {
 			Random ran = new Random();
-			for(int i =0;i<1100;i++){
+			for (int i = 0; i < 1100; i++) {
 				IDonTask task = new DonTask("something", storage.getNextID());
-				assertEquals(null,i+1,storage.addTask(task));
+				assertEquals(null, i + 1, storage.addTask(task));
 			}
-			for(int i = 0;i<100;i++){
-				assertEquals(null,true,storage.removeTask(ran.nextInt(9)+i*10+1));
+			for (int i = 0; i < 100; i++) {
+				assertEquals(null, true,
+						storage.removeTask(ran.nextInt(9) + i * 10 + 1));
 			}
-			for(int i =0;i<800;i++){
+			for (int i = 0; i < 800; i++) {
 				IDonTask task = new DonTask("something", storage.getNextID());
 				storage.addTask(task);
 			}
 		}
-		System.out.println(storage.getTaskList().size());
 		storage.saveToDisk();
 	}
-	
+
 }
