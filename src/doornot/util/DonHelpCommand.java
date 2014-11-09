@@ -75,16 +75,18 @@ public class DonHelpCommand extends AbstractDonCommand {
 			response.addMessage("del Do work <-- Deletes the task containing \"Do work\" in the title");
 		} else if (commandType == HelpType.HELP_SEARCH) {
 			// Help for search
-			response.addMessage("search / s / son / saf: Finds a task with the given ID, title or date");
+			response.addMessage("search / s / son / saf / sr: Finds a task with the given ID, title or date");
 			response.addMessage("Command format: search Task_id");
 			response.addMessage("Command format: search Part of Task title");
-			response.addMessage("Command format: search 22/01/2016");
-			response.addMessage("Command format: saf 22/01/2016");
+			response.addMessage("Command format: son DD/MM/YYYY");
+			response.addMessage("Command format: saf DD/MM/YYYY");
+			response.addMessage("Command format: sr date to date");
 			response.addMessage("Examples:");
 			response.addMessage("search 22 <-- Searches for task 22");
 			response.addMessage("search Do work <-- Searches for tasks containing \"Do work\" in the title");
 			response.addMessage("son 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
 			response.addMessage("saf 22/01/2016 <-- Searches for tasks occurring after 22nd of January 2016");
+			response.addMessage("sr this monday to this friday <-- Searches for tasks happening between this Monday and Friday");
 		} else if (commandType == HelpType.HELP_MARK) {
 			// Help for mark
 			response.addMessage("mark: Marks a task as done/undone");
