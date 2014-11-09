@@ -1,9 +1,15 @@
 package doornot.logic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import doornot.parser.DonParser;
 import doornot.parser.IDonParser;
@@ -26,6 +32,7 @@ import edu.emory.mathcs.backport.java.util.Collections;
 //@author A0111995Y
 public class DonLogic implements IDonLogic {
 
+	private static final String FILE_DONLOGIC_LOG = "donlogic.log";
 	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
 	private static final String MSG_SAVE_FAILED = "Save failed.";
 	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
@@ -42,6 +49,9 @@ public class DonLogic implements IDonLogic {
 	// be cleared.
 	private Stack<AbstractDonCommand> commandPast, commandFuture;
 
+	private final static Logger log = Logger
+			.getLogger(DonLogic.class.getName());
+	
 	public DonLogic() {
 		donStorage = new DonStorage();
 		donParser = new DonParser();
@@ -50,7 +60,7 @@ public class DonLogic implements IDonLogic {
 		commandFuture = new Stack<AbstractDonCommand>();
 
 		donStorage.loadFromDisk();
-
+		initLogger();
 	}
 
 	/**
@@ -61,7 +71,7 @@ public class DonLogic implements IDonLogic {
 	 * @param parser
 	 *            the parser component
 	 */
-	public DonLogic(IDonStorage storage, IDonParser parser) {
+	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
 		donStorage = storage;
 		donParser = parser;
 
@@ -69,7 +79,26 @@ public class DonLogic implements IDonLogic {
 		commandFuture = new Stack<AbstractDonCommand>();
 
 		donStorage.loadFromDisk();
+		if(useLog) {
+			initLogger();
+		}
+	}
+	
+	public static void setDebug(Level level) {
+		log.setLevel(level);
+	}
 
+	private static void initLogger() {
+		try {
+			Handler fileHandler = new FileHandler(FILE_DONLOGIC_LOG);
+			fileHandler.setFormatter(new SimpleFormatter());
+			log.addHandler(fileHandler);
+			Logger.getLogger(DonLogic.class.getName()).setLevel(Level.FINE);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -77,6 +106,7 @@ public class DonLogic implements IDonLogic {
 		if (command == null) {
 			throw new IllegalArgumentException(MSG_EX_COMMAND_CANNOT_BE_NULL);
 		}
+		log.fine(command);
 		AbstractDonCommand dCommand = donParser.parseCommand(command);
 
 		AbstractDonCommand.GeneralCommandType genCommandType = dCommand
@@ -110,9 +140,11 @@ public class DonLogic implements IDonLogic {
 		if (saveSuccess) {
 			response.setResponseType(IDonResponse.ResponseType.SAVE_SUCCESS);
 			response.addMessage(MSG_SAVE_SUCCESSFUL);
+			log.fine(MSG_SAVE_SUCCESSFUL);
 		} else {
 			response.setResponseType(IDonResponse.ResponseType.SAVE_FAILURE);
 			response.addMessage(MSG_SAVE_FAILED);
+			log.fine(MSG_SAVE_FAILED);
 		}
 		return response;
 	}

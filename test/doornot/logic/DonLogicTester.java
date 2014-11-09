@@ -19,18 +19,19 @@ import edu.emory.mathcs.backport.java.util.Collections;
 //@author A0111995Y
 public class DonLogicTester {
 	
+	private static final String FILE_LOGIC_TEST = "logic_test";
 	private static DonLogic logic;
 	private static DonStorage storage;
 	@BeforeClass
 	public static void initLogic() {
 		storage = new DonStorage();
-		storage.changeFileName("logic_test");
-		logic = new DonLogic(storage, new DonParser());
+		storage.changeFileName(FILE_LOGIC_TEST);
+		logic = new DonLogic(storage, new DonParser(), false);
 	}
 	
 	@Before
 	public void removeTestFile() {
-		File f = new File("logic_test");
+		File f = new File(FILE_LOGIC_TEST);
 		f.delete();
 		storage.getTaskList().clear();
 	}
