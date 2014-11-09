@@ -17,7 +17,7 @@ import doornot.util.SearchHelper;
 public class DonFindCommand extends AbstractDonCommand {
 
 	public enum SearchType {
-		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE, CONSOLE;
+		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE, CONSOLE, SEARCH_RANGE;
 	}
 
 	private SearchType type;
@@ -86,6 +86,23 @@ public class DonFindCommand extends AbstractDonCommand {
 		}
 		generalCommandType = GeneralCommandType.SEARCH;
 
+	}
+	
+	/**
+	 * Search between two dates. 
+	 * 
+	 * @param date
+	 *            the date to search for
+	 * @param dateType
+	 *            the type of the date search (before, on, after etc)
+	 */
+	public DonFindCommand(Calendar startDate, Calendar endDate, boolean isTimeUsed) {
+		searchStartDate = startDate;
+		searchEndDate = endDate;
+		type = SearchType.SEARCH_RANGE;
+		this.isTimeUsed = isTimeUsed;
+		
+		generalCommandType = GeneralCommandType.SEARCH;
 	}
 
 	public SearchType getType() {
@@ -515,6 +532,29 @@ public class DonFindCommand extends AbstractDonCommand {
 		response.setResponseType(ResponseType.SWITCH_PANEL);
 		return response;
 	}
+	
+	/**
+	 * Returns tasks in a given time range
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing the found tasks
+	 */
+	private IDonResponse findRange(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		if (CalHelper.dateEqualOrBefore(searchEndDate, searchStartDate)) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_COMMAND_WRONG_DATE);
+			return response;
+		}
+		if(!isTimeUsed) {
+			searchStartDate = CalHelper.getDayStart(searchStartDate);
+			searchEndDate = CalHelper.getDayEnd(searchEndDate);
+		}
+		response = findTaskRange(donStorage, searchStartDate, searchEndDate, SearchHelper.FIND_INCOMPLETE);
+
+		return response;
+	}
 
 	@Override
 	public IDonResponse executeCommand(IDonStorage donStorage) {
@@ -552,6 +592,8 @@ public class DonFindCommand extends AbstractDonCommand {
 			response = findResults();
 		} else if (type == SearchType.CONSOLE) {
 			response = findConsole();
+		} else if (type == SearchType.SEARCH_RANGE) {
+			response = findRange(donStorage);
 		}
 
 		if (type == SearchType.TODAY) {

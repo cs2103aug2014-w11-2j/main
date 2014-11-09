@@ -101,6 +101,8 @@ public class DonParser implements IDonParser {
 			setSearchDatesCommand(SearchType.SEARCH_AFTDATE);
 		} else if (commandWord.equalsIgnoreCase("son")) {
 			setSearchDatesCommand(SearchType.SEARCH_DATE);
+		} else if (commandWord.equalsIgnoreCase("sr")) {
+			setSearchDateRangeCommand();
 		} else if (commandWord.equalsIgnoreCase("all")) {
 			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
 		} else if (commandWord.equalsIgnoreCase("d")
@@ -529,6 +531,21 @@ public class DonParser implements IDonParser {
 			dCommand = new DonFindCommand(searchDate, hasSetTime, type);
 		}
 
+	}
+	
+	/**
+	 * Creates the search date range CommandType
+	 */
+	private void setSearchDateRangeCommand() {
+		String parameters = removeFirstWord(userCommand);
+		Calendar startDate = Calendar.getInstance(), endDate = Calendar
+				.getInstance();
+		boolean hasSetTime = setStartAndEndForCommand(parameters, startDate,
+				endDate);
+
+		if (dCommand == null) {
+			dCommand = new DonFindCommand(startDate, endDate, hasSetTime);
+		}		
 	}
 
 	/**
