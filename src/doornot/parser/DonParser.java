@@ -170,7 +170,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the add CommandType
+	 * Creates DonCreateCommand object
 	 */
 	private void setAddCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -197,7 +197,11 @@ public class DonParser implements IDonParser {
 					commandWord);
 		}
 	}
-
+	
+	/**
+	 * Creates the add deadline task command
+	 * @param command parameters
+	 */
 	private void createAddDeadlineCommand(String param) {
 		int byIndex = param.lastIndexOf(" by ");
 		String taskDate = param.substring(byIndex + 1);
@@ -223,7 +227,10 @@ public class DonParser implements IDonParser {
 		}
 
 	}
-
+	/**
+	 * Creates the add event task command
+	 * @param command parameters
+	 */
 	private void createAddEventCommand(String param) {
 		int fromIndex = param.lastIndexOf(" from ");
 		String taskDates = param.substring(fromIndex + 1);
@@ -272,7 +279,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the edit CommandType
+	 * Creates the DonEditCommand
 	 */
 	private void setEditCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -331,7 +338,10 @@ public class DonParser implements IDonParser {
 		}
 
 	}
-
+	/**
+	 * Creates the edit deadline task command
+	 * @param command parameters
+	 */
 	private void createEditDeadlineCommand(String param) {
 		int byIndex = param.lastIndexOf(" by ");
 		String taskDate = param.substring(byIndex + 1);
@@ -368,7 +378,10 @@ public class DonParser implements IDonParser {
 		}
 
 	}
-
+	/**
+	 * Creates the edit event task command
+	 * @param command parameters
+	 */
 	private void createEditEventCommand(String param) {
 		int fromIndex = param.lastIndexOf(" from ");
 		String taskDates = param.substring(fromIndex + 1);
@@ -410,7 +423,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the mark CommandType
+	 * Creates the DonMarkCommand object
 	 */
 	private void setMarkCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -447,7 +460,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the delete CommandType
+	 * Creates the DonDeleteCommand object
 	 */
 	private void setDeleteCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -488,7 +501,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the search CommandType
+	 * Creates the DonSearchCommand object
 	 */
 	private void setSearchCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -518,7 +531,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the search after CommandType and search on CommandType
+	 * Creates the search after and search on command types in DonFindCommand
 	 */
 	private void setSearchDatesCommand(SearchType type) {
 		String parameters = removeFirstWord(userCommand);
@@ -532,7 +545,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the search label CommandType
+	 * Creates the search label type in DonFindCommand object
 	 */
 	private void setSlabelCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -549,7 +562,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the remove label CommandType
+	 * Creates the DonDelabelCommand object
 	 */
 	private void setDelabelCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -599,7 +612,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Creates the label CommandType
+	 * Creates the DonAddlabelCommand object
 	 */
 	private void setLabelCommand() {
 		String parameters = removeFirstWord(userCommand);
@@ -636,7 +649,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Set the help command types
+	 * Creates DonHelpCommand objects
 	 */
 	private void setHelpCommand() {
 
@@ -725,7 +738,12 @@ public class DonParser implements IDonParser {
 
 		return hasSetTime;
 	}
-
+	
+	/**
+	 * Makes sure that dates with no timing specified are set to 23:59
+	 * @param dateCal
+	 * @return date
+	 */
 	private Calendar createDateNatty(Calendar dateCal) {
 
 		int year = dateCal.get(Calendar.YEAR);
@@ -766,7 +784,7 @@ public class DonParser implements IDonParser {
 	}
 
 	/**
-	 * Gets dates from parser
+	 * Gets more than one date from parser, used for event task commands
 	 * 
 	 * @param parameters
 	 * @return
@@ -787,7 +805,13 @@ public class DonParser implements IDonParser {
 			return dates;
 		}
 	}
-
+	/**
+	 * Set start date and end date for dCommand
+	 * @param parameters
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
 	private boolean setStartAndEndForCommand(String parameters,
 			Calendar startDate, Calendar endDate) {
 		boolean hasSetTime = false;
