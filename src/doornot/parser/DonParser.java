@@ -689,7 +689,8 @@ public class DonParser implements IDonParser {
 					|| parameters.equalsIgnoreCase("saf")
 					|| parameters.equalsIgnoreCase("son")
 					|| parameters.equalsIgnoreCase("sd")
-					|| parameters.equalsIgnoreCase("sud")) {
+					|| parameters.equalsIgnoreCase("sud")
+					|| parameters.equalsIgnoreCase("sr")) {
 				dCommand = new DonHelpCommand(HelpType.HELP_SEARCH);
 			} else if (parameters.equalsIgnoreCase("del")
 					|| parameters.equalsIgnoreCase("delete")
