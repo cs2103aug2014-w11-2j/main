@@ -146,7 +146,6 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	 * @return the response containing the deletion status and deleted tasks
 	 */
 	private IDonResponse deleteOverdueTasks(IDonStorage donStorage) {
-		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> foundList = SearchHelper.findOverdue(donStorage);
 
@@ -187,7 +186,6 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	 * @return the response containing the deletion status and deleted tasks
 	 */
 	private IDonResponse deleteFloatingTasks(IDonStorage donStorage) {
-		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> foundList = SearchHelper.findTaskByType(donStorage,
 				TaskType.FLOATING, true, true);
@@ -278,7 +276,6 @@ public class DonDeleteCommand extends AbstractDonCommand {
 	 * @return response containing success/failure of the operation
 	 */
 	private IDonResponse deleteCompletedTasks(IDonStorage donStorage) {
-		assert searchTitle != null;
 		IDonResponse response = new DonResponse();
 		List<IDonTask> foundList = SearchHelper.findDone(donStorage);
 

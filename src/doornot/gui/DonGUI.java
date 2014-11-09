@@ -115,14 +115,14 @@ public class DonGUI {
 	private int selectedPage = 1;
 	private int selectedCmd = -1;
 	private JLabel searchLabel;
-	private Timer timerg;
-	private int flashcode = -1;
-	private int curr = -2;
-	private int flashcode2 = -1;
-	private int curr2 = -2;
+	private Timer globalTimer;
+	private int flashcode_panel = -1;
+	private int currentHighlightedPanel = -2;
+	private int flashcode_task = -1;
+	private int currentHighlightedTask = -2;
 	private boolean delflag = false;
 	private String curSearchString = "";
-	private MyDialog dlg = new MyDialog(frmDoornot);
+	private AboutDialog aboutDialog = new AboutDialog(frmDoornot);
 
 	/**
 	 * Launch the application.
@@ -174,39 +174,8 @@ public class DonGUI {
     }
     
 	private void branchToPage(String cmd) {
-		switch (cmd) {
-		case "c":
-		case "console":
-			selectedPage = 7;
-			list.clearSelection();
-			break;
-		case "t":
-		case "today":
-			selectedPage = 1;
-			typeList.setSelectedIndex(0);
-			break;
-		case "w":
-		case "week":
-			selectedPage = 2;
-			typeList.setSelectedIndex(1);
-			break;
-		case "u":
-		case "future":
-			selectedPage = 3;
-			typeList.setSelectedIndex(2);
-			break;
-		case "f":
-		case "float":
-			selectedPage = 4;
-			typeList.setSelectedIndex(3);
-			break;
-		case "l":
-		case "all":
-			selectedPage = 5;
-			typeList.setSelectedIndex(4);
-			break;
-		case "o":
-		case "overdue":
+		int index = Integer.parseInt(cmd);
+		if(index == 0){
 			if (overdueList != null && overdueList.size() != 0) {
 				selectedPage = 0;
 				typeList.clearSelection();
@@ -214,12 +183,13 @@ public class DonGUI {
 				buttomFiller.setVisible(false);
 				infoPane.setText("No overdue tasks!");
 				infoPane.setVisible(true);
-				new Alb(1000);
+				new InfoTimer(1000);
 				return;
 			}
-			break;
-		case "r":
-		case "results":
+		} else if (index > 0 && index < 6){
+			selectedPage = index;
+			typeList.setSelectedIndex(index-1);
+		} else if (index == 6){
 			if (searchList != null && searchList.size() != 0) {
 				selectedPage = 6;
 				typeList.clearSelection();
@@ -227,11 +197,14 @@ public class DonGUI {
 				buttomFiller.setVisible(false);
 				infoPane.setText("No search results!");
 				infoPane.setVisible(true);
-				new Alb(1000);
+				new InfoTimer(1000);
 				return;
 			}
-			break;
-		default:
+		} else if (index == 7){
+			selectedPage = 7;
+			typeList.clearSelection();
+		} else {
+			return;
 		}
 		typeList.setCellRenderer(new TypeCellRenderer());
 		setTypeData();
@@ -242,17 +215,15 @@ public class DonGUI {
 			donLogic.saveToDrive();
 			System.exit(0);
 		}
-		if (cmd.equals("c") || cmd.equals("console") || cmd.equals("t") || cmd.equals("today") || cmd.equals("w") || cmd.equals("week")
-				|| cmd.equals("u") || cmd.equals("future") || cmd.equals("f") || cmd.equals("float") || cmd.equals("l")
-				|| cmd.equals("all") || cmd.equals("o") || cmd.equals("overdue") || cmd.equals("r") || cmd.equals("results")) {
-			textField.setText("");
-			branchToPage(cmd);
-			return;
-		}
 		IDonResponse rp = donLogic.runCommand(cmd);
 		assert rp != null;
 		String fb = "";
 		int size = 0;
+		if(rp.getResponseType() == IDonResponse.ResponseType.SWITCH_PANEL){
+			textField.setText("");
+			branchToPage(rp.getMessages().get(0));
+			return;
+		}
 		if (rp.hasMessages() && rp.getResponseType() != IDonResponse.ResponseType.HELP) {
 			lastMsg = rp.getMessages().get(0);
 			currentMsgList = new ArrayList<String>();
@@ -280,8 +251,8 @@ public class DonGUI {
 		if (rp.hasTasks() && (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || 
 				rp.getResponseType() == IDonResponse.ResponseType.EDIT_SUCCESS)){
 			delflag = false;
-			flashcode = judgeType(rp.getTasks().get(0));
-			flashcode2 = rp.getTasks().get(0).getID();			
+			flashcode_panel = judgeType(rp.getTasks().get(0));
+			flashcode_task = rp.getTasks().get(0).getID();			
 		}
 		if (rp.hasTasks()
 				&& (rp.getResponseType() == IDonResponse.ResponseType.SEARCH_SUCCESS
@@ -301,7 +272,7 @@ public class DonGUI {
 		}
 		if (rp.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
 			if(rp.getTasks().size() > 0){
-				flashcode = judgeType(rp.getTasks().get(0));
+				flashcode_panel = judgeType(rp.getTasks().get(0));
 				delflag = true;
 			}
 			if (searchList != null) {
@@ -323,7 +294,7 @@ public class DonGUI {
 			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
 			
-			new Alb(1000);
+			new InfoTimer(1000);
 		} else if (size > 1) {
 			for (int i = 0; i < currentMsgList.size(); i++) {
 				fb += currentMsgList.get(i) + "\n";
@@ -331,7 +302,7 @@ public class DonGUI {
 			infoPane.setText(currentMsgList.remove(0));
 			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
-			new Almb(1000);
+			new MultiInfoTimer(1000);
 		}
 		display += fb;
 		textArea.setText(display);
@@ -590,15 +561,15 @@ public class DonGUI {
 	}
 	
 	private void parseType(){
-		overdueList = donLogic.runCommand("overdue").getTasks();
-		todayList = donLogic.runCommand("today").getTasks();
-		weekList = donLogic.runCommand("week").getTasks();
-		farList = donLogic.runCommand("future").getTasks();
-		floatList = donLogic.runCommand("float").getTasks();
+		overdueList = donLogic.getOverdueTasks();
+		todayList = donLogic.getTodayTasks();
+		weekList = donLogic.getWeekTasks();
+		farList = donLogic.getFutureTasks();
+		floatList = donLogic.getFloatingTasks();
 	}
 
 
-	ActionListener alg = new ActionListener(){
+	ActionListener globalTimerListener = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			typeList.setCellRenderer(new TypeCellRenderer());
 			textField.requestFocusInWindow();
@@ -650,9 +621,9 @@ public class DonGUI {
 			}
 		});
 		
-		timerg = new Timer(1000, alg);
-		timerg.setRepeats(true);
-		timerg.start();
+		globalTimer = new Timer(1000, globalTimerListener);
+		globalTimer.setRepeats(true);
+		globalTimer.start();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 63, 386, 69, 50, 10,0 };
@@ -692,7 +663,7 @@ public class DonGUI {
 							buttomFiller.setVisible(false);
 							infoPane.setText("No overdue tasks!");
 							infoPane.setVisible(true);
-							new Alb(1000);
+							new InfoTimer(1000);
 							return;
 						}
 					} else {
@@ -733,8 +704,8 @@ public class DonGUI {
 		
 		panel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				dlg.setLocationRelativeTo(frmDoornot);
-				dlg.setVisible(true);
+				aboutDialog.setLocationRelativeTo(frmDoornot);
+				aboutDialog.setVisible(true);
 			}
 		});
 
@@ -1070,15 +1041,15 @@ public class DonGUI {
 				p.setBorder(null);
 			}
 			
-			if(typecode == flashcode){
-				if(curr == flashcode){
+			if(typecode == flashcode_panel){
+				if(currentHighlightedPanel == flashcode_panel){
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));	
 				} else {
 					if(!delflag) p.setBorder(new LineBorder(Color.green, 3));
 					else p.setBorder(new LineBorder(Color.red,3));
-					curr = flashcode;
-					new Alfb(1000);
+					currentHighlightedPanel = flashcode_panel;
+					new PanelHighlightTimer(1000);
 				}
 			} else {
 				if (isSelected || selectedPage - 1 == index) {
@@ -1199,13 +1170,13 @@ public class DonGUI {
 			Calendar current = Calendar.getInstance();
 			IDonTask entry = (IDonTask) value;
 			
-			if(entry.getID() == flashcode2 && entry.getID() != -1){
-				if(curr2 == flashcode2){
+			if(entry.getID() == flashcode_task && entry.getID() != -1){
+				if(currentHighlightedTask == flashcode_task){
 					p.setBorder(new LineBorder(Color.green, 3));
 				} else {
 					p.setBorder(new LineBorder(Color.green, 3));
-					curr2 = flashcode2;
-					new Alib(1000);
+					currentHighlightedTask = flashcode_task;
+					new TaskHighlightTimer(1000);
 				}
 			} else {
 				p.setBorder(null);
@@ -1337,9 +1308,9 @@ public class DonGUI {
 	}
 
 	
-	class Alb implements ActionListener {
+	class InfoTimer implements ActionListener {
 		Timer timer;
-		Alb(int delay){
+		InfoTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
@@ -1351,9 +1322,9 @@ public class DonGUI {
 		}
 	}
 	
-	class Almb implements ActionListener {
+	class MultiInfoTimer implements ActionListener {
 		Timer timer;
-		Almb(int delay){
+		MultiInfoTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.setRepeats(true);
 			timer.start();
@@ -1370,36 +1341,36 @@ public class DonGUI {
 		}
 	}
 	
-	class Alfb implements ActionListener {
+	class PanelHighlightTimer implements ActionListener {
 		Timer timer;
-		Alfb(int delay){
+		PanelHighlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			curr = -2;
-			flashcode = -1;
+			currentHighlightedPanel = -2;
+			flashcode_panel = -1;
 			timer.stop();
 		}
 	}
 	
-	class Alib implements ActionListener {
+	class TaskHighlightTimer implements ActionListener {
 		Timer timer;
-		Alib(int delay){
+		TaskHighlightTimer(int delay){
 			timer = new Timer(delay, this);
 			timer.start();
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			curr2 = -2;
-			flashcode2 = -1;
+			currentHighlightedTask = -2;
+			flashcode_task = -1;
 			timer.stop();
 		}
 	}
 	
-	class MyDialog extends JDialog {
-		  public MyDialog(JFrame parent) {
+	class AboutDialog extends JDialog {
+		  public AboutDialog(JFrame parent) {
 		    super(parent, "About", true);
 		    Container cp = getContentPane();
 		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));

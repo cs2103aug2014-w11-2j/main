@@ -171,12 +171,18 @@ public class DonCreateCommand extends AbstractDonCommand {
 	 */
 	private IDonResponse createEventTask(IDonStorage donStorage) {
 		assert taskTitle != null && startDate != null && endDate != null;
+		IDonResponse response = new DonResponse();
+		if (CalHelper.dateEqualOrBefore(endDate, startDate)) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+			response.addMessage(MSG_COMMAND_WRONG_DATE);
+			return response;
+		}
 		IDonTask task = new DonTask(taskTitle, startDate, endDate,
 				donStorage.getNextID());
 		task.setTimeUsed(timeUsed);
 		int addResult = donStorage.addTask(task);
 
-		DonResponse response = new DonResponse();
+		
 		if (addResult == FAILURE) {
 			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
 			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, taskTitle));
