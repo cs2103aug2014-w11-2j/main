@@ -547,7 +547,7 @@ public class DonParser implements IDonParser {
 	}
 	
 	/**
-	 * Creates the search date range CommandType
+	 * Creates the search date range CommandType in DonFindCommand object
 	 */
 	private void setSearchDateRangeCommand() {
 		String parameters = removeFirstWord(userCommand);
