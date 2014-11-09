@@ -35,7 +35,7 @@ import doornot.util.DonMarkCommand.MarkType;
 public class DonParserTest {
 
 	private static DonParser parser;
-	//private AbstractDonCommand CommandTest = new AbstractDonCommand();
+	
 	@BeforeClass
 	public static void init(){
 		parser = new DonParser();
@@ -44,7 +44,7 @@ public class DonParserTest {
 	@Test
 	public void testAddTask(){
 
-		// test add task
+		// test add deadline tasks
 		
 		
 		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a hihihi 12345678 by 09/09/2014");
@@ -54,8 +54,7 @@ public class DonParserTest {
 		
 		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678 by 12/13/2014");
 		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad hihihi by 09082014");
-//		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a done by 09082014");
-		DonInvalidCommand invalid4 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
 		
 		assertEquals(AddType.DEADLINE, create1.getType());
 		assertEquals("hihihi 12345678", create1.getTaskTitle());
@@ -66,7 +65,7 @@ public class DonParserTest {
 		
 		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
 		
-		// test hours
+		// test deadlines with time specified
 		
 		Calendar septCal = new GregorianCalendar(2014,8,9,13,24);
 
@@ -75,21 +74,19 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(septCal, create3.getStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(septCal, create4.getStartDate()));
 		
-		// test invalid
+		// test invalid commands
 		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
 		assertEquals("ad", invalid2.getStringInput());
-//		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
-//		assertEquals("a", invalid3.getStringInput());
-		assertEquals(InvalidType.INVALID_FORMAT, invalid4.getType());
-		assertEquals("a", invalid4.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("a", invalid3.getStringInput());
 		
 	}
 	
 	@Test
 	public void testAddEvent(){
+		
 		// test add event
 
-		
 		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("add hihihi from 07/08/2014 to 09/08/2014");
 		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add hihihi from 7 aug to 9 aug");
 		
@@ -104,7 +101,7 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(startDate1, create2.getStartDate()));
 		assertEquals(endDate1.getTime().toString(), create2.getEndDate().getTime().toString());
 		
-		// test time
+		// test time specified
 		startDate1 = new GregorianCalendar(2014,7,7,13,24);
 		endDate1 = new GregorianCalendar(2014,7,9,15,54);
 		
@@ -130,15 +127,15 @@ public class DonParserTest {
 	@Test
 	public void testAddFloat(){
 		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("addf overdue work");
-		// test event add
+		// test add floating tasks
 		assertEquals(AddType.FLOATING, create1.getType());
 		assertEquals("overdue work", create1.getTaskTitle());
 		
-		// test invalid
-//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf overdue");
-		
-//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-//		assertEquals("addf", invalid1.getStringInput());
+		// test invalid 
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf ove;rdue");
+		//invalid name
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("addf", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -156,12 +153,6 @@ public class DonParserTest {
 		
 		assertEquals(MarkType.MARK_OVERDUE, mark3.getMarkType());
 		assertEquals(MarkType.MARK_FLOAT, mark4.getMarkType());
-		
-		// test invalid
-//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("mark undone");
-		
-//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-//		assertEquals("mark", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -189,12 +180,6 @@ public class DonParserTest {
 		assertEquals(DeleteType.DELETE_LABEL, delete4.getType());
 		assertEquals("funny business", delete4.getSearchTitle());
 		assertEquals(DeleteType.DELETE_DONE, delete5.getType());
-		
-		// test invalid
-//		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("del undone");
-		
-//		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
-//		assertEquals("del", invalid1.getStringInput());
 	}
 	
 	@Test
@@ -226,6 +211,7 @@ public class DonParserTest {
 		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("son 09/08/2014");
 		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("son 9 aug");
 		Calendar date1 = new GregorianCalendar(2014,7,9,23,59);
+		
 		// test search date
 		assertEquals(SearchType.SEARCH_DATE, search1.getType());
 		assertEquals(date1.getTime().toString(), search1.getSearchStartDate().getTime().toString());
@@ -242,11 +228,13 @@ public class DonParserTest {
 	@Test
 	public void testSearchGeneral(){
 
-//		TODAY,
-//		OVERDUE,
 		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("saf 09/08/2014");
 		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("saf 9 aug");
-		Calendar date1 = new GregorianCalendar(2014,7,10,23,59); //search after commands will have a modified startdate after getting parsed if they are provided without time
+		Calendar date1 = new GregorianCalendar(2014,7,10,23,59); 
+		
+		//search after commands will have a modified startdate after getting parsed 
+		//if they are provided without time
+		
 		// test search after date
 		assertEquals(SearchType.SEARCH_AFTDATE, search1.getType());
 		assertEquals(true, CalHelper.relevantEquals(date1, search1.getSearchStartDate()));
@@ -254,9 +242,7 @@ public class DonParserTest {
 		
 		// test search free
 		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("free");
-//		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("search free");
 		assertEquals(SearchType.SEARCH_FREE, search3.getType());
-//		assertEquals(SearchType.SEARCH_FREE, search4.getType());
 		
 		// test search all
 		DonFindCommand search5 = (DonFindCommand) parser.parseCommand("s");
@@ -266,19 +252,15 @@ public class DonParserTest {
 		
 		// test search undone
 		DonFindCommand search7 = (DonFindCommand) parser.parseCommand("sud");
-//		DonFindCommand search8 = (DonFindCommand) parser.parseCommand("s undone");
-//		DonFindCommand search9 = (DonFindCommand) parser.parseCommand("search undone");
+		DonFindCommand search8 = (DonFindCommand) parser.parseCommand("undone");
 		assertEquals(SearchType.SEARCH_UNDONE, search7.getType());
-//		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
-//		assertEquals(SearchType.SEARCH_UNDONE, search9.getType());
+		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
 		
 		// test search done
 		DonFindCommand search16 = (DonFindCommand) parser.parseCommand("sd");
-//		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("s done");
-//		DonFindCommand search18 = (DonFindCommand) parser.parseCommand("search done");
+		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("done");
 		assertEquals(SearchType.SEARCH_DONE, search16.getType());
-//		assertEquals(SearchType.SEARCH_DONE, search17.getType());
-//		assertEquals(SearchType.SEARCH_DONE, search18.getType());
+		assertEquals(SearchType.SEARCH_DONE, search17.getType());
 		
 		// test today
 		DonFindCommand search10 = (DonFindCommand) parser.parseCommand("today");
@@ -362,7 +344,7 @@ public class DonParserTest {
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewStartDate()));
 		assertEquals(true, CalHelper.relevantEquals(endDate, edit4.getNewEndDate()));
 		
-		// tets with time
+		// test with time
 		startDate = new GregorianCalendar(2014,7,7,13,55);
 		endDate = new GregorianCalendar(2014,7,9,11,44);
 		
@@ -399,7 +381,7 @@ public class DonParserTest {
 		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit hihihi by 9 aug 1.23 am");
 		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewDeadline()));
 		
-		// tets ID edit date
+		// test ID edit date
 		startDate = new GregorianCalendar(2014,7,9,23,59);
 		
 		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("e 666 by 09/08/2014");
@@ -472,7 +454,7 @@ public class DonParserTest {
 		assertEquals("projects", label1.getNewLabel());
 		assertEquals("hihihi", label1.getSearchTitle());
 		
-		// tets label ID
+		// test label ID
 		
 		DonAddLabelCommand label2 = (DonAddLabelCommand) parser.parseCommand("label 666 #projects");
 		assertEquals(AddLabelType.LABEL_ID, label2.getAddLabelType());
