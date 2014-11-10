@@ -3076,7 +3076,7 @@ public class DonFindCommand extends AbstractDonCommand {
 		} else {
 			lastFree.setStartDate(lastTask.getEndDate());
 		}
-		lastFree.setEndDate(new GregorianCalendar(4242, 0, 1));
+		lastFree.setEndDate(null);
 		lastFree.setTimeUsed(lastTask.isTimeUsed());
 		response.addTask(lastFree);
 		
