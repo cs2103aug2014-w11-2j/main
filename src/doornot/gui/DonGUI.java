@@ -1,6 +1,6 @@
 /**
-* DonGUI - Graphic interface of DoOrNot V0.5
-**/
+ * DonGUI - Graphic interface of DoOrNot V0.5
+ **/
 
 //@author A0119423L
 
@@ -85,11 +85,11 @@ public class DonGUI {
 	private static final int SEARCH_INDEX = 6;
 	private static final int CONSOLE_INDEX = 7;
 	private static final int HELP_INDEX = 8;
-	
+
 	private static final int NO_ID = -1;
 	private static final int NOT_SELECTED = -1;
 	private static final int NOT_HIGHLIGHTED = -2;
-	
+
 	private JFrame frmDoornot;
 	DonLogic donLogic = new DonLogic();
 	int selectedTask;
@@ -116,7 +116,8 @@ public class DonGUI {
 	private JLabel lblTaskList;
 	private Image logo;
 	private Image noTaskImage;
-	private Integer[] placeholder = { TODAY_INDEX, WEEK_INDEX, FUTURE_INDEX, FLOAT_INDEX, ALL_INDEX };
+	private Integer[] placeholder = { TODAY_INDEX, WEEK_INDEX, FUTURE_INDEX,
+			FLOAT_INDEX, ALL_INDEX };
 	private List<IDonTask> guiTaskList;
 	private List<IDonTask> overdueList;
 	private List<IDonTask> todayList;
@@ -160,12 +161,13 @@ public class DonGUI {
 		initialize();
 	}
 
-    /**
-     * a ActionListener for global timer to refresh the GUI and set focus in input box
-     */
+	/**
+	 * a ActionListener for global timer to refresh the GUI and set focus in
+	 * input box
+	 */
 
-	ActionListener globalTimerListener = new ActionListener(){
-		public void actionPerformed(ActionEvent e){
+	ActionListener globalTimerListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
 			typeList.setCellRenderer(new TypeCellRenderer());
 			textField.requestFocusInWindow();
 		}
@@ -178,7 +180,7 @@ public class DonGUI {
 	private void initialize() {
 
 		/*
-		 * initialize the frame 
+		 * initialize the frame
 		 */
 		frmDoornot = new JFrame();
 		frmDoornot.getContentPane().setBackground(new Color(159, 197, 232));
@@ -211,29 +213,29 @@ public class DonGUI {
 				}
 			}
 		});
-		
-		frmDoornot.addKeyListener(new KeyAdapter(){
-			public void keyPressed(KeyEvent e){
-				if(e.getKeyCode() == KeyEvent.VK_F1){
+
+		frmDoornot.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_F1) {
 					typeList.setSelectedIndex(0);
 					selectedPage = 1;
 					setTypeData();
 				}
 			}
 		});
-		
+
 		/*
 		 * initialize global timer
 		 */
 		globalTimer = new Timer(1000, globalTimerListener);
 		globalTimer.setRepeats(true);
 		globalTimer.start();
-		
+
 		/*
 		 * define layout
 		 */
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] { 63, 386, 69, 50, 10,0 };
+		gridBagLayout.columnWidths = new int[] { 63, 386, 69, 50, 10, 0 };
 		gridBagLayout.rowHeights = new int[] { 44, 30, 315, 31, 38, 0 };
 		gridBagLayout.columnWeights = new double[] { 0.0, 0.0, 0.0,
 				Double.MIN_VALUE };
@@ -245,8 +247,9 @@ public class DonGUI {
 		 * initialize textField
 		 */
 		textField = new JTextField();
-		//key listener of textField to listen to up/down traversal of command history,
-		//enter, and function key F1 to F6.
+		// key listener of textField to listen to up/down traversal of command
+		// history,
+		// enter, and function key F1 to F6.
 		textField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -267,7 +270,7 @@ public class DonGUI {
 						textField.setText(cmdStack.get(cmdStack.size() - 1
 								- selectedCmd));
 				} else if (e.getKeyCode() > 111 && e.getKeyCode() < 118) {
-					if(e.getKeyCode() == 117){						
+					if (e.getKeyCode() == 117) {
 						if (overdueList != null && overdueList.size() != 0) {
 							selectedPage = 0;
 							typeList.clearSelection();
@@ -288,22 +291,23 @@ public class DonGUI {
 
 			}
 		});
-		
-		//key listener of textField to listen to page_up/page_down for scroll control
-		textField.addKeyListener(new KeyAdapter(){
+
+		// key listener of textField to listen to page_up/page_down for scroll
+		// control
+		textField.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if(e.getKeyCode() == KeyEvent.VK_PAGE_UP){
+				if (e.getKeyCode() == KeyEvent.VK_PAGE_UP) {
 					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
 					vs.setValue(vs.getValue() - 20);
 				}
 
-				if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN){
+				if (e.getKeyCode() == KeyEvent.VK_PAGE_DOWN) {
 					JScrollBar vs = scrollPane_list.getVerticalScrollBar();
 					vs.setValue(vs.getValue() + 20);
 				}
 			}
 		});
-		
+
 		GridBagConstraints gbc_textField = new GridBagConstraints();
 		gbc_textField.fill = GridBagConstraints.BOTH;
 		gbc_textField.insets = new Insets(0, 0, 5, 5);
@@ -315,8 +319,6 @@ public class DonGUI {
 		frmDoornot.getContentPane().add(textField, gbc_textField);
 		textField.setColumns(10);
 
-		
-		
 		/*
 		 * initialize panel (that display logo)
 		 */
@@ -332,7 +334,7 @@ public class DonGUI {
 		};
 		panel.setBackground(new Color(159, 197, 232));
 		panel.setVisible(false);
-		
+
 		panel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				aboutDialog.setLocationRelativeTo(frmDoornot);
@@ -435,7 +437,6 @@ public class DonGUI {
 		gbc_searchLabel.gridy = 0;
 		frmDoornot.getContentPane().add(searchLabel, gbc_searchLabel);
 
-		
 		/*
 		 * initialize buttomFiller (that display version info)
 		 */
@@ -467,11 +468,12 @@ public class DonGUI {
 		/*
 		 * initialize noTaskPanel (that display 'no task' when there's no task)
 		 */
-		
+
 		noTaskPanel = new JPanel() {
 			protected void paintComponent(Graphics g) {
-				Image resizedLogo = noTaskImage.getScaledInstance(noTaskPanel.getWidth(),
-						noTaskPanel.getHeight(), Image.SCALE_SMOOTH);
+				Image resizedLogo = noTaskImage.getScaledInstance(
+						noTaskPanel.getWidth(), noTaskPanel.getHeight(),
+						Image.SCALE_SMOOTH);
 				super.paintComponent(g);
 				g.drawImage(resizedLogo, 0, 0, null);
 			}
@@ -486,10 +488,10 @@ public class DonGUI {
 		gbc_noTaskPanel.gridy = 1;
 		gbc_noTaskPanel.weighty = 1;
 		frmDoornot.getContentPane().add(noTaskPanel, gbc_noTaskPanel);
-		
+
 		/*
-		 * initialize editor (that display 'no task' when there's no task)
-		 * and scrollPane_editor (which is a scrollPane to contain the component)
+		 * initialize editor (that display 'no task' when there's no task) and
+		 * scrollPane_editor (which is a scrollPane to contain the component)
 		 */
 
 		scrollPane_editor = new JScrollPane();
@@ -501,15 +503,16 @@ public class DonGUI {
 		gbc_scrollPane_editor.gridx = 1;
 		gbc_scrollPane_editor.gridy = 1;
 		gbc_scrollPane_editor.weighty = 1;
-		frmDoornot.getContentPane().add(scrollPane_editor, gbc_scrollPane_editor);
+		frmDoornot.getContentPane().add(scrollPane_editor,
+				gbc_scrollPane_editor);
 		editor = new JEditorPane();
 		editor.setEditable(false);
 		editor.setVisible(false);
 		scrollPane_editor.setViewportView(editor);
-		
+
 		/*
-		 * initialize textArea (that display console output)
-		 * and scrollPane_textarea (which is a scrollPane to contain the component)
+		 * initialize textArea (that display console output) and
+		 * scrollPane_textarea (which is a scrollPane to contain the component)
 		 */
 
 		scrollPane_textarea = new JScrollPane();
@@ -531,8 +534,8 @@ public class DonGUI {
 		textArea.setVisible(false);
 
 		/*
-		 * initialize list (that display task list)
-		 * and scrollPane_list (which is a scrollPane to contain the component)
+		 * initialize list (that display task list) and scrollPane_list (which
+		 * is a scrollPane to contain the component)
 		 */
 
 		scrollPane_list = new JScrollPane();
@@ -544,7 +547,7 @@ public class DonGUI {
 		gbc_scrollPane_list.gridx = 1;
 		gbc_scrollPane_list.gridy = 1;
 		gbc_scrollPane_list.weighty = 1;
-		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);		
+		frmDoornot.getContentPane().add(scrollPane_list, gbc_scrollPane_list);
 		list = new JList<IDonTask>();
 		scrollPane_list.setViewportView(list);
 		list.setForeground(Color.RED);
@@ -584,7 +587,7 @@ public class DonGUI {
 		/*
 		 * initialize overdueLabel (that works as a link to overdue page)
 		 */
-		
+
 		overdueLabel = new JLabel();
 		overdueLabel.setBackground(Color.red);
 		overdueLabel.setOpaque(true);
@@ -607,11 +610,11 @@ public class DonGUI {
 		gbc_overdueLabel.gridx = 0;
 		gbc_overdueLabel.gridy = 3;
 		frmDoornot.getContentPane().add(overdueLabel, gbc_overdueLabel);
-		
+
 		/*
 		 * initialize sendButton
 		 */
-	
+
 		sendButton = new JButton("Send");
 		sendButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -632,7 +635,7 @@ public class DonGUI {
 
 		/*
 		 * initialize infoPane (that works as notification bar)
-		 */		
+		 */
 
 		infoPane = new JTextPane();
 		infoPane.setVisible(false);
@@ -667,12 +670,13 @@ public class DonGUI {
 		updateList();
 
 	}
+
 	/**
-	 *  a method to switch between pages from user input
+	 * a method to switch between pages from user input
 	 */
 	private void branchToPage(String cmd) {
 		int index = Integer.parseInt(cmd);
-		if(index == OVERDUE_INDEX){
+		if (index == OVERDUE_INDEX) {
 			if (overdueList != null && overdueList.size() != 0) {
 				selectedPage = OVERDUE_INDEX;
 				typeList.clearSelection();
@@ -683,10 +687,10 @@ public class DonGUI {
 				new InfoTimer(1000);
 				return;
 			}
-		} else if (index > 0 && index < 6){
+		} else if (index > 0 && index < 6) {
 			selectedPage = index;
-			typeList.setSelectedIndex(index-1);
-		} else if (index == SEARCH_INDEX){
+			typeList.setSelectedIndex(index - 1);
+		} else if (index == SEARCH_INDEX) {
 			if (searchList != null && searchList.size() != 0) {
 				selectedPage = SEARCH_INDEX;
 				typeList.clearSelection();
@@ -697,7 +701,7 @@ public class DonGUI {
 				new InfoTimer(1000);
 				return;
 			}
-		} else if (index == CONSOLE_INDEX){
+		} else if (index == CONSOLE_INDEX) {
 			selectedPage = CONSOLE_INDEX;
 			typeList.clearSelection();
 		} else {
@@ -708,7 +712,7 @@ public class DonGUI {
 	}
 
 	/**
-	 *  a method to renew multiple components as a response to user input
+	 * a method to renew multiple components as a response to user input
 	 */
 	private void renew(String cmd) {
 		if (cmd.equals("exit")) {
@@ -719,12 +723,13 @@ public class DonGUI {
 		assert rp != null;
 		String fb = "";
 		int size = 0;
-		if(rp.getResponseType() == IDonResponse.ResponseType.SWITCH_PANEL){
+		if (rp.getResponseType() == IDonResponse.ResponseType.SWITCH_PANEL) {
 			textField.setText("");
 			branchToPage(rp.getMessages().get(0));
 			return;
 		}
-		if (rp.hasMessages() && rp.getResponseType() != IDonResponse.ResponseType.HELP) {
+		if (rp.hasMessages()
+				&& rp.getResponseType() != IDonResponse.ResponseType.HELP) {
 			lastMsg = rp.getMessages().get(0);
 			currentMsgList = new ArrayList<String>();
 			size = rp.getMessages().size();
@@ -737,30 +742,32 @@ public class DonGUI {
 		if (rp.getResponseType() == IDonResponse.ResponseType.HELP) {
 			size = 1;
 			String helptext = "";
-			for(String msg : rp.getMessages()){
+			for (String msg : rp.getMessages()) {
 				helptext += msg;
 				helptext += "\n";
 			}
-		    editor.setText(helptext);
+			editor.setText(helptext);
 			selectedPage = HELP_INDEX;
 			setTypeData();
 			textField.setText("");
 			updateList();
 			return;
 		}
-		if (rp.hasTasks() && (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || 
-				rp.getResponseType() == IDonResponse.ResponseType.EDIT_SUCCESS)){
+		if (rp.hasTasks()
+				&& (rp.getResponseType() == IDonResponse.ResponseType.ADD_SUCCESS || rp
+						.getResponseType() == IDonResponse.ResponseType.EDIT_SUCCESS)) {
 			isDelAction = false;
 			flashcode_panel = judgeType(rp.getTasks().get(0));
-			flashcode_task = rp.getTasks().get(0).getID();			
+			flashcode_task = rp.getTasks().get(0).getID();
 		}
 		if (rp.hasTasks()
 				&& (rp.getResponseType() == IDonResponse.ResponseType.SEARCH_SUCCESS
-						|| rp.getResponseType() == IDonResponse.ResponseType.DEL_FAILURE || 
-						rp.getResponseType() == IDonResponse.ResponseType.EDIT_FAILURE)) {
+						|| rp.getResponseType() == IDonResponse.ResponseType.DEL_FAILURE || rp
+						.getResponseType() == IDonResponse.ResponseType.EDIT_FAILURE)) {
 			scrollPane_textarea.setVisible(false);
 			textArea.setVisible(false);
-			if(rp.hasMessages()) curSearchString = rp.getMessages().get(0);
+			if (rp.hasMessages())
+				curSearchString = rp.getMessages().get(0);
 			currentMsgList.remove(lastMsg);
 
 			searchList = new ArrayList<IDonTask>();
@@ -771,12 +778,12 @@ public class DonGUI {
 			setTypeData();
 		}
 		if (rp.getResponseType() == IDonResponse.ResponseType.DEL_SUCCESS) {
-			if(rp.getTasks().size() > 0){
+			if (rp.getTasks().size() > 0) {
 				flashcode_panel = judgeType(rp.getTasks().get(0));
 				isDelAction = true;
 			}
 			if (searchList != null) {
-				for(int j=0; j < rp.getTasks().size(); j++) {
+				for (int j = 0; j < rp.getTasks().size(); j++) {
 					for (int i = 0; i < searchList.size(); i++) {
 						if (searchList.get(i).getID() == rp.getTasks().get(j)
 								.getID()) {
@@ -793,7 +800,7 @@ public class DonGUI {
 			infoPane.setText(lastMsg);
 			buttomFiller.setVisible(false);
 			infoPane.setVisible(true);
-			
+
 			new InfoTimer(1000);
 		} else if (size > 1) {
 			for (int i = 0; i < currentMsgList.size(); i++) {
@@ -828,36 +835,36 @@ public class DonGUI {
 			list.setListData(Arrays.copyOf(overdueList.toArray(),
 					overdueList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: overdue tasks");
-		} else if (selectedPage == TODAY_INDEX) {			
-			if(todayList.size() == 0){
+		} else if (selectedPage == TODAY_INDEX) {
+			if (todayList.size() == 0) {
 				noTaskPanel.setVisible(true);
 			}
 			list.setListData(Arrays.copyOf(todayList.toArray(),
 					todayList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: today tasks");
 		} else if (selectedPage == WEEK_INDEX) {
-			if(weekList.size() == 0){
+			if (weekList.size() == 0) {
 				noTaskPanel.setVisible(true);
 			}
 			list.setListData(Arrays.copyOf(weekList.toArray(), weekList.size(),
 					IDonTask[].class));
 			lblTaskList.setText("Task List: tasks in 7 days");
 		} else if (selectedPage == FUTURE_INDEX) {
-			if(farList.size() == 0){
+			if (farList.size() == 0) {
 				noTaskPanel.setVisible(true);
 			}
 			list.setListData(Arrays.copyOf(farList.toArray(), farList.size(),
 					IDonTask[].class));
 			lblTaskList.setText("Task List: tasks in future (after 7 days)");
 		} else if (selectedPage == FLOAT_INDEX) {
-			if(floatList.size() == 0){
+			if (floatList.size() == 0) {
 				noTaskPanel.setVisible(true);
 			}
 			list.setListData(Arrays.copyOf(floatList.toArray(),
 					floatList.size(), IDonTask[].class));
 			lblTaskList.setText("Task List: floating tasks");
 		} else if (selectedPage == ALL_INDEX) {
-			if(guiTaskList.size() == 0){
+			if (guiTaskList.size() == 0) {
 				noTaskPanel.setVisible(true);
 			}
 			list.setListData(Arrays.copyOf(guiTaskList.toArray(),
@@ -885,7 +892,7 @@ public class DonGUI {
 	}
 
 	/**
-	 * a method to update the task list displayed from donStorage 
+	 * a method to update the task list displayed from donStorage
 	 */
 
 	private void updateList() {
@@ -905,40 +912,45 @@ public class DonGUI {
 	/**
 	 * a method to get the lists for different task types from donLogic
 	 */
-	private void parseTypeList(){
+	private void parseTypeList() {
 		overdueList = donLogic.getOverdueTasks();
 		todayList = donLogic.getTodayTasks();
 		weekList = donLogic.getWeekTasks();
 		farList = donLogic.getFutureTasks();
 		floatList = donLogic.getFloatingTasks();
 	}
-	
+
 	/**
-	 *  a method to judge the type an IDonTask belongs to 
+	 * a method to judge the type an IDonTask belongs to
 	 */
 
-	private int judgeType(IDonTask task){
-		if(!task.getStatus()){
-			if(isDued(task)) return 0;
+	private int judgeType(IDonTask task) {
+		if (!task.getStatus()) {
+			if (isDued(task))
+				return 0;
 			else {
-				if(isToday(task)) return 1;
-				else if(isWithinWeek(task)) return 2;
-				else if(task.getStartDate()==null) return 4;
-				else return 3;
+				if (isToday(task))
+					return 1;
+				else if (isWithinWeek(task))
+					return 2;
+				else if (task.getStartDate() == null)
+					return 4;
+				else
+					return 3;
 			}
 		} else {
 			return 5;
 		}
 	}
-	
+
 	/**
-	 *   the WindowEventHandler to handle functions to be called in window actions
+	 * the WindowEventHandler to handle functions to be called in window actions
 	 */
 
 	class WindowEventHandler extends WindowAdapter {
-	    public void windowOpened(WindowEvent e) {
-	        textField.requestFocusInWindow();
-	    }			
+		public void windowOpened(WindowEvent e) {
+			textField.requestFocusInWindow();
+		}
 
 		public void windowClosing(WindowEvent e) {
 			donLogic.saveToDrive();
@@ -946,7 +958,7 @@ public class DonGUI {
 	}
 
 	/**
-	 *   the format renderer of the cells in typeList
+	 * the format renderer of the cells in typeList
 	 */
 	class TypeCellRenderer extends JLabel implements ListCellRenderer {
 
@@ -990,14 +1002,18 @@ public class DonGUI {
 			} else {
 				p.setBorder(null);
 			}
-			
-			if(typecode == flashcode_panel){
-				if(currentHighlightedPanel == flashcode_panel){
-					if(!isDelAction) p.setBorder(new LineBorder(Color.green, 3));
-					else p.setBorder(new LineBorder(Color.red,3));	
+
+			if (typecode == flashcode_panel) {
+				if (currentHighlightedPanel == flashcode_panel) {
+					if (!isDelAction)
+						p.setBorder(new LineBorder(Color.green, 3));
+					else
+						p.setBorder(new LineBorder(Color.red, 3));
 				} else {
-					if(!isDelAction) p.setBorder(new LineBorder(Color.green, 3));
-					else p.setBorder(new LineBorder(Color.red,3));
+					if (!isDelAction)
+						p.setBorder(new LineBorder(Color.green, 3));
+					else
+						p.setBorder(new LineBorder(Color.red, 3));
 					currentHighlightedPanel = flashcode_panel;
 					new PanelHighlightTimer(1000);
 				}
@@ -1053,9 +1069,9 @@ public class DonGUI {
 		}
 
 	}
-	
+
 	/**
-	 *   the format renderer of the cells in (task) list
+	 * the format renderer of the cells in (task) list
 	 */
 
 	class TaskCellRenderer extends JLabel implements ListCellRenderer {
@@ -1123,9 +1139,10 @@ public class DonGUI {
 				int index, boolean isSelected, boolean cellHasFocus) {
 			Calendar current = Calendar.getInstance();
 			IDonTask entry = (IDonTask) value;
-			
-			if(entry.getID() == flashcode_task && entry.getID() != NOT_SELECTED){
-				if(currentHighlightedTask == flashcode_task){
+
+			if (entry.getID() == flashcode_task
+					&& entry.getID() != NOT_SELECTED) {
+				if (currentHighlightedTask == flashcode_task) {
 					p.setBorder(new LineBorder(Color.green, 3));
 				} else {
 					p.setBorder(new LineBorder(Color.green, 3));
@@ -1138,21 +1155,8 @@ public class DonGUI {
 
 			String entryText = "";
 			String timeText = "";
-			if (entry.getType() == IDonTask.TaskType.FLOATING) {
-				entryText += entry.getTitle();
-			} else if (entry.getType() == IDonTask.TaskType.DEADLINE) {
-				entryText += entry.getTitle();
-				timeText = " (Deadline: "
-						+ printDate(entry.getStartDate(), entry.isTimeUsed())
-						+ ")";
-			} else {
-				entryText += entry.getTitle();
-				timeText = " (Duration: "
-						+ printDate(entry.getStartDate(), entry.isTimeUsed())
-						+ " -- "
-						+ printDate(entry.getEndDate(), entry.isTimeUsed())
-						+ ")";
-			}
+
+			entryText += entry.getTitle();
 			if (entry.getStatus()) {
 				entryText += " " + "[Done]";
 			}
@@ -1160,7 +1164,8 @@ public class DonGUI {
 			if (isToday(entry) && selectedPage == 1) {
 				if (entry.getType() == IDonTask.TaskType.DURATION) {
 					if (isSameDay(entry.getEndDate(), current)) {
-						id.setText("last d\n"+printTodayTime(entry.getEndDate()));
+						id.setText("last d\n"
+								+ printTodayTime(entry.getEndDate()));
 					} else {
 						int day = dateDiff(current, entry.getStartDate()) + 1;
 						if (day % 10 == 1 && day % 100 != 11)
@@ -1187,6 +1192,31 @@ public class DonGUI {
 				}
 			}
 
+			boolean isNotShowFree = entry.getID() != NO_ID;
+
+			if (isNotShowFree) {
+				if (entry.getType() == IDonTask.TaskType.FLOATING) {
+				} else if (entry.getType() == IDonTask.TaskType.DEADLINE) {
+					timeText = " (Deadline: "
+							+ printDate(entry.getStartDate(),
+									entry.isTimeUsed()) + ")";
+				} else {
+					timeText = " (Duration: "
+							+ printDate(entry.getStartDate(),
+									entry.isTimeUsed()) + " -- "
+							+ printDate(entry.getEndDate(), entry.isTimeUsed())
+							+ ")";
+				}
+			} else {
+				if (entry.getEndDate() == null) {
+					id.setText(printShortDate(entry.getStartDate()) + "\n"
+							+ "--");
+				}
+				timeText = " (Duration: "
+						+ printDateForFree(entry.getStartDate(), true) + " -- "
+						+ printDateForFree(entry.getEndDate(), false) + ")";
+			}
+
 			realid.setText(new Integer(entry.getID()).toString());
 			realid.setForeground(Color.white);
 			realid.setBackground(Color.gray);
@@ -1200,10 +1230,10 @@ public class DonGUI {
 			content.setText(entryText);
 			id.setFont(new Font("Verdana", Font.BOLD, 17));
 			id.setForeground(Color.white);
-			if(entry.getStatus()){
-				id.setBackground(new Color(21,161,19));
-				content.setBackground(new Color(9,222,7));
-				label.setBackground(new Color(9,222,7));
+			if (entry.getStatus()) {
+				id.setBackground(new Color(21, 161, 19));
+				content.setBackground(new Color(9, 222, 7));
+				label.setBackground(new Color(9, 222, 7));
 			} else {
 				if (entry.getEndDate() != null) {
 					if (entry.getEndDate().compareTo(current) < 0) {
@@ -1234,7 +1264,7 @@ public class DonGUI {
 					}
 				}
 			}
-			if(entry.getID() == NO_ID){
+			if (!isNotShowFree) {
 				realid.setText(null);
 				id.setBackground(Color.gray);
 				content.setBackground(Color.LIGHT_GRAY);
@@ -1260,18 +1290,32 @@ public class DonGUI {
 			return p;
 		}
 	}
-	
+
 	/**
-	 *  helper functions to analyze/show date
+	 * helper functions to analyze/show date
 	 */
 
 	private String printDate(Calendar cal, boolean isTimeUsed) {
 		SimpleDateFormat df = new SimpleDateFormat();
-		if (isTimeUsed)
+		if (isTimeUsed) {
 			df.applyPattern("dd/MM/yyyy HH:mm");
-		else
+		} else
 			df.applyPattern("dd/MM/yyyy");
 		return df.format(cal.getTime());
+	}
+
+	private String printDateForFree(Calendar cal, boolean isStart) {
+		if (cal == null)
+			return "future";
+		SimpleDateFormat df = new SimpleDateFormat();
+		Calendar copy = (Calendar) cal.clone();
+		if (isStart) {
+			copy.add(Calendar.MINUTE, 1);
+		} else {
+			copy.add(Calendar.MINUTE, -1);
+		}
+		df.applyPattern("dd/MM/yyyy HH:mm");
+		return df.format(copy.getTime());
 	}
 
 	private String printTodayTime(Calendar cal) {
@@ -1291,7 +1335,7 @@ public class DonGUI {
 		df.applyPattern("EEE");
 		return df.format(cal.getTime());
 	}
-	
+
 	private boolean isDued(IDonTask task) {
 		Calendar current = Calendar.getInstance();
 		if (task.getEndDate() != null) {
@@ -1415,35 +1459,39 @@ public class DonGUI {
 			}
 		}
 	}
-	
+
 	/**
-	 *  Timer classes for notifications
+	 * Timer classes for notifications
 	 */
-	
+
 	class InfoTimer implements ActionListener {
 		Timer timer;
-		InfoTimer(int delay){
+
+		InfoTimer(int delay) {
 			timer = new Timer(delay, this);
 			timer.start();
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			infoPane.setVisible(false);
 			buttomFiller.setVisible(true);
-			timer.stop();			
+			timer.stop();
 		}
 	}
-	
+
 	class MultiInfoTimer implements ActionListener {
 		Timer timer;
-		MultiInfoTimer(int delay){
+
+		MultiInfoTimer(int delay) {
 			timer = new Timer(delay, this);
 			timer.setRepeats(true);
 			timer.start();
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(currentMsgList == null || currentMsgList.size() == 0){
+			if (currentMsgList == null || currentMsgList.size() == 0) {
 				infoPane.setVisible(false);
 				buttomFiller.setVisible(true);
 				timer.stop();
@@ -1452,13 +1500,15 @@ public class DonGUI {
 			}
 		}
 	}
-	
+
 	class PanelHighlightTimer implements ActionListener {
 		Timer timer;
-		PanelHighlightTimer(int delay){
+
+		PanelHighlightTimer(int delay) {
 			timer = new Timer(delay, this);
 			timer.start();
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			currentHighlightedPanel = NOT_HIGHLIGHTED;
@@ -1466,13 +1516,15 @@ public class DonGUI {
 			timer.stop();
 		}
 	}
-	
+
 	class TaskHighlightTimer implements ActionListener {
 		Timer timer;
-		TaskHighlightTimer(int delay){
+
+		TaskHighlightTimer(int delay) {
 			timer = new Timer(delay, this);
 			timer.start();
 		}
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			currentHighlightedTask = NOT_HIGHLIGHTED;
@@ -1482,52 +1534,50 @@ public class DonGUI {
 	}
 
 	/**
-	 * a method to load music 
+	 * a method to load music
 	 */
-    public static void music() {       
-        AudioPlayer MGP = AudioPlayer.player;
-        AudioStream BGM;
+	public static void music() {
+		AudioPlayer MGP = AudioPlayer.player;
+		AudioStream BGM;
 
-        ContinuousAudioDataStream loop = null;
+		ContinuousAudioDataStream loop = null;
 
-        try
-        {
-		    InputStream ringStream = DonGUI.class.getResourceAsStream("ring.wav");
-            BGM = new AudioStream(ringStream);
-            AudioPlayer.player.start(BGM);
-        }
-        catch(FileNotFoundException e){
-            System.out.print(e.toString());
-        }
-        catch(IOException error)
-        {
-            System.out.print(error.toString());
-        }
-        MGP.start(loop);
-    }
+		try {
+			InputStream ringStream = DonGUI.class
+					.getResourceAsStream("ring.wav");
+			BGM = new AudioStream(ringStream);
+			AudioPlayer.player.start(BGM);
+		} catch (FileNotFoundException e) {
+			System.out.print(e.toString());
+		} catch (IOException error) {
+			System.out.print(error.toString());
+		}
+		MGP.start(loop);
+	}
 
 	/**
-	 *  a class to show a dialog of about info
+	 * a class to show a dialog of about info
 	 */
 
 	class AboutDialog extends JDialog {
-		  public AboutDialog(JFrame parent) {
-		    super(parent, "About", true);
-		    Container cp = getContentPane();
-		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
-		    JTextPane aboutInfo = new JTextPane();
-		    aboutInfo.setText("Developers:\nEu Yong Xue\nHaritha Ramesh\nHu Yifei\nLin Daqi");
-		    aboutInfo.setEditable(false);
-		    cp.add(aboutInfo);
-		    JButton ok = new JButton("OK");
-		    ok.addActionListener(new ActionListener() {
-		      public void actionPerformed(ActionEvent e) {
-		        dispose(); // Closes the dialog
-		      }
-		    });
-		    cp.add(ok);
-		    setSize(150, 200);
-		    music();
-		  }
+		public AboutDialog(JFrame parent) {
+			super(parent, "About", true);
+			Container cp = getContentPane();
+			cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
+			JTextPane aboutInfo = new JTextPane();
+			aboutInfo
+					.setText("Developers:\nEu Yong Xue\nHaritha Ramesh\nHu Yifei\nLin Daqi");
+			aboutInfo.setEditable(false);
+			cp.add(aboutInfo);
+			JButton ok = new JButton("OK");
+			ok.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					dispose(); // Closes the dialog
+				}
+			});
+			cp.add(ok);
+			setSize(150, 200);
+			music();
+		}
 	}
 }
