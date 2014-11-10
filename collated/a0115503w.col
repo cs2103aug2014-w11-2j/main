@@ -1,0 +1,1588 @@
+//@author: a0115503w
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\parser\DonParser.java
+	 */
+
+public class DonParser implements IDonParser {
+
+	public DonParser() {
+
+	}
+
+	private String userCommand;
+	private AbstractDonCommand dCommand;
+	private String commandWord;
+
+	// for natty parser
+	private Parser nattyParser = new Parser();
+	private List<DateGroup> groups;
+
+	// List of all the allowed types
+
+	// name must be between " "
+	private String taskNameReg = "^\".+\"$";
+
+	// allow "blah" by
+	private String deadlineTaskReg = ".+(by\\s.+){1}";
+
+	// allow "blah" from
+	private String eventTaskReg = ".+(from\\s.+){1}";
+
+	// allow "blah"/ID to
+	private String editToNameReg = ".+(to\\s\".+\"){1}";
+
+	// for to "
+	private String editNameSpaceReg = "to \"";
+
+	// allow xx "BLAH"
+	private String labelNameReg = "^#.+$";
+
+	// allow "blah" "BLAH"
+	private String labelReg = ".+ #.+$";
+
+	@Override
+	public AbstractDonCommand parseCommand(String command) {
+
+		dCommand = null;
+		userCommand = command;
+		setDonCommand();
+		return dCommand;
+
+	}
+
+	@Override
+	public void setDonCommand() {
+		commandWord = getFirstWord(userCommand);
+
+		if (commandWord.equalsIgnoreCase("a")
+				|| commandWord.equalsIgnoreCase("add")) {
+			setAddCommand();
+		} else if (commandWord.equalsIgnoreCase("addf")
+				|| commandWord.equalsIgnoreCase("af")) {
+			setAddFloatCommand();
+		} else if (commandWord.equalsIgnoreCase("e")
+				|| commandWord.equalsIgnoreCase("ed")
+				|| commandWord.equalsIgnoreCase("edit")) {
+			setEditCommand();
+		} else if (commandWord.equalsIgnoreCase("s")
+				|| commandWord.equalsIgnoreCase("search")) {
+			setSearchCommand();
+		} else if (commandWord.equalsIgnoreCase("saf")) {
+			setSearchDatesCommand(SearchType.SEARCH_AFTDATE);
+		} else if (commandWord.equalsIgnoreCase("son")) {
+			setSearchDatesCommand(SearchType.SEARCH_DATE);
+		} else if (commandWord.equalsIgnoreCase("sr")) {
+			setSearchDateRangeCommand();
+		} else if (commandWord.equalsIgnoreCase("all")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
+		} else if (commandWord.equalsIgnoreCase("d")
+				|| commandWord.equalsIgnoreCase("del")
+				|| commandWord.equalsIgnoreCase("delete")) {
+			setDeleteCommand();
+		} else if (commandWord.equalsIgnoreCase("m")
+				|| commandWord.equalsIgnoreCase("mark")) {
+			setMarkCommand();
+		} else if (commandWord.equalsIgnoreCase("label")
+				|| commandWord.equalsIgnoreCase("l")) {
+			setLabelCommand();
+		} else if (commandWord.equalsIgnoreCase("delabel")
+				|| commandWord.equalsIgnoreCase("dl")) {
+			setDelabelCommand();
+		} else if (commandWord.equalsIgnoreCase("slabel")
+				|| commandWord.equalsIgnoreCase("sl")) {
+			setSlabelCommand();
+		} else if (commandWord.equalsIgnoreCase("sud")
+				|| commandWord.equalsIgnoreCase("undone")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_UNDONE);
+		} else if (commandWord.equalsIgnoreCase("sd")
+				|| commandWord.equalsIgnoreCase("done")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_DONE);
+		} else if (commandWord.equalsIgnoreCase("free")) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_FREE);
+		} else if (commandWord.equalsIgnoreCase("today")
+				|| commandWord.equalsIgnoreCase("t")) {
+			dCommand = new DonFindCommand(SearchType.TODAY);
+		} else if (commandWord.equalsIgnoreCase("od")
+				|| commandWord.equalsIgnoreCase("overdue")
+				|| commandWord.equalsIgnoreCase("o")) {
+			dCommand = new DonFindCommand(SearchType.OVERDUE);
+		} else if (commandWord.equalsIgnoreCase("week")
+				|| commandWord.equalsIgnoreCase("w")) {
+			dCommand = new DonFindCommand(SearchType.SEVEN_DAYS);
+		} else if (commandWord.equalsIgnoreCase("future")
+				|| commandWord.equalsIgnoreCase("u")) {
+			dCommand = new DonFindCommand(SearchType.FUTURE);
+		} else if (commandWord.equalsIgnoreCase("c")
+				|| commandWord.equalsIgnoreCase("console")) {
+			dCommand = new DonFindCommand(SearchType.CONSOLE);
+		}else if (commandWord.equalsIgnoreCase("float")
+				|| commandWord.equalsIgnoreCase("fl")
+				|| commandWord.equalsIgnoreCase("floating")
+				|| commandWord.equalsIgnoreCase("f")) {
+			dCommand = new DonFindCommand(SearchType.FLOAT);
+		} else if (commandWord.equalsIgnoreCase("results")
+				|| commandWord.equalsIgnoreCase("result")
+				|| commandWord.equalsIgnoreCase("r")) {
+			dCommand = new DonFindCommand(SearchType.RESULTS);
+		} else if (commandWord.equalsIgnoreCase("undo")
+				|| commandWord.equalsIgnoreCase("un")) {
+			dCommand = new DonGeneralCommand(GeneralCommandType.UNDO);
+		} else if (commandWord.equalsIgnoreCase("redo")
+				|| commandWord.equalsIgnoreCase("re")) {
+			dCommand = new DonGeneralCommand(GeneralCommandType.REDO);
+		} else if (commandWord.equalsIgnoreCase("help")) {
+			setHelpCommand();
+		} else if (commandWord.equalsIgnoreCase("exit")) {
+			dCommand = new DonGeneralCommand(GeneralCommandType.EXIT);
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_COMMAND,
+					commandWord);
+		}
+
+	}
+
+	/**
+	 * Creates DonCreateCommand object
+	 */
+	private void setAddCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isRightCommand(parameters, deadlineTaskReg)
+				&& isRightCommand(parameters, eventTaskReg)) {
+			// check which is later.
+			int byIndex = parameters.lastIndexOf(" by ");
+			int fromIndex = parameters.lastIndexOf(" from ");
+
+			if (byIndex > fromIndex) {
+				createAddDeadlineCommand(parameters);
+			} else {
+				createAddEventCommand(parameters);
+			}
+		} else if (isRightCommand(parameters, deadlineTaskReg)) {
+			createAddDeadlineCommand(parameters);
+
+		} else if (isRightCommand(parameters, eventTaskReg)) {
+			createAddEventCommand(parameters);
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+	}
+	
+	/**
+	 * Creates the add deadline task command
+	 * @param command parameters
+	 */
+	private void createAddDeadlineCommand(String param) {
+		int byIndex = param.lastIndexOf(" by ");
+		String taskDate = param.substring(byIndex + 1);
+		String taskName = param.substring(0, byIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
+			taskName = extractName(taskName);
+		}
+
+		if (isGoodName(taskName)) {
+
+			Calendar deadline = Calendar.getInstance();
+			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
+			// if dCommand is not null setNewDeadlineForCommand must have set
+			// INVALID_DATE
+			if (dCommand == null) {
+				dCommand = new DonCreateCommand(taskName, deadline, hasSetTime);
+			}
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+
+	}
+	/**
+	 * Creates the add event task command
+	 * @param command parameters
+	 */
+	private void createAddEventCommand(String param) {
+		int fromIndex = param.lastIndexOf(" from ");
+		String taskDates = param.substring(fromIndex + 1);
+		String taskName = param.substring(0, fromIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
+			taskName = extractName(taskName);
+		}
+
+		if (isGoodName(taskName)) {
+
+			Calendar startDate = Calendar.getInstance(), endDate = Calendar
+					.getInstance();
+			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
+					endDate);
+
+			if (dCommand == null) {
+				dCommand = new DonCreateCommand(taskName, startDate, endDate,
+						hasSetTime);
+			}
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+
+	}
+
+	/**
+	 * Creates the add floating command.
+	 * 
+	 */
+	private void setAddFloatCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isWithinInvertedCommas(parameters)) {
+			parameters = extractName(parameters);
+		}
+
+		if (isGoodName(parameters)) {
+			dCommand = new DonCreateCommand(parameters);
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+	}
+
+	/**
+	 * Creates the DonEditCommand
+	 */
+	private void setEditCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isRightCommand(parameters, editToNameReg)) {
+
+			String[] taskNames = getTaskNameArr(parameters, editNameSpaceReg);
+
+			String oldName = taskNames[0];
+			String newName = taskNames[1];
+
+			if (isWithinInvertedCommas(oldName)) {
+				oldName = extractName(oldName);
+			}
+
+			if (isGoodName(oldName) && isGoodName(newName)) {
+				dCommand = new DonEditCommand(oldName, newName);
+
+			} else if (isGoodName(newName)) {
+				try {
+
+					int ID = Integer.parseInt(oldName);
+					dCommand = new DonEditCommand(ID, newName);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
+				}
+
+			} else {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+
+		} else if (isRightCommand(parameters, deadlineTaskReg)
+				&& isRightCommand(parameters, eventTaskReg)) {
+			// check which is later.
+			int byIndex = parameters.lastIndexOf(" by ");
+			int fromIndex = parameters.lastIndexOf(" from ");
+
+			if (byIndex > fromIndex) {
+				createEditDeadlineCommand(parameters);
+			} else {
+				createEditEventCommand(parameters);
+			}
+
+		} else if (isRightCommand(parameters, deadlineTaskReg)) {
+			createEditDeadlineCommand(parameters);
+
+		} else if (isRightCommand(parameters, eventTaskReg)) {
+			createEditEventCommand(parameters);
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+
+	}
+	/**
+	 * Creates the edit deadline task command
+	 * @param command parameters
+	 */
+	private void createEditDeadlineCommand(String param) {
+		int byIndex = param.lastIndexOf(" by ");
+		String taskDate = param.substring(byIndex + 1);
+		String taskName = param.substring(0, byIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
+			taskName = extractName(taskName);
+		}
+
+		if (isGoodName(taskName)) {
+
+			Calendar deadline = Calendar.getInstance();
+			boolean hasSetTime = setNewDeadlineForCommand(taskDate, deadline);
+
+			if (dCommand == null) {
+				dCommand = new DonEditCommand(taskName, deadline, hasSetTime);
+			}
+
+		} else {
+			try {
+
+				int ID = Integer.parseInt(taskName);
+				Calendar deadline = Calendar.getInstance();
+				boolean hasSetTime = setNewDeadlineForCommand(taskDate,
+						deadline);
+
+				if (dCommand == null) {
+					dCommand = new DonEditCommand(ID, deadline, hasSetTime);
+				}
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+		}
+
+	}
+	/**
+	 * Creates the edit event task command
+	 * @param command parameters
+	 */
+	private void createEditEventCommand(String param) {
+		int fromIndex = param.lastIndexOf(" from ");
+		String taskDates = param.substring(fromIndex + 1);
+		String taskName = param.substring(0, fromIndex + 1).trim();
+
+		if (isWithinInvertedCommas(taskName)) {
+			taskName = extractName(taskName);
+		}
+
+		if (isGoodName(taskName)) {
+
+			Calendar startDate = Calendar.getInstance(), endDate = Calendar
+					.getInstance();
+			boolean hasSetTime = setStartAndEndForCommand(taskDates, startDate,
+					endDate);
+
+			if (dCommand == null) {
+				dCommand = new DonEditCommand(taskName, startDate, endDate,
+						hasSetTime);
+			}
+
+		} else {
+			try {
+				int ID = Integer.parseInt(taskName);
+				Calendar startDate = Calendar.getInstance(), endDate = Calendar
+						.getInstance();
+				boolean hasSetTime = setStartAndEndForCommand(taskDates,
+						startDate, endDate);
+
+				if (dCommand == null) {
+					dCommand = new DonEditCommand(ID, startDate, endDate,
+							hasSetTime);
+				}
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+		}
+	}
+
+	/**
+	 * Creates the DonMarkCommand object
+	 */
+	private void setMarkCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")) {
+			dCommand = new DonMarkCommand(MarkType.MARK_OVERDUE);
+
+		} else if (parameters.equalsIgnoreCase("float")
+				|| parameters.equalsIgnoreCase("fl")
+				|| parameters.equalsIgnoreCase("floating")) {
+			dCommand = new DonMarkCommand(MarkType.MARK_FLOAT);
+
+		} else if (isGoodName(parameters)) {
+
+			if (isWithinInvertedCommas(parameters)) {
+				parameters = extractName(parameters);
+			}
+
+			dCommand = new DonMarkCommand(parameters);
+
+		} else {
+
+			try {
+				int ID = Integer.parseInt(parameters);
+				dCommand = new DonMarkCommand(ID);
+
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+		}
+
+	}
+
+	/**
+	 * Creates the DonDeleteCommand object
+	 */
+	private void setDeleteCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (parameters.equalsIgnoreCase("overdue")
+				|| parameters.equalsIgnoreCase("od")) {
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_OVERDUE);
+
+		} else if (parameters.equalsIgnoreCase("float")
+				|| parameters.equalsIgnoreCase("fl")
+				|| parameters.equalsIgnoreCase("floating")) {
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_FLOAT);
+
+		} else if (parameters.equalsIgnoreCase("done")) {
+			dCommand = new DonDeleteCommand(DeleteType.DELETE_DONE);
+
+		} else if (isRightCommand(parameters, labelNameReg)) {
+			dCommand = new DonDeleteCommand(extractLabelName(parameters),
+					DeleteType.DELETE_LABEL);
+
+		} else if (isGoodName(parameters)) {
+			if (isWithinInvertedCommas(parameters)) {
+				parameters = extractName(parameters);
+			}
+			dCommand = new DonDeleteCommand(parameters, DeleteType.DELETE_TITLE);
+
+		} else {
+			try {
+				int ID = Integer.parseInt(parameters);
+				dCommand = new DonDeleteCommand(ID);
+
+			} catch (Exception e) {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+		}
+
+	}
+
+	/**
+	 * Creates the DonSearchCommand object
+	 */
+	private void setSearchCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (parameters.isEmpty()) {
+			dCommand = new DonFindCommand(SearchType.SEARCH_ALL);
+
+		} else {
+			if (isGoodName(parameters)) {
+				if (isWithinInvertedCommas(parameters)) {
+					parameters = extractName(parameters);
+				}
+				dCommand = new DonFindCommand(parameters,
+						SearchType.SEARCH_NAME);
+
+			} else {
+				try {
+					int ID = Integer.parseInt(parameters);
+					dCommand = new DonFindCommand(ID);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Creates the search after and search on command types in DonFindCommand
+	 */
+	private void setSearchDatesCommand(SearchType type) {
+		String parameters = removeFirstWord(userCommand);
+
+		Calendar searchDate = Calendar.getInstance();
+		boolean hasSetTime = setNewDeadlineForCommand(parameters, searchDate);
+		if (dCommand == null) {
+			dCommand = new DonFindCommand(searchDate, hasSetTime, type);
+		}
+
+	}
+	
+	/**
+	 * Creates the search date range CommandType in DonFindCommand object
+	 */
+	private void setSearchDateRangeCommand() {
+		String parameters = removeFirstWord(userCommand);
+		Calendar startDate = Calendar.getInstance(), endDate = Calendar
+				.getInstance();
+		boolean hasSetTime = setStartAndEndForCommand(parameters, startDate,
+				endDate);
+
+		if (dCommand == null) {
+			dCommand = new DonFindCommand(startDate, endDate, hasSetTime);
+		}		
+	}
+
+	/**
+	 * Creates the search label type in DonFindCommand object
+	 */
+	private void setSlabelCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isRightCommand(parameters, labelNameReg)) {
+			dCommand = new DonFindCommand(extractLabelName(parameters),
+					SearchType.SEARCH_LABEL);
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+
+	}
+
+	/**
+	 * Creates the DonDelabelCommand object
+	 */
+	private void setDelabelCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isRightCommand(parameters, labelReg)) {
+			int byIndex = parameters.lastIndexOf(" #");
+			String labelName = parameters.substring(byIndex + 1);
+			String taskName = parameters.substring(0, byIndex + 1).trim();
+
+			if (isWithinInvertedCommas(taskName)) {
+				taskName = extractName(taskName);
+			}
+
+			if (isGoodName(taskName)) {
+				dCommand = new DonDelabelCommand(taskName,
+						extractLabelName(labelName));
+			} else {
+				try {
+					int ID = Integer.parseInt(taskName);
+					dCommand = new DonDelabelCommand(ID,
+							extractLabelName(labelName));
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
+				}
+			}
+
+		} else {
+			if (isGoodName(parameters)) {
+				if (isWithinInvertedCommas(parameters)) {
+					parameters = extractName(parameters);
+				}
+				dCommand = new DonDelabelCommand(parameters);
+			} else {
+				try {
+					int ID = Integer.parseInt(parameters);
+					dCommand = new DonDelabelCommand(ID);
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Creates the DonAddlabelCommand object
+	 */
+	private void setLabelCommand() {
+		String parameters = removeFirstWord(userCommand);
+
+		if (isRightCommand(parameters, labelReg)) {
+			int byIndex = parameters.lastIndexOf(" #");
+			String labelName = parameters.substring(byIndex + 1);
+			String taskName = parameters.substring(0, byIndex + 1).trim();
+
+			if (isWithinInvertedCommas(taskName)) {
+				taskName = extractName(taskName);
+			}
+
+			if (isGoodName(taskName)) {
+				dCommand = new DonAddLabelCommand(taskName,
+						extractLabelName(labelName));
+			} else {
+				try {
+					int ID = Integer.parseInt(taskName);
+					dCommand = new DonAddLabelCommand(ID,
+							extractLabelName(labelName));
+
+				} catch (Exception e) {
+					dCommand = new DonInvalidCommand(
+							InvalidType.INVALID_FORMAT, commandWord);
+				}
+			}
+
+		} else {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+					commandWord);
+		}
+
+	}
+
+	/**
+	 * Creates DonHelpCommand objects
+	 */
+	private void setHelpCommand() {
+
+		String parameters = removeFirstWord(userCommand);
+
+		if (parameters.isEmpty()) {
+			dCommand = new DonHelpCommand(HelpType.HELP_GENERAL);
+		} else {
+			if (parameters.equalsIgnoreCase("add")
+					|| parameters.equalsIgnoreCase("a")
+					|| parameters.equalsIgnoreCase("af")
+					|| parameters.equalsIgnoreCase("addf")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_ADD);
+			} else if (parameters.equalsIgnoreCase("edit")
+					|| parameters.equalsIgnoreCase("ed")
+					|| parameters.equalsIgnoreCase("e")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_EDIT);
+			} else if (parameters.equalsIgnoreCase("search")
+					|| parameters.equalsIgnoreCase("s")
+					|| parameters.equalsIgnoreCase("saf")
+					|| parameters.equalsIgnoreCase("son")
+					|| parameters.equalsIgnoreCase("sd")
+					|| parameters.equalsIgnoreCase("sud")
+					|| parameters.equalsIgnoreCase("sr")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_SEARCH);
+			} else if (parameters.equalsIgnoreCase("del")
+					|| parameters.equalsIgnoreCase("delete")
+					|| parameters.equalsIgnoreCase("d")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_DELETE);
+			} else if (parameters.equalsIgnoreCase("label")
+					|| parameters.equalsIgnoreCase("delabel")
+					|| parameters.equalsIgnoreCase("slabel")
+					|| parameters.equalsIgnoreCase("dl")
+					|| parameters.equalsIgnoreCase("sl")
+					|| parameters.equalsIgnoreCase("l")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_LABEL);
+			} else if (parameters.equalsIgnoreCase("mark")
+					|| parameters.equalsIgnoreCase("m")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_MARK);
+			} else if (parameters.equalsIgnoreCase("undo")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_UNDO);
+			} else if (parameters.equalsIgnoreCase("redo")) {
+				dCommand = new DonHelpCommand(HelpType.HELP_REDO);
+			} else {
+				dCommand = new DonInvalidCommand(InvalidType.INVALID_FORMAT,
+						commandWord);
+			}
+		}
+
+	}
+
+	/**
+	 * Uses regex and checks if parameter contains regex
+	 */
+	private boolean isRightCommand(String param, String regex) {
+		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(param);
+		return matcher.find();
+	}
+
+	/**
+	 * Sets new deadlines for dCommand
+	 * 
+	 * @param parameters
+	 * @param deadlineOut
+	 *            Deadline to modify
+	 * @return true if user has set time
+	 */
+	private boolean setNewDeadlineForCommand(String parameters,
+			Calendar deadlineOut) {
+		boolean hasSetTime = false;
+
+		try {
+			Date date = getTimeFromParser(parameters);
+			Calendar cal = new GregorianCalendar();
+			cal.setTime(date);
+
+			if (isTimeMentioned()) {
+				hasSetTime = true;
+				CalHelper.copyCalendar(cal, deadlineOut);
+			} else {
+				CalHelper.copyCalendar(createDateNatty(cal), deadlineOut);
+			}
+		} catch (Exception e) {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
+		}
+
+		return hasSetTime;
+	}
+	
+	/**
+	 * Makes sure that dates with no timing specified are set to 23:59
+	 * @param dateCal
+	 * @return date
+	 */
+	private Calendar createDateNatty(Calendar dateCal) {
+
+		int year = dateCal.get(Calendar.YEAR);
+		int month = dateCal.get(Calendar.MONTH);
+		int day = dateCal.get(Calendar.DAY_OF_MONTH);
+
+		return new GregorianCalendar(year, month, day, 23, 59);
+	}
+
+	/**
+	 * check if time is mentioned
+	 * 
+	 * @return
+	 */
+	private boolean isTimeMentioned() {
+		return !(groups.get(0).isTimeInferred());
+	}
+
+	/**
+	 * Gets date from parser
+	 * 
+	 * @param parameters
+	 * @return
+	 * @throws WrongDateException
+	 */
+	private Date getTimeFromParser(String parameters) throws WrongDateException {
+		groups = nattyParser.parse(parameters);
+
+		Date date = groups.get(0).getDates().get(0);
+
+		if (groups.get(0).getDates().size() != 1 || groups.get(0).isRecurring()) {
+			throw new WrongDateException();
+
+		} else {
+			return date;
+		}
+
+	}
+
+	/**
+	 * Gets more than one date from parser, used for event task commands
+	 * 
+	 * @param parameters
+	 * @return
+	 * @throws WrongDateException
+	 */
+	private Date[] getTimingsFromParser(String parameters)
+			throws WrongDateException {
+		groups = nattyParser.parse(parameters);
+
+		if (groups.get(0).getDates().size() != 2 || groups.get(0).isRecurring()) {
+
+			throw new WrongDateException();
+
+		} else {
+			Date[] dates = new Date[2];
+			dates[0] = groups.get(0).getDates().get(0);
+			dates[1] = groups.get(0).getDates().get(1);
+			return dates;
+		}
+	}
+	/**
+	 * Set start date and end date for dCommand
+	 * @param parameters
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	private boolean setStartAndEndForCommand(String parameters,
+			Calendar startDate, Calendar endDate) {
+		boolean hasSetTime = false;
+
+		try {
+			Date[] dates = getTimingsFromParser(parameters);
+			Calendar[] calArr = new Calendar[2];
+			Calendar cal = new GregorianCalendar();
+
+			cal.setTime(dates[0]);
+			calArr[0] = cal;
+			Calendar cal2 = new GregorianCalendar();
+			cal2.setTime(dates[1]);
+			calArr[1] = cal2;
+
+			if (isTimeMentioned()) {
+				hasSetTime = true;
+				CalHelper.copyCalendar(calArr[0], startDate);
+				CalHelper.copyCalendar(calArr[1], endDate);
+			} else {
+				CalHelper.copyCalendar(createDateNatty(calArr[0]), startDate);
+				CalHelper.copyCalendar(createDateNatty(calArr[1]), endDate);
+			}
+		} catch (Exception e) {
+			dCommand = new DonInvalidCommand(InvalidType.INVALID_DATE);
+		}
+
+		return hasSetTime;
+	}
+
+	/**
+	 * Gets the array of task names being referred to from the parameter
+	 */
+	private String[] getTaskNameArr(String param, String regex) {
+		String[] nameArr = new String[2];
+		nameArr = param.split(regex);
+		nameArr[0] = nameArr[0].trim();
+		nameArr[1] = extractName("\"" + nameArr[1].trim());
+		return nameArr;
+	}
+
+	/**
+	 * Gets the name of task being referred to from the parameter
+	 */
+	private boolean isWithinInvertedCommas(String param) {
+		Pattern pattern = Pattern.compile(taskNameReg);
+		Matcher matcher = pattern.matcher(param);
+		return matcher.find();
+	}
+
+	/**
+	 * Checks if the task name does not contain ;
+	 */
+	private boolean isGoodName(String name) {
+		// ensures semi colon not in name
+		if (!name.contains(";") && !name.contains("#")
+				&& !name.matches("^[0-9]+$")) {
+
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	private static String removeFirstWord(String userCommand) {
+		return userCommand.replaceFirst(getFirstWord(userCommand), "").trim();
+	}
+
+	private static String getFirstWord(String userCommand) {
+		return userCommand.trim().split("\\s+")[0];
+	}
+
+	/**
+	 * Removes ""
+	 */
+	private String extractName(String param) {
+		return param.substring(1, param.length() - 1).trim();
+	}
+
+	/**
+	 * Removes #
+	 */
+	private String extractLabelName(String param) {
+		return param.substring(1, param.length()).trim();
+	}
+
+	public class WrongDateException extends Exception {
+
+		private static final long serialVersionUID = 95503042885547853L;
+
+		public WrongDateException() {
+			super();
+		}
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\parser\DonParser.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\parser\IDonParser.java
+	 */
+
+
+public interface IDonParser {
+
+	/**
+	 * Initialises and returns DonCommand object with the respective properties.
+	 * Calls setDonCommand(String command) to create the respective
+	 * AbstractDonCommand according to the user input.
+	 * 
+	 * @param command
+	 *            string from user
+	 * @return DonCommand
+	 */
+	public AbstractDonCommand parseCommand(String command);
+
+	/**
+	 * Creates the respective dCommand according to the user input. Requires
+	 * parseCommand(String command) to initialise DonCommand object.
+	 */
+	public void setDonCommand();
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\parser\IDonParser.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\AbstractDonCommand.java
+	 */
+
+public abstract class AbstractDonCommand {
+
+	protected static final String MSG_NAME_CONFLICT = "Warning: Another task with '%1$s' already exists.";
+	protected static final String MSG_DEADLINE_CONFLICT = "Warning: Another task is happening at the same time.";
+	protected static final String MSG_ADD_FLOATING_TASK_SUCCESS = "'%1$s' has been added.";
+	protected static final String MSG_ADD_TASK_FAILURE = "Could not add task '%1$s'";
+	protected static final String MSG_COMMAND_WRONG_DATE = "The date you entered was invalid!";
+	protected static final String MSG_COMMAND_WRONG_FORMAT = "The format of '%1$s' is invalid!";
+	protected static final String MSG_DELETE_FAILED = "The task could not be deleted.";
+	protected static final String MSG_DELETE_SUCCESS = "The task was deleted successfully.";
+	protected static final String MSG_DELETE_ALL_WITH_LABEL_SUCCESS = "All tasks with the label #%1$s deleted.";
+	protected static final String MSG_EDIT_SINGLE_DATE_SUCCESS = "%1$s changed from %2$s to %3$s.";
+	protected static final String MSG_EDIT_SINGLE_DATE_ADD_SUCCESS = "%1$s changed to %2$s.";
+	protected static final String MSG_EDIT_TITLE_SUCCESS = "Task name changed from '%1$s' to '%2$s'.";
+	protected static final String MSG_FREE_EVERYWHERE = "You are free!";
+	protected static final String MSG_LABEL_ADDED_ID = "Label '%1$s' added to task %2$d.";
+	protected static final String MSG_LABEL_EXISTS = "The label '%1$s' already exists.";
+	protected static final String MSG_LABEL_NAME_REMOVED = "The label '%1$s' has been removed.";
+	protected static final String MSG_LABEL_ALL_REMOVED = "All labels have been removed.";
+	protected static final String MSG_LABEL_STRING_DOES_NOT_EXIST = "The label '%1$s' does not exist";
+	protected static final String MSG_MATCHING_RESULTS = "Matching results for '%1$s'";
+	protected static final String MSG_NO_FLOATING = "No floating tasks found!";
+	protected static final String MSG_NO_LABEL_TASKS = "No tasks with the label '%1$s' found!";
+	protected static final String MSG_NO_UNDONE_OVERDUE = "No undone overdue tasks found!";
+	protected static final String MSG_NO_UNDONE_TASKS = "Congratulations, you have no incomplete tasks!";
+	protected static final String MSG_NO_DONE_TASKS = "No completed tasks found!";
+	protected static final String MSG_SEARCH_DATE_FAILED = "No tasks starting in '%1$s' were found.";
+	protected static final String MSG_SEARCH_FAILED = "No tasks found";
+	protected static final String MSG_SEARCH_FOUND = "%1$d task(s) found";
+	protected static final String MSG_SEARCH_ID_FAILED = "No tasks with ID of %1$d were found.";
+	protected static final String MSG_SEARCH_ID_FOUND = "Task %1$d found";
+	protected static final String MSG_SEARCH_RESULT_NAME = "Search results for '%1$s'";
+	protected static final String MSG_SEARCH_RESULT_ID = "Search results for ID %1$d";
+	protected static final String MSG_SEARCH_RESULT_UNDONE = "Undone tasks";
+	protected static final String MSG_SEARCH_RESULT_TODAY = "Today's tasks";
+	protected static final String MSG_SEARCH_RESULT_FREE_TIME = "Free time";
+	protected static final String MSG_SEARCH_RESULT_ALL = "All tasks";
+	protected static final String MSG_SEARCH_RESULT_WEEK = "Tasks in the coming seven days";
+	protected static final String MSG_SEARCH_RESULT_FUTURE = "Future tasks";
+	protected static final String MSG_SEARCH_RESULT_OVERDUE = "Overdue tasks";
+	protected static final String MSG_SEARCH_RESULT_FLOAT = "Floating tasks";
+	protected static final String MSG_SEARCH_RESULT_DONE = "Completed tasks";
+	protected static final String MSG_SEARCH_LABEL_FAILED = "No tasks with label '%1$s' were found.";
+	protected static final String MSG_SEARCH_LABEL_FOUND = "%1$d tasks with label '%2$s' found.";
+	protected static final String MSG_SEARCH_MORE_THAN_ONE_TASK = "'%1$s' returned more than 1 result. Please specify with the ID.";
+	protected static final String MSG_SEARCH_NAME_FOUND = "%1$d task(s) containing '%2$s' found";
+	protected static final String MSG_SEARCH_TITLE_FAILED = "No tasks with a title containing '%1$s' were found.";
+	protected static final String MSG_SEARCH_UNDONE_FOUND = "You have %1$d undone tasks.";
+	protected static final String MSG_TOGGLE_STATUS_ID_SUCCESS = "Task %1$d has been set to '%2$s'";
+	protected static final String MSG_TOGGLE_STATUS_MULTI_SUCCESS = "%1$d tasks' status toggled.";
+	protected static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
+	protected static final String MSG_UNDO_SUCCESS = "Last action undone. %1$d change(s) removed.";
+	protected static final String MSG_UNKNOWN_COMMAND = "The command '%1$s' does not exist!";
+	protected static final String MSG_LABEL_OVERLOAD = "Labelling failed. A task cannot have more than %1$d labels!";
+
+	protected static final String PHRASE_END_DATE = "End date";
+	protected static final String PHRASE_START_DATE = "Start date";
+	protected static final String PHRASE_COMPLETE = "complete";
+	protected static final String PHRASE_INCOMPLETE = "incomplete";
+	protected static final String PHRASE_DEADLINE = "Deadline";
+	protected static final String PHRASE_FREE_TIME = "Free time";
+
+	
+
+	public static enum GeneralCommandType {
+		ADD, EDIT, DELETE, SEARCH, MARK, UNDO, LABEL, REDO, HELP, EXIT, INVALID_COMMAND, INVALID_FORMAT, INVALID_DATE
+	}
+
+	protected GeneralCommandType generalCommandType;
+
+	protected boolean executed = false; // Set to true when execution has
+										// finished to allow undo to take place
+
+	/**
+	 * Runs the AbstractDonCommand on tasks stored in donStorage
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the user's tasks
+	 * @return the response produced by execution of the command
+	 */
+	public abstract IDonResponse executeCommand(IDonStorage donStorage);
+
+	/**
+	 * Reverses the action performed by the AbstractDonCommand in executeCommand
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the user's tasks
+	 * @return the response produced by reversing the command
+	 */
+	public abstract IDonResponse undoCommand(IDonStorage donStorage);
+
+	/**
+	 * Creates a standard failure response for the undo function
+	 * 
+	 * @return the undo failure response
+	 */
+	protected IDonResponse createUndoFailureResponse() {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
+		response.addMessage(MSG_UNDO_NO_ACTIONS);
+		return response;
+	}
+
+	/**
+	 * Creates a standard success response for the undo function
+	 * 
+	 * @param num
+	 *            the number of changes reversed
+	 * @return the undo failure response
+	 */
+	protected IDonResponse createUndoSuccessResponse(int num) {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.UNDO_SUCCESS);
+		response.addMessage(String.format(MSG_UNDO_SUCCESS, num));
+		return response;
+	}
+
+	/**
+	 * Creates a standard search failure response
+	 * 
+	 * @param searchString
+	 *            the search string which failed the search
+	 * @return the search failure response
+	 */
+	protected IDonResponse createSearchFailedResponse(String searchString) {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(ResponseType.SEARCH_EMPTY);
+		response.addMessage(String
+				.format(MSG_SEARCH_TITLE_FAILED, searchString));
+		return response;
+	}
+
+	/**
+	 * Gets the general command type of the AbstractDonCommand
+	 * 
+	 * @return the general type
+	 */
+	public GeneralCommandType getGeneralType() {
+		return generalCommandType;
+	}
+
+	/**
+	 * Returns whether the AbstractDonCommand object has been executed
+	 * 
+	 * @return
+	 */
+	public boolean hasExecuted() {
+		return executed;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\AbstractDonCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\test\doornot\parser\DonParserTest.java
+	 */
+
+public class DonParserTest {
+
+	private static DonParser parser;
+	
+	@BeforeClass
+	public static void init(){
+		parser = new DonParser();
+	}
+	
+	@Test
+	public void testAddTask(){
+
+		// test add deadline tasks
+		
+		
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("a hihihi 12345678 by 09/09/2014");
+		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add hihihi 12345678 by 9th september");
+		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add hihihi by 09/09/2014 13:24");
+		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add hihihi by 9 sep 1.24 pm");
+		
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("a hihihi 12345678 by 12/13/2014");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("ad hihihi by 09082014");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("a hihih;i by 09082014");
+		
+		assertEquals(AddType.DEADLINE, create1.getType());
+		assertEquals("hihihi 12345678", create1.getTaskTitle());
+
+		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create1.getStartDate()));
+		
+		assertEquals(true, CalHelper.relevantEquals(new GregorianCalendar(2014,8,9,23,59), create2.getStartDate()));
+		
+		assertEquals(InvalidType.INVALID_DATE, invalid1.getType());
+		
+		// test deadlines with time specified
+		
+		Calendar septCal = new GregorianCalendar(2014,8,9,13,24);
+
+		
+		assertEquals(septCal.getTime().toString(), create3.getStartDate().getTime().toString());
+		assertEquals(true, CalHelper.relevantEquals(septCal, create3.getStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(septCal, create4.getStartDate()));
+		
+		// test invalid commands
+		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
+		assertEquals("ad", invalid2.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("a", invalid3.getStringInput());
+		
+	}
+	
+	@Test
+	public void testAddEvent(){
+		
+		// test add event
+
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("add hihihi from 07/08/2014 to 09/08/2014");
+		DonCreateCommand create2 = (DonCreateCommand) parser.parseCommand("add hihihi from 7 aug to 9 aug");
+		
+		Calendar startDate1 = new GregorianCalendar(2014,7,7,23,59);
+		Calendar endDate1 = new GregorianCalendar(2014,7,9,23,59);
+		
+		assertEquals(AddType.EVENT, create1.getType());
+		assertEquals("hihihi", create1.getTaskTitle());
+		assertEquals(true, CalHelper.relevantEquals(startDate1, create1.getStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate1, create1.getEndDate()));
+		
+		assertEquals(true, CalHelper.relevantEquals(startDate1, create2.getStartDate()));
+		assertEquals(endDate1.getTime().toString(), create2.getEndDate().getTime().toString());
+		
+		// test time specified
+		startDate1 = new GregorianCalendar(2014,7,7,13,24);
+		endDate1 = new GregorianCalendar(2014,7,9,15,54);
+		
+		DonCreateCommand create3 = (DonCreateCommand) parser.parseCommand("add hihihi from 07/08/2014 1.24 pm to 09/08/2014 15:54");
+		DonCreateCommand create4 = (DonCreateCommand) parser.parseCommand("add hihihi from 7 aug 1.24 pm to 9 aug 3.54 pm");
+		assertEquals(true, CalHelper.relevantEquals(startDate1, create3.getStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate1, create3.getEndDate()));
+		
+		assertEquals(true, CalHelper.relevantEquals(startDate1, create4.getStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate1, create4.getEndDate()));
+		
+		// test invalid 
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("add hihihi fro 07082014 to 09082014");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("add hihihi from 0702014 to 0908204");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("add hihihi from 0702014 2 0908204");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("add", invalid1.getStringInput());
+		assertEquals(InvalidType.INVALID_DATE, invalid2.getType());
+		assertEquals(InvalidType.INVALID_DATE, invalid3.getType());
+	}
+	
+	@Test
+	public void testAddFloat(){
+		DonCreateCommand create1 = (DonCreateCommand) parser.parseCommand("addf overdue work");
+		// test add floating tasks
+		assertEquals(AddType.FLOATING, create1.getType());
+		assertEquals("overdue work", create1.getTaskTitle());
+		
+		// test invalid 
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("addf ove;rdue");
+		//invalid name
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("addf", invalid1.getStringInput());
+	}
+	
+	@Test
+	public void testMark(){
+		
+		DonMarkCommand mark1 = (DonMarkCommand) parser.parseCommand("mark blah95");
+		
+		// test mark
+		assertEquals(MarkType.MARK_STRING, mark1.getMarkType());
+		assertEquals("blah95", mark1.getSearchTitle());
+		
+		// test batch mark
+		DonMarkCommand mark3 = (DonMarkCommand) parser.parseCommand("mark overdue");
+		DonMarkCommand mark4 = (DonMarkCommand) parser.parseCommand("mark float");
+		
+		assertEquals(MarkType.MARK_OVERDUE, mark3.getMarkType());
+		assertEquals(MarkType.MARK_FLOAT, mark4.getMarkType());
+	}
+	
+	@Test
+	public void testMarkID(){
+		DonMarkCommand mark1 = (DonMarkCommand) parser.parseCommand("mark 666");
+		// test mark id
+		assertEquals(MarkType.MARK_ID, mark1.getMarkType());
+		assertEquals(666, mark1.getSearchID());
+	}
+	@Test
+	public void testDelete(){
+		DonDeleteCommand delete1 = (DonDeleteCommand) parser.parseCommand("del blah95");
+		// test delete
+		assertEquals(DeleteType.DELETE_TITLE, delete1.getType());
+		assertEquals("blah95", delete1.getSearchTitle());
+		
+		// test batch delete
+		DonDeleteCommand delete2 = (DonDeleteCommand) parser.parseCommand("del od");
+		DonDeleteCommand delete3 = (DonDeleteCommand) parser.parseCommand("del fl");
+		DonDeleteCommand delete4 = (DonDeleteCommand) parser.parseCommand("del #funny business");
+		DonDeleteCommand delete5 = (DonDeleteCommand) parser.parseCommand("del done");
+		
+		assertEquals(DeleteType.DELETE_OVERDUE, delete2.getType());
+		assertEquals(DeleteType.DELETE_FLOAT, delete3.getType());
+		assertEquals(DeleteType.DELETE_LABEL, delete4.getType());
+		assertEquals("funny business", delete4.getSearchTitle());
+		assertEquals(DeleteType.DELETE_DONE, delete5.getType());
+	}
+	
+	@Test
+	public void testDeleteID(){
+		DonDeleteCommand delete1 = (DonDeleteCommand) parser.parseCommand("delete 666");
+		// test delete ID
+		assertEquals(DeleteType.DELETE_ID, delete1.getType());
+		assertEquals(666, delete1.getSearchID());
+		
+	}
+	@Test
+	public void testSearchName(){
+		DonFindCommand search = (DonFindCommand) parser.parseCommand("search blah95");
+		// test search
+		assertEquals(SearchType.SEARCH_NAME, search.getType());
+		assertEquals("blah95", search.getSearchTitle());
+	}
+	
+	@Test
+	public void testSearchID(){
+		DonFindCommand search = (DonFindCommand) parser.parseCommand("s 666");
+		// test search ID
+		assertEquals(SearchType.SEARCH_ID, search.getType());
+		assertEquals(666, search.getSearchID());
+	}
+	
+	@Test
+	public void testSearchDate(){
+		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("son 09/08/2014");
+		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("son 9 aug");
+		Calendar date1 = new GregorianCalendar(2014,7,9,23,59);
+		
+		// test search date
+		assertEquals(SearchType.SEARCH_DATE, search1.getType());
+		assertEquals(date1.getTime().toString(), search1.getSearchStartDate().getTime().toString());
+		assertEquals(true, CalHelper.relevantEquals(date1, search2.getSearchStartDate()));
+		
+		// test search with time
+		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("son 09/08/2014 11:23");
+		DonFindCommand search4 = (DonFindCommand) parser.parseCommand("son 9 aug 11:23");
+		date1 = new GregorianCalendar(2014,7,9,11,23);
+		assertEquals(true, CalHelper.relevantEquals(date1, search3.getSearchStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(date1, search4.getSearchStartDate()));
+	}
+	
+	@Test
+	public void testSearchGeneral(){
+
+		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("saf 09/08/2014");
+		DonFindCommand search2 = (DonFindCommand) parser.parseCommand("saf 9 aug");
+		Calendar date1 = new GregorianCalendar(2014,7,10,23,59); 
+		
+		//search after commands will have a modified startdate after getting parsed 
+		//if they are provided without time
+		
+		// test search after date
+		assertEquals(SearchType.SEARCH_AFTDATE, search1.getType());
+		assertEquals(true, CalHelper.relevantEquals(date1, search1.getSearchStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(date1, search2.getSearchStartDate()));
+		
+		// test search free
+		DonFindCommand search3 = (DonFindCommand) parser.parseCommand("free");
+		assertEquals(SearchType.SEARCH_FREE, search3.getType());
+		
+		// test search all
+		DonFindCommand search5 = (DonFindCommand) parser.parseCommand("s");
+		DonFindCommand search6 = (DonFindCommand) parser.parseCommand("search");
+		assertEquals(SearchType.SEARCH_ALL, search5.getType());
+		assertEquals(SearchType.SEARCH_ALL, search6.getType());
+		
+		// test search undone
+		DonFindCommand search7 = (DonFindCommand) parser.parseCommand("sud");
+		DonFindCommand search8 = (DonFindCommand) parser.parseCommand("undone");
+		assertEquals(SearchType.SEARCH_UNDONE, search7.getType());
+		assertEquals(SearchType.SEARCH_UNDONE, search8.getType());
+		
+		// test search done
+		DonFindCommand search16 = (DonFindCommand) parser.parseCommand("sd");
+		DonFindCommand search17 = (DonFindCommand) parser.parseCommand("done");
+		assertEquals(SearchType.SEARCH_DONE, search16.getType());
+		assertEquals(SearchType.SEARCH_DONE, search17.getType());
+		
+		// test today
+		DonFindCommand search10 = (DonFindCommand) parser.parseCommand("today");
+		assertEquals(SearchType.TODAY, search10.getType());
+		
+		// test overdue
+		DonFindCommand search11 = (DonFindCommand) parser.parseCommand("od");
+		DonFindCommand search12 = (DonFindCommand) parser.parseCommand("overdue");
+		assertEquals(SearchType.OVERDUE, search11.getType());
+		assertEquals(SearchType.OVERDUE, search12.getType());
+		
+		// test future
+		DonFindCommand search13 = (DonFindCommand) parser.parseCommand("future");
+		assertEquals(SearchType.FUTURE, search13.getType());
+				
+		// test results
+		DonFindCommand search14 = (DonFindCommand) parser.parseCommand("results");
+		assertEquals(SearchType.RESULTS, search14.getType());
+		
+		// test float
+		DonFindCommand search15 = (DonFindCommand) parser.parseCommand("fl");
+		assertEquals(SearchType.FLOAT, search15.getType());	
+		
+		// test search done
+		DonFindCommand search19 = (DonFindCommand) parser.parseCommand("s");
+		DonFindCommand search20 = (DonFindCommand) parser.parseCommand("all");
+		assertEquals(SearchType.SEARCH_ALL, search19.getType());
+		assertEquals(SearchType.SEARCH_ALL, search20.getType());
+	}
+	@Test
+	public void testEditName(){
+		// test edit 
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("ed hihihi to \"HEHEHE\"");
+		
+		assertEquals(EditType.NAME_NAME, edit1.getType());
+		assertEquals("HEHEHE", edit1.getNewTitle());
+		assertEquals("hihihi", edit1.getSearchTitle());
+		
+		//test invalid
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("EDIT hihihi to HEHEHE\"");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("EDIT", invalid1.getStringInput());
+		
+		// test edit ID
+		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit 666 to \"hehehe\"");
+		
+		assertEquals(EditType.ID_NAME, edit2.getType());
+		assertEquals("hehehe", edit2.getNewTitle());
+		assertEquals(666, edit2.getSearchID());		
+	}
+	
+	@Test
+	public void testEditEvent(){
+		
+		// test edit event
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit hihihi from 07/08/2014 to 09/08/2014");
+		Calendar startDate = new GregorianCalendar(2014,7,7,23,59), endDate = new GregorianCalendar(2014,7,9,23,59);
+		
+		assertEquals(EditType.NAME_EVENT, edit1.getType());
+		assertEquals("hihihi", edit1.getSearchTitle());
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit1.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit1.getNewEndDate()));
+
+		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit hihihi from 7 aug to 9 aug");
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit2.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit2.getNewEndDate()));
+		
+		// test edit ID event
+		startDate = new GregorianCalendar(2014,7,7,23,59);
+		endDate = new GregorianCalendar(2014,7,9,23,59);
+		
+		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit 666 from 07/08/2014 to 09/08/2014");
+		
+		assertEquals(EditType.ID_EVENT, edit3.getType());
+		assertEquals(666, edit3.getSearchID());
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit3.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit3.getNewEndDate()));
+		
+		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit 666 from 7 aug to 9 aug");
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit4.getNewEndDate()));
+		
+		// test with time
+		startDate = new GregorianCalendar(2014,7,7,13,55);
+		endDate = new GregorianCalendar(2014,7,9,11,44);
+		
+		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("edit 666 from 07/08/2014 13:55 to 09/08/2014 11:44");
+		
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit5.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit5.getNewEndDate()));
+		
+		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 from 7 aug 13:55 to 9 aug 11:44");
+		
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit6.getNewStartDate()));
+		assertEquals(true, CalHelper.relevantEquals(endDate, edit6.getNewEndDate()));
+	}
+	
+	@Test
+	public void testEditDate(){
+		// test edit date
+		DonEditCommand edit1 = (DonEditCommand) parser.parseCommand("edit hihihi by 09/08/2014");
+		Calendar startDate = new GregorianCalendar(2014,7,9,23,59);
+		
+		assertEquals(EditType.NAME_DATE, edit1.getType());
+		assertEquals("hihihi", edit1.getSearchTitle());
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit1.getNewDeadline()));
+
+		DonEditCommand edit2 = (DonEditCommand) parser.parseCommand("edit hihihi by 9 aug");
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit2.getNewDeadline()));
+		
+		// tets with time
+		startDate = new GregorianCalendar(2014,7,9,1,23);
+		DonEditCommand edit3 = (DonEditCommand) parser.parseCommand("edit hihihi by 09/08/2014 1.23 am");
+		
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit3.getNewDeadline()));
+		
+		DonEditCommand edit4 = (DonEditCommand) parser.parseCommand("edit hihihi by 9 aug 1.23 am");
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit4.getNewDeadline()));
+		
+		// test ID edit date
+		startDate = new GregorianCalendar(2014,7,9,23,59);
+		
+		DonEditCommand edit5 = (DonEditCommand) parser.parseCommand("e 666 by 09/08/2014");
+		assertEquals(EditType.ID_DATE, edit5.getType());
+		assertEquals(666, edit5.getSearchID());
+		assertEquals(startDate.getTime().toString(), edit5.getNewDeadline().getTime().toString());
+
+		DonEditCommand edit6 = (DonEditCommand) parser.parseCommand("edit 666 by 9 aug");
+		assertEquals(true, CalHelper.relevantEquals(startDate, edit6.getNewDeadline()));		
+	
+	}
+	@Test
+	public void testHelp(){
+		
+		// test help
+		DonHelpCommand help1 = (DonHelpCommand) parser.parseCommand("help");
+		
+		assertEquals(HelpType.HELP_GENERAL, help1.getRequestedCommand());
+		
+		DonHelpCommand help2 = (DonHelpCommand) parser.parseCommand("help add");
+		
+		assertEquals(HelpType.HELP_ADD, help2.getRequestedCommand());
+		
+		DonHelpCommand help3 = (DonHelpCommand) parser.parseCommand("help edit");
+		
+		assertEquals(HelpType.HELP_EDIT, help3.getRequestedCommand());
+		
+		DonHelpCommand help4 = (DonHelpCommand) parser.parseCommand("help search");
+		
+		assertEquals(HelpType.HELP_SEARCH, help4.getRequestedCommand());
+		
+		DonHelpCommand help5 = (DonHelpCommand) parser.parseCommand("help del");
+		DonHelpCommand help6 = (DonHelpCommand) parser.parseCommand("help delete");
+		
+		assertEquals(HelpType.HELP_DELETE, help5.getRequestedCommand());
+		assertEquals(HelpType.HELP_DELETE, help6.getRequestedCommand());
+		
+		DonHelpCommand help7 = (DonHelpCommand) parser.parseCommand("help mark");
+			
+		assertEquals(HelpType.HELP_MARK, help7.getRequestedCommand());
+
+		DonHelpCommand help8 = (DonHelpCommand) parser.parseCommand("help undo");
+		
+		assertEquals(HelpType.HELP_UNDO, help8.getRequestedCommand());
+		
+		DonHelpCommand help9 = (DonHelpCommand) parser.parseCommand("help redo");
+		
+		assertEquals(HelpType.HELP_REDO, help9.getRequestedCommand());
+
+		// test invalid
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("help commands");
+		DonInvalidCommand invalid2 = (DonInvalidCommand) parser.parseCommand("helpppp add");
+		DonInvalidCommand invalid3 = (DonInvalidCommand) parser.parseCommand("help adds");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("help", invalid1.getStringInput());
+		assertEquals(InvalidType.INVALID_COMMAND, invalid2.getType());
+		assertEquals("helpppp", invalid2.getStringInput());
+		assertEquals(InvalidType.INVALID_FORMAT, invalid3.getType());
+		assertEquals("help", invalid3.getStringInput());
+	}
+
+	@Test
+	public void testLabel(){
+		
+		// test label 
+		DonAddLabelCommand label1 = (DonAddLabelCommand) parser.parseCommand("label hihihi #projects");
+		
+		assertEquals(AddLabelType.LABEL_NAME, label1.getAddLabelType());
+		assertEquals("projects", label1.getNewLabel());
+		assertEquals("hihihi", label1.getSearchTitle());
+		
+		// test label ID
+		
+		DonAddLabelCommand label2 = (DonAddLabelCommand) parser.parseCommand("label 666 #projects");
+		assertEquals(AddLabelType.LABEL_ID, label2.getAddLabelType());
+		assertEquals("projects", label2.getNewLabel());
+		assertEquals(666, label2.getSearchID());
+	}
+	@Test
+	public void testDelabel(){
+		// test delabel 
+		
+		DonDelabelCommand delabel1 = (DonDelabelCommand) parser.parseCommand("dl hihihi #projects");
+
+		assertEquals(DelabelType.LABEL_NAME, delabel1.getDelabelType());
+		assertEquals("projects", delabel1.getSearchLabel());
+		assertEquals("hihihi", delabel1.getSearchTitle());
+
+		// tets delabel ID
+		DonDelabelCommand delabel2 = (DonDelabelCommand) parser.parseCommand("delabel 666 #projects");
+		assertEquals(DelabelType.LABEL_ID, delabel2.getDelabelType());
+		assertEquals("projects", delabel2.getSearchLabel());
+		assertEquals(666, delabel2.getSearchID());
+		
+		//test delabel all id
+		DonDelabelCommand delabel3 = (DonDelabelCommand) parser.parseCommand("delabel 666");
+		assertEquals(DelabelType.LABEL_ALL_ID, delabel3.getDelabelType());
+		assertEquals(666, delabel3.getSearchID());
+		
+		//test delabel all name
+		DonDelabelCommand delabel4 = (DonDelabelCommand) parser.parseCommand("delabel blah95");
+		assertEquals(DelabelType.LABEL_ALL_NAME, delabel4.getDelabelType());
+		assertEquals("blah95", delabel4.getSearchTitle());
+		
+		
+	}
+	@Test
+	public void testSearchLabel(){
+		DonFindCommand search1 = (DonFindCommand) parser.parseCommand("sl #projects");		
+		
+		// test search label
+		assertEquals(SearchType.SEARCH_LABEL, search1.getType());
+		assertEquals("projects", search1.getSearchTitle());
+		
+		// test invalid
+		DonInvalidCommand invalid1 = (DonInvalidCommand) parser.parseCommand("sl projects");
+		
+		assertEquals(InvalidType.INVALID_FORMAT, invalid1.getType());
+		assertEquals("sl", invalid1.getStringInput());
+
+		
+	}
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\test\doornot\parser\DonParserTest.java
+
+
+
+
+

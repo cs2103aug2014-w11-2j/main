@@ -1,0 +1,5043 @@
+//@author: a0111995y
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\logic\DonLogic.java
+	 */
+
+public class DonLogic implements IDonLogic {
+
+	private static final String FILE_DONLOGIC_LOG = "donlogic.log";
+	private static final String MSG_SAVE_SUCCESSFUL = "Save successful.";
+	private static final String MSG_SAVE_FAILED = "Save failed.";
+	private static final String MSG_UNDO_NO_ACTIONS = "There are no actions to undo!";
+	private static final String MSG_UNDO_REMINDER = "You can undo your action with the undo command.";
+	private static final String MSG_REDO_NO_ACTIONS = "There are no actions to redo!";
+	private static final String MSG_EX_COMMAND_CANNOT_BE_NULL = "Command cannot be null";
+
+	private IDonStorage donStorage;
+	private IDonParser donParser;
+	
+
+	// actionPast contains the actions to undo, actionFuture to redo
+	// If a new action that performs modifications is made, actionFuture has to
+	// be cleared.
+	private Stack<AbstractDonCommand> commandPast, commandFuture;
+
+	private final static Logger log = Logger
+			.getLogger(DonLogic.class.getName());
+	
+	public DonLogic() {
+		donStorage = new DonStorage();
+		donParser = new DonParser();
+
+		commandPast = new Stack<AbstractDonCommand>();
+		commandFuture = new Stack<AbstractDonCommand>();
+
+		donStorage.loadFromDisk();
+		initLogger();
+	}
+
+	/**
+	 * Constructor for dependency injection during testing
+	 * 
+	 * @param storage
+	 *            the storage component
+	 * @param parser
+	 *            the parser component
+	 */
+	public DonLogic(IDonStorage storage, IDonParser parser, boolean useLog) {
+		donStorage = storage;
+		donParser = parser;
+
+		commandPast = new Stack<AbstractDonCommand>();
+		commandFuture = new Stack<AbstractDonCommand>();
+
+		donStorage.loadFromDisk();
+		if(useLog) {
+			initLogger();
+		}
+	}
+	
+	public static void setDebug(Level level) {
+		log.setLevel(level);
+	}
+
+	private static void initLogger() {
+		try {
+			Handler fileHandler = new FileHandler(FILE_DONLOGIC_LOG);
+			fileHandler.setFormatter(new SimpleFormatter());
+			log.addHandler(fileHandler);
+			Logger.getLogger(DonLogic.class.getName()).setLevel(Level.FINE);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public IDonResponse runCommand(String command) {
+		if (command == null) {
+			throw new IllegalArgumentException(MSG_EX_COMMAND_CANNOT_BE_NULL);
+		}
+		log.fine(command);
+		AbstractDonCommand dCommand = donParser.parseCommand(command);
+
+		AbstractDonCommand.GeneralCommandType genCommandType = dCommand
+				.getGeneralType();
+		IDonResponse response = null;
+		if (genCommandType == GeneralCommandType.UNDO) {
+			response = undoLastAction();
+		} else if (genCommandType == GeneralCommandType.REDO) {
+			response = redoAction();
+		} else {
+			response = dCommand.executeCommand(donStorage);
+			if (dCommand.hasExecuted()) {
+				// Executed commands can be undone, add undo message
+				response.addMessage(MSG_UNDO_REMINDER);
+				commandPast.add(dCommand);
+				commandFuture.clear(); // If a change has been made, the redo
+										// stack needs to be cleared
+			}
+		}
+
+		// Perform a save after every command
+		saveToDrive();
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse saveToDrive() {
+		boolean saveSuccess = donStorage.saveToDisk();
+		IDonResponse response = new DonResponse();
+		if (saveSuccess) {
+			response.setResponseType(IDonResponse.ResponseType.SAVE_SUCCESS);
+			response.addMessage(MSG_SAVE_SUCCESSFUL);
+			log.fine(MSG_SAVE_SUCCESSFUL);
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SAVE_FAILURE);
+			response.addMessage(MSG_SAVE_FAILED);
+			log.fine(MSG_SAVE_FAILED);
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse initialize() {
+		return donParser.parseCommand("today").executeCommand(donStorage);
+	}
+
+	/**
+	 * Undoes the last action
+	 * 
+	 * @return response stating the status of the undo operation
+	 */
+	private IDonResponse undoLastAction() {
+		IDonResponse response = new DonResponse();
+
+		if (commandPast.size() <= 0) {
+			response.setResponseType(IDonResponse.ResponseType.UNDO_FAILURE);
+			response.addMessage(MSG_UNDO_NO_ACTIONS);
+
+		} else {
+			AbstractDonCommand lastCommand = commandPast.pop();
+			assert lastCommand.hasExecuted(); // The lastCommand can only be in
+												// the stack if it has run
+			response = lastCommand.undoCommand(donStorage);
+			if (!lastCommand.hasExecuted()) {
+				// Command undone
+				commandFuture.add(lastCommand);
+			}
+		}
+
+		return response;
+	}
+
+	/**
+	 * Undoes the last action
+	 * 
+	 * @return response stating the status of the undo operation
+	 */
+	private IDonResponse redoAction() {
+		IDonResponse response = new DonResponse();
+
+		if (commandFuture.size() <= 0) {
+			response.setResponseType(IDonResponse.ResponseType.REDO_FAILURE);
+			response.addMessage(MSG_REDO_NO_ACTIONS);
+		} else {
+			AbstractDonCommand nextCommand = commandFuture.pop();
+			assert !nextCommand.hasExecuted(); // The lastCommand can only be in
+												// the stack if it has run
+
+			response = nextCommand.executeCommand(donStorage);
+			if (nextCommand.hasExecuted()) {
+				// Command redone
+				commandPast.add(nextCommand);
+			}
+
+		}
+		return response;
+	}
+
+	@Override
+	public List<IDonTask> getTaskList() {
+		List<IDonTask> taskList = new ArrayList<IDonTask>(donStorage.getTaskList());
+		Collections.sort(taskList);
+		return taskList;
+	}
+
+	@Override
+	public List<IDonTask> getTodayTasks() {
+		List<IDonTask> todayTasks = SearchHelper.findTaskRange(donStorage, CalHelper.getTodayStart(),
+				CalHelper.getTodayEnd(), SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(todayTasks, new TodayTaskComparator());
+		return todayTasks;
+	}
+
+	@Override
+	public List<IDonTask> getWeekTasks() {
+		Calendar start = CalHelper.getTodayStart();
+		Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		List<IDonTask> weekTasks = SearchHelper.findTaskRange(donStorage, start, end,
+				SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(weekTasks);
+		return weekTasks;
+	}
+
+	@Override
+	public List<IDonTask> getFutureTasks() {
+		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		List<IDonTask> futureTasks = SearchHelper.findTaskRange(donStorage, start, null,
+				SearchHelper.FIND_INCOMPLETE);
+		Collections.sort(futureTasks);
+		return futureTasks;
+	}
+
+	@Override
+	public List<IDonTask> getFloatingTasks() {
+		List<IDonTask> floatingTasks = SearchHelper.findTaskByType(donStorage, TaskType.FLOATING, true, false);
+		Collections.sort(floatingTasks);
+		return floatingTasks;
+	}
+
+	@Override
+	public List<IDonTask> getOverdueTasks() {
+		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage, null,
+				Calendar.getInstance(), SearchHelper.FIND_INCOMPLETE);
+		List<IDonTask> resultList = new ArrayList<IDonTask>();
+		for (IDonTask task : taskList) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
+				resultList.add(task);
+			}
+		}
+		Collections.sort(taskList);
+		return resultList;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\logic\DonLogic.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\logic\DonResponse.java
+	 */
+
+public class DonResponse implements IDonResponse {
+
+	private List<String> messages;
+	private List<IDonTask> tasks;
+	private ResponseType type;
+
+	public DonResponse() {
+		messages = new ArrayList<String>();
+		tasks = new ArrayList<IDonTask>();
+	}
+
+	@Override
+	public ResponseType getResponseType() {
+		return type;
+	}
+
+	@Override
+	public List<String> getMessages() {
+		return new ArrayList<String>(messages);
+	}
+
+	@Override
+	public List<IDonTask> getTasks() {
+		return new ArrayList<IDonTask>(tasks);
+	}
+
+	@Override
+	public boolean addMessage(String message) {
+		return messages.add(message);
+	}
+
+	@Override
+	public boolean addTask(IDonTask task) {
+		return tasks.add(task);
+	}
+
+	@Override
+	public boolean hasMessages() {
+		return (messages.size() > 0);
+	}
+
+	@Override
+	public boolean hasTasks() {
+		return (tasks.size() > 0);
+	}
+
+	@Override
+	public void setResponseType(ResponseType type) {
+		this.type = type;
+	}
+
+	@Override
+	public void copyTasks(IDonResponse response) {
+		for (IDonTask task : response.getTasks()) {
+			this.addTask(task);
+		}
+
+	}
+
+	@Override
+	public void setTaskList(List<IDonTask> tasks) {
+		this.tasks = tasks;
+	}
+
+	@Override
+	public void sortTask(Comparator<IDonTask> comp) {
+		Collections.sort(tasks, comp);
+	}
+
+	@Override
+	public void sortTask() {
+		Collections.sort(tasks);
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\logic\DonResponse.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\logic\IDonLogic.java
+	 */
+
+public interface IDonLogic {
+
+	/**
+	 * Runs the given command and returns the result in an IDonResponse object
+	 * 
+	 * @param command
+	 *            the command given by the user
+	 * @return the response
+	 */
+	public IDonResponse runCommand(String command);
+
+	/**
+	 * Perform a save of the data in DoOrNot to drive. This is expected to be
+	 * called from the GUI on a repeating interval.
+	 * 
+	 * @return whether the save was successful
+	 */
+	public IDonResponse saveToDrive();
+
+	/**
+	 * Method to get called by DoOrNot at startup of the program to bring up a
+	 * list of latest tasks. Gets information required by a welcome "page"
+	 * 
+	 * @return the response containing relevant tasks and messages
+	 */
+	public IDonResponse initialize();
+
+	/**
+	 * Gets the list of tasks held by the storage component of the logic
+	 * component
+	 * 
+	 * @return the list of tasks
+	 */
+	public List<IDonTask> getTaskList();
+	
+	/**
+	 * Gets today's tasks
+	 * @return the list of tasks today
+	 */
+	public List<IDonTask> getTodayTasks();
+	
+	/**
+	 * Gets the tasks happening within the week
+	 * @return the list of task in the 7 days ahead
+	 */
+	public List<IDonTask> getWeekTasks();
+	
+	/**
+	 * Gets the tasks happening after 7 days
+	 * @return the list of tasks
+	 */
+	public List<IDonTask> getFutureTasks();
+	
+	/**
+	 * Gets all floating tasks
+	 * @return the list of floating tasks
+	 */
+	public List<IDonTask> getFloatingTasks();
+	
+	/**
+	 * Gets all overdue tasks
+	 * @return the list of overdue tasks
+	 */
+	public List<IDonTask> getOverdueTasks();
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\logic\IDonLogic.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\logic\IDonResponse.java
+	 */
+
+public interface IDonResponse {
+
+	public enum ResponseType {
+		ADD_SUCCESS, ADD_FAILURE, DEL_SUCCESS, DEL_FAILURE, SEARCH_EMPTY, SEARCH_SUCCESS, EDIT_SUCCESS, EDIT_FAILURE, UNDO_SUCCESS, UNDO_FAILURE, REDO_SUCCESS, REDO_FAILURE, SAVE_SUCCESS, SAVE_FAILURE, HELP, UNKNOWN_COMMAND, LABEL_EXISTS, LABEL_ADDED, LABEL_REMOVED, LABEL_NOT_FOUND, LABEL_FAILED, SWITCH_PANEL
+	}
+
+	public ResponseType getResponseType();
+
+	/**
+	 * Returns the response messages as a list. The list will be empty if there
+	 * are no messages
+	 * 
+	 * @return the list of messages
+	 */
+	public List<String> getMessages();
+
+	/**
+	 * Returns the list of tasks enclosed within the response. The list will be
+	 * empty if there are no tasks.
+	 * 
+	 * @return the list of tasks
+	 */
+	public List<IDonTask> getTasks();
+
+	/**
+	 * Adds a message to the response
+	 * 
+	 * @param message
+	 *            the message to add
+	 * @return true if the addition was successful
+	 */
+	public boolean addMessage(String message);
+
+	/**
+	 * Adds a task to the response
+	 * 
+	 * @param task
+	 *            the task to add
+	 * @return true if the addition was successful
+	 */
+	public boolean addTask(IDonTask task);
+
+	/**
+	 * Sets the response type of the IDonResponse object
+	 * 
+	 * @param type
+	 *            the new type of response
+	 */
+	public void setResponseType(ResponseType type);
+
+	/**
+	 * Sets the list of tasks of the IDonResponse object directly
+	 * 
+	 * @param task
+	 *            the new task list
+	 */
+	public void setTaskList(List<IDonTask> tasks);
+
+	/**
+	 * Returns whether the response has any messages. This is identical to
+	 * checking getMessages().size()>0
+	 * 
+	 * @return true if the response contains one or more messages
+	 */
+	public boolean hasMessages();
+
+	/**
+	 * Returns whether the response has any tasks. This is identical to checking
+	 * getTasks().size()>0
+	 * 
+	 * @return true if the response contains one or more tasks
+	 */
+	public boolean hasTasks();
+
+	/**
+	 * Copies the task from another IDonResponse into this IDonResponse. If the
+	 * response already has tasks inside, the tasks from the other response will
+	 * be appended to the tasks in the response object.
+	 * 
+	 * @param response
+	 *            the response to copy tasks from
+	 */
+	public void copyTasks(IDonResponse response);
+
+	/**
+	 * Sorts the tasks in the response with the given comparator.
+	 * 
+	 * @param comp
+	 */
+	public void sortTask(Comparator<IDonTask> comp);
+
+	/**
+	 * Sorts the tasks in the response with the the tasks default compareTo
+	 */
+	public void sortTask();
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\logic\IDonResponse.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\storage\DonTask.java
+	 */
+
+public class DonTask implements IDonTask {
+
+	private String taskTitle;
+	private Calendar startDate, endDate;
+	private boolean status, timeUsed;
+	private int taskID;
+	private List<String> labels;
+
+	public DonTask(String title, int ID) {
+		taskTitle = title;
+		startDate = null;
+		endDate = null;
+		status = false;
+		taskID = ID;
+		labels = new ArrayList<String>();
+		timeUsed = false;
+	}
+
+	public DonTask(String title, Calendar deadline, int ID) {
+		taskTitle = title;
+		startDate = deadline;
+		endDate = null;
+		status = false;
+		taskID = ID;
+		labels = new ArrayList<String>();
+	}
+
+	public DonTask(String title, Calendar startDate, Calendar endDate, int ID) {
+		taskTitle = title;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		status = false;
+		taskID = ID;
+		labels = new ArrayList<String>();
+	}
+
+	public DonTask(String title, Calendar startDate, Calendar endDate, int ID,
+			List<String> labels) {
+		taskTitle = title;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		status = false;
+		taskID = ID;
+		this.labels = labels;
+	}
+
+	@Override
+	public int getID() {
+
+		return taskID;
+	}
+
+	@Override
+	public String getTitle() {
+		return taskTitle;
+	}
+
+	@Override
+	public Calendar getStartDate() {
+		return startDate;
+	}
+
+	@Override
+	public Calendar getEndDate() {
+		return endDate;
+	}
+
+	@Override
+	public boolean getStatus() {
+		return status;
+	}
+
+	@Override
+	public List<String> getLabels() {
+		return labels;
+	}
+
+	@Override
+	public void setTitle(String newTitle) {
+		taskTitle = newTitle;
+	}
+
+	@Override
+	public void setStartDate(Calendar newDate) {
+		startDate = newDate;
+	}
+
+	@Override
+	public void setEndDate(Calendar newDate) {
+		endDate = newDate;
+	}
+
+	@Override
+	public void setStatus(boolean newStatus) {
+		status = newStatus;
+	}
+
+	@Override
+	public void setLabels(List<String> newLabels) {
+		labels = newLabels;
+	}
+
+	@Override
+	public TaskType getType() {
+		if (startDate == null) {
+			return TaskType.FLOATING;
+		} else if (endDate == null) {
+			return TaskType.DEADLINE;
+		} else {
+			return TaskType.DURATION;
+		}
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (!(other instanceof IDonTask)) {
+			return false;
+		}
+
+		IDonTask otherTask = (IDonTask) other;
+		if (this.getTitle() == null || otherTask.getTitle() == null) {
+			// We treat tasks with null titles as incomparable
+			return false;
+		}
+
+		if (this.getType() != otherTask.getType()) {
+			return false;
+		}
+
+		if (this.getType() == TaskType.FLOATING) {
+			// A floating task only needs to have its title compared
+			if (this.getTitle() == otherTask.getTitle()) {
+				return true;
+			}
+		} else if (this.getType() == TaskType.DEADLINE) {
+			if (this.getTitle() == otherTask.getTitle()
+					&& this.getStartDate().equals(otherTask.getStartDate())) {
+				return true;
+			}
+		} else if (this.getType() == TaskType.DURATION) {
+			if (this.getTitle() == otherTask.getTitle()
+					&& this.getStartDate().equals(otherTask.getStartDate())
+					&& this.getEndDate().equals(otherTask.getEndDate())) {
+				return true;
+			}
+		}
+		return false;
+
+	}
+
+	@Override
+	public int compareTo(IDonTask otherTask) {
+		if (this.getType() == TaskType.FLOATING) {
+			if (otherTask.getType() != TaskType.FLOATING) {
+				return 1;
+			}
+			// For floating tasks the title will be compared based on
+			// lexicographic ordering
+			return compareTitle(otherTask);
+		} else if (this.getType() == TaskType.DEADLINE) {
+			// For deadline tasks the deadline will be compared first
+			// with an earlier deadline being "less than" a later deadline
+			if (otherTask.getType() == TaskType.FLOATING) {
+				// If a deadline task is being compared to a floating one,
+				// only the title can be compared.
+				return -1;
+			}
+			int startDateComp = compareStartDate(otherTask);
+			if (startDateComp == 0) {
+				return compareTitle(otherTask);
+			}
+			return startDateComp;
+
+		} else if (this.getType() == TaskType.DURATION) {
+			// For tasks with a duration the start date will be compared first
+			// with an earlier start date being "less than" the later one.
+			// If they are equal the end date will be compared with the earlier
+			// one being "less than" the later one.
+			// If both start and end dates are equivalent the title will be
+			// compared.
+			if (otherTask.getType() == TaskType.FLOATING) {
+				// If a duration task is being compared to a floating one,
+				// only the title can be compared.
+				return -1;
+			} else if (otherTask.getType() == TaskType.DEADLINE) {
+				// If a duration task is being compared to a deadline task,
+				// only the start date and title can be compared.
+				int startDateComp = compareStartDate(otherTask);
+				if (startDateComp == 0) {
+					return compareTitle(otherTask);
+				}
+				return startDateComp;
+			} else {
+				int startDateComp = compareStartDate(otherTask);
+				int endDateComp = compareEndDate(otherTask);
+				if (startDateComp == 0 && endDateComp != 0) {
+					return endDateComp;
+				} else if (startDateComp == 0 && endDateComp == 0) {
+					return compareTitle(otherTask);
+				}
+
+				return startDateComp;
+			}
+
+		}
+		return 0;
+	}
+
+	/**
+	 * Helper method for compareTo to utilize. Compares the title of the current
+	 * and another task. Assumes title exists
+	 * 
+	 * @param otherTask
+	 *            the task to compare with
+	 * @return -1 if the title is smaller, 0 if they are the same, 1 if the
+	 *         other task is larger
+	 */
+	private int compareTitle(IDonTask otherTask) {
+		return this.getTitle().compareToIgnoreCase(otherTask.getTitle());
+	}
+
+	/**
+	 * Helper method for compareTo to utilize. Compares the start date of the
+	 * current and another task. Assumes that start date is not null
+	 * 
+	 * @param otherTask
+	 *            the task to compare with
+	 * @return -1 if the title starts earlier, 0 if they are the same, 1 if the
+	 *         other task starts later
+	 */
+	protected int compareStartDate(IDonTask otherTask) {
+		return this.getStartDate().compareTo(otherTask.getStartDate());
+	}
+
+	/**
+	 * Helper method for compareTo to utilize. Compares the end date of the
+	 * current and another task. Assumes that end date is not null
+	 * 
+	 * @param otherTask
+	 *            the task to compare with
+	 * @return -1 if the title ends earlier, 0 if they are the same, 1 if the
+	 *         other task ends later
+	 */
+	private int compareEndDate(IDonTask otherTask) {
+		return this.getEndDate().compareTo(otherTask.getEndDate());
+	}
+
+	@Override
+	public DonTask clone() {
+		DonTask newTask = new DonTask(taskTitle, taskID);
+		if (this.getStartDate() != null) {
+			newTask.setStartDate((Calendar) this.getStartDate().clone());
+		}
+		if (this.getEndDate() != null) {
+			newTask.setEndDate((Calendar) this.getEndDate().clone());
+		}
+
+		newTask.setStatus(this.getStatus());
+		newTask.setTimeUsed(this.isTimeUsed());
+		newTask.setLabels(new ArrayList<String>(this.getLabels()));
+		return newTask;
+
+	}
+
+	@Override
+	public void copyTaskDetails(IDonTask sourceTask) {
+		this.setTitle(sourceTask.getTitle());
+		if (sourceTask.getStartDate() != null) {
+			this.setStartDate((Calendar) sourceTask.getStartDate().clone());
+		} else {
+			this.setStartDate(null);
+		}
+		if (sourceTask.getEndDate() != null) {
+			this.setEndDate((Calendar) sourceTask.getEndDate().clone());
+		} else {
+			this.setEndDate(null);
+		}
+
+		this.setStatus(sourceTask.getStatus());
+		this.setTimeUsed(sourceTask.isTimeUsed());
+		this.setLabels(new ArrayList<String>(sourceTask.getLabels()));
+	}
+
+	/**
+	 * Comparator to help sort DonTasks by ID instead of name/date
+	 */
+	public static class IDComparator implements Comparator<IDonTask> {
+		@Override
+		public int compare(IDonTask task1, IDonTask task2) {
+			return (task1.getID() - task2.getID());
+		}
+
+	}
+
+	@Override
+	public boolean addLabel(String newLabel) {
+		for (int i = 0; i < labels.size(); i++) {
+			if (labels.get(i).equalsIgnoreCase(newLabel)) {
+				return false;
+			}
+		}
+		return labels.add(newLabel);
+	}
+
+	@Override
+	public boolean deleteLabel(String labelToDelete) {
+		return labels.remove(labelToDelete);
+	}
+
+	@Override
+	public void setTimeUsed(boolean timeUsed) {
+		this.timeUsed = timeUsed;
+	}
+
+	@Override
+	public boolean isTimeUsed() {
+		return timeUsed;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\storage\DonTask.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\storage\IDonTask.java
+	 */
+
+public interface IDonTask extends Comparable<IDonTask>, Cloneable {
+
+	public enum TaskType {
+		FLOATING, DEADLINE, DURATION
+	}
+
+	/**
+	 * Returns the unique ID of the task
+	 * 
+	 * @return the ID of the task
+	 */
+	public int getID();
+
+	/**
+	 * Returns the title of the task
+	 * 
+	 * @return the title of the task
+	 */
+	public String getTitle();
+
+	/**
+	 * Returns the starting date of the task if it is present. Returns null
+	 * otherwise. For tasks with only a deadline, this will return the deadline.
+	 * 
+	 * @return the starting date of the task
+	 */
+	public Calendar getStartDate();
+
+	/**
+	 * Returns the end date of the task if it is present. Returns null
+	 * otherwise. For tasks with only a deadline, this will return null.
+	 * 
+	 * @return the ending date of the task
+	 */
+	public Calendar getEndDate();
+
+	/**
+	 * Returns the completion status of the task, with true representing done
+	 * and false representing undone.
+	 * 
+	 * @return the status of the task
+	 */
+	public boolean getStatus();
+
+	/**
+	 * Returns the type of the task based on the fields used/unused in the Task
+	 * 
+	 * @return the type of the task
+	 */
+	public TaskType getType();
+
+	/**
+	 * Returns the label of the task if it is present. Return null otherwise.
+	 * 
+	 * @return the label of the task
+	 */
+	public List<String> getLabels();
+
+	/**
+	 * Sets the title of the task to the given title
+	 * 
+	 * @param newTitle
+	 *            the new title of the task
+	 */
+	public void setTitle(String newTitle);
+
+	/**
+	 * Sets the start date or deadline of the task to the given date Set to null
+	 * to denote a floating task.
+	 * 
+	 * @param newDate
+	 *            the new date
+	 */
+	public void setStartDate(Calendar newDate);
+
+	/**
+	 * Sets the end date of a task that contains a duration. Set to null to
+	 * denote either a floating task or a task with only a deadline.
+	 * 
+	 * @param newDate
+	 *            the new date
+	 */
+	public void setEndDate(Calendar newDate);
+
+	/**
+	 * Sets the completion status of the task. True represents a completed task.
+	 * 
+	 * @param newStatus
+	 *            the completion status of the task
+	 */
+	public void setStatus(boolean newStatus);
+
+	/**
+	 * Sets the labels of the task.
+	 * 
+	 * @param labels
+	 *            of the task.
+	 */
+	public void setLabels(List<String> newLabels);
+
+	/**
+	 * Copies all fields of the given IDonTask into the current IDonTask
+	 * 
+	 * @param sourceTask
+	 *            the task to copy details from
+	 */
+	public void copyTaskDetails(IDonTask sourceTask);
+
+	/**
+	 * Add new labels for a task, duplication checked ignoring case.
+	 * 
+	 * @param label
+	 *            of the task.
+	 * @return true for successful add, false if there is duplication
+	 */
+	public boolean addLabel(String newLabel);
+
+	/**
+	 * Delete a label for a task.
+	 * 
+	 * @param index
+	 *            of label to be deleted.
+	 * @return true for successful delete, false otherwise
+	 */
+	public boolean deleteLabel(String labelToDelete);
+
+	/**
+	 * Sets whether the user has set time for the dates in this task
+	 * 
+	 * @param timeUsed
+	 *            true if user has set time, false otherwise
+	 */
+	public void setTimeUsed(boolean timeUsed);
+
+	/**
+	 * Returns whether time is used in the date fields of the task
+	 * 
+	 * @return true if time is used
+	 */
+	public boolean isTimeUsed();
+
+	public IDonTask clone();
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\storage\IDonTask.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\CalHelper.java
+	 */
+
+public class CalHelper {
+
+	/**
+	 * Return today's Calendar object
+	 */
+
+	/**
+	 * Sets the Calendar to the first moment of the given date
+	 * 
+	 * @param cal
+	 *            The date to get the first moment of
+	 * @return the Calendar set to today at 0 hour, 0 minute, 0 second, 0
+	 *         millisecond
+	 */
+	public static Calendar getDayStart(Calendar cal) {
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		return cal;
+	}
+
+	/**
+	 * Gets the first moment of today
+	 * 
+	 * @return the Calendar set to today at 0 hour, 0 minute, 0 second, 0
+	 *         millisecond
+	 */
+	public static Calendar getTodayStart() {
+		Calendar ret = Calendar.getInstance();
+		getDayStart(ret);
+		return ret;
+	}
+
+	/**
+	 * Sets the Calendar to the first moment of the given date
+	 * 
+	 * @param cal
+	 *            The date to get the first moment of
+	 * @return the Calendar set to today at 23 hour, 59 minute, 59 second, 999
+	 *         millisecond
+	 */
+	public static Calendar getDayEnd(Calendar cal) {
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
+		cal.set(Calendar.SECOND, 59);
+		cal.set(Calendar.MILLISECOND, 999);
+		return cal;
+	}
+
+	/**
+	 * Gets the last moment of today
+	 * 
+	 * @return the Calendar set to today at 23 hour, 59 minute, 59 second, 999
+	 *         millisecond
+	 */
+	public static Calendar getTodayEnd() {
+		Calendar ret = Calendar.getInstance();
+		getDayEnd(ret);
+		return ret;
+	}
+
+	/**
+	 * Returns the Calendar object that is set to the day after the given day
+	 * (ignores hour/minute)
+	 * 
+	 * @param currentDay
+	 *            the day to get the next day of
+	 * @return
+	 */
+	public static Calendar getDayAfter(Calendar currentDay) {
+		Calendar ret = (Calendar) currentDay.clone();
+		ret.add(Calendar.DAY_OF_MONTH, 1);
+		return ret;
+	}
+
+	/**
+	 * Determines if date is the same as or after the base date.
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is >= baseDate
+	 */
+	public static boolean dateEqualOrAfter(Calendar date, Calendar baseDate) {
+		if (date.after(baseDate) || date.equals(baseDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is the same as or before the base date.
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is <= baseDate
+	 */
+	public static boolean dateEqualOrBefore(Calendar date, Calendar baseDate) {
+		if (date.before(baseDate) || date.equals(baseDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is on the same day as baseDate
+	 * 
+	 * @param date
+	 *            the date to compare
+	 * @param baseDate
+	 *            the base date to check against
+	 * @return true if date is on the same DAY as baseDate
+	 */
+	public static boolean isSameDay(Calendar date, Calendar baseDate) {
+		if (date.get(Calendar.DATE) == baseDate.get(Calendar.DATE)
+				&& date.get(Calendar.MONTH) == baseDate.get(Calendar.MONTH)
+				&& date.get(Calendar.YEAR) == baseDate.get(Calendar.YEAR)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if date is between minDate and maxDate
+	 * 
+	 * @param date
+	 *            the date to check
+	 * @param minDate
+	 *            the earlier date
+	 * @param maxDate
+	 *            the later date
+	 * @return true if date is between minDate and maxDate
+	 */
+	public static boolean isBetweenDates(Calendar date, Calendar minDate,
+			Calendar maxDate) {
+		if (dateEqualOrAfter(date, minDate) && dateEqualOrBefore(date, maxDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Copy calendar day, month, year, hour, minute and second from source to
+	 * destination date object
+	 * 
+	 * @param sourceDate
+	 *            the Calendar object to get the fields from
+	 * @param destDate
+	 *            the Calendar object to copy the fields to
+	 */
+	public static void copyCalendar(Calendar sourceDate, Calendar destDate) {
+		destDate.set(Calendar.DATE, sourceDate.get(Calendar.DATE));
+		destDate.set(Calendar.MONTH, sourceDate.get(Calendar.MONTH));
+		destDate.set(Calendar.YEAR, sourceDate.get(Calendar.YEAR));
+
+		destDate.set(Calendar.HOUR_OF_DAY, sourceDate.get(Calendar.HOUR_OF_DAY));
+		destDate.set(Calendar.MINUTE, sourceDate.get(Calendar.MINUTE));
+		destDate.set(Calendar.SECOND, sourceDate.get(Calendar.SECOND));
+	}
+
+	/**
+	 * Compares the year, month, date, hour, minutes of the 2 calendar objects
+	 * 
+	 * @return
+	 */
+	public static boolean relevantEquals(Calendar c1, Calendar c2) {
+		return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR)
+				&& c1.get(Calendar.MONTH) == c2.get(Calendar.MONTH)
+				&& c1.get(Calendar.DAY_OF_MONTH) == c2
+						.get(Calendar.DAY_OF_MONTH)
+				&& c1.get(Calendar.HOUR_OF_DAY) == c2.get(Calendar.HOUR_OF_DAY)
+				&& c1.get(Calendar.MINUTE) == c2.get(Calendar.MINUTE);
+	}
+
+	/**
+	 * Gets the Calendar object set to the given number of days after today's
+	 * date
+	 * 
+	 * @param numDays
+	 *            the number of days after today
+	 * @return the Calendar object
+	 */
+	public static Calendar getDaysFromNow(int numDays) {
+		Parser nattyParser = new Parser();
+		List<DateGroup> dateGroup = nattyParser.parse(numDays
+				+ " days from today");
+		Calendar outCal = new GregorianCalendar();
+		outCal.setTime(dateGroup.get(0).getDates().get(0));
+		return outCal;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\CalHelper.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonAddLabelCommand.java
+	 */
+
+public class DonAddLabelCommand extends DonEditCommand {
+
+	public enum AddLabelType {
+		LABEL_ID, LABEL_NAME
+	}
+
+	private AddLabelType type;
+	private String newLabel;
+	private static int MAX_LABEL = 3;
+
+	/**
+	 * Creates an add label command that adds to the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task
+	 * @param label
+	 *            the label to add
+	 */
+	public DonAddLabelCommand(int id, String label) {
+		searchID = id;
+		newLabel = label;
+		type = AddLabelType.LABEL_ID;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	/**
+	 * Creates an add label command that adds to a task with the given title
+	 * 
+	 * @param title
+	 * @param label
+	 */
+	public DonAddLabelCommand(String title, String label) {
+		searchTitle = title;
+		newLabel = label;
+		type = AddLabelType.LABEL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	/**
+	 * Gets the specific type of command this AddLabelCommand is
+	 * 
+	 * @return the type of this command
+	 */
+	public AddLabelType getAddLabelType() {
+		return type;
+	}
+
+	/**
+	 * Gets the label to be added to the task
+	 * 
+	 * @return
+	 */
+	public String getNewLabel() {
+		return newLabel;
+	}
+
+	/**
+	 * Add a label to a task with the given id
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
+	 * @param labelName
+	 *            the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabelByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.size() >= MAX_LABEL) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_FAILED);
+				response.addMessage(String
+						.format(MSG_LABEL_OVERLOAD, MAX_LABEL));
+			} else {
+				unchangedTask.add(task.clone());
+				if (currentLabels.contains(newLabel)) {
+					response.setResponseType(IDonResponse.ResponseType.LABEL_EXISTS);
+					response.addMessage(String.format(MSG_LABEL_EXISTS,
+							newLabel));
+				} else {
+					task.addLabel(newLabel);
+					response.setResponseType(IDonResponse.ResponseType.LABEL_ADDED);
+					response.addMessage(String.format(MSG_LABEL_ADDED_ID,
+							newLabel, searchID));
+					response.addTask(task);
+				}
+			}
+
+		}
+
+		return response;
+	}
+
+	/**
+	 * Add a label to a task with the given name If more than 1 task has the
+	 * name, it will not add the label
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
+	 * @param labelName
+	 *            the name of the label to add
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse addLabelByTitle(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundTasks.get(0).getID();
+			response = addLabelByID(donStorage);
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == AddLabelType.LABEL_ID) {
+			response = addLabelByID(donStorage);
+		} else if (type == AddLabelType.LABEL_NAME) {
+			response = addLabelByTitle(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.LABEL_ADDED) {
+			executed = true;
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonAddLabelCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonCreateCommand.java
+	 */
+
+public class DonCreateCommand extends AbstractDonCommand {
+
+	public enum AddType {
+		FLOATING, DEADLINE, EVENT
+	}
+
+	private static final int FAILURE = -1;
+
+	private AddType type;
+	private String taskTitle;
+	private Calendar startDate, endDate;
+	private boolean timeUsed = false;
+	private IDonTask createdTask = null; // To be used only after command has
+											// been executed.
+
+	/**
+	 * Creates a CreateCommand that adds a floating task
+	 * 
+	 * @param title
+	 *            the title of the new task
+	 */
+	public DonCreateCommand(String title) {
+		type = AddType.FLOATING;
+		taskTitle = title;
+		generalCommandType = GeneralCommandType.ADD;
+	}
+
+	/**
+	 * Creates a CreateCommand that adds a deadline task
+	 * 
+	 * @param title
+	 *            the title of the new task
+	 * @param deadline
+	 *            the deadline of the task
+	 * @param timeUsed
+	 *            whether a time is specified
+	 */
+	public DonCreateCommand(String title, Calendar deadline, boolean timeUsed) {
+		type = AddType.DEADLINE;
+		taskTitle = title;
+		startDate = deadline;
+		this.timeUsed = timeUsed;
+		generalCommandType = GeneralCommandType.ADD;
+	}
+
+	/**
+	 * Creates a CreateCommand that adds an event task
+	 * 
+	 * @param title
+	 *            the title of the new task
+	 * @param startDate
+	 *            the start date of the task
+	 * @param endDate
+	 *            the end date of a task
+	 * @param timeUsed
+	 *            whether a time is specified
+	 */
+	public DonCreateCommand(String title, Calendar startDate, Calendar endDate,
+			boolean timeUsed) {
+		type = AddType.EVENT;
+		taskTitle = title;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.timeUsed = timeUsed;
+		generalCommandType = GeneralCommandType.ADD;
+	}
+
+	public String getTaskTitle() {
+		return taskTitle;
+	}
+
+	public Calendar getStartDate() {
+		return startDate;
+	}
+
+	public Calendar getEndDate() {
+		return endDate;
+	}
+
+	public AddType getType() {
+		return type;
+	}
+
+	/**
+	 * Creates a floating task
+	 * 
+	 * @param donStorage
+	 *            the storage to add tasks to
+	 * @return the response
+	 */
+	private IDonResponse createFloatingTask(IDonStorage donStorage) {
+		assert taskTitle != null;
+		IDonTask task = new DonTask(taskTitle, donStorage.getNextID());
+		int addResult = donStorage.addTask(task);
+
+		DonResponse response = new DonResponse();
+		if (addResult == FAILURE) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, taskTitle));
+
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
+			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
+					taskTitle));
+			if (SearchHelper.findTaskByExactName(donStorage, taskTitle).size() > 1) {
+				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
+			}
+			response.addTask(task);
+			createdTask = task.clone();
+		}
+		return response;
+	}
+
+	/**
+	 * Creates a deadline task
+	 * 
+	 * @param donStorage
+	 *            the storage to add tasks to
+	 * @return the response
+	 */
+	private IDonResponse createDeadlineTask(IDonStorage donStorage) {
+		assert taskTitle != null && startDate != null; // This method should
+														// only be
+														// called when both
+														// parameters are
+														// present
+		IDonTask task = new DonTask(taskTitle, startDate,
+				donStorage.getNextID());
+		task.setTimeUsed(timeUsed);
+		int addResult = donStorage.addTask(task);
+
+		DonResponse response = new DonResponse();
+		if (addResult == FAILURE) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, taskTitle));
+
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
+			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
+					taskTitle));
+			if (SearchHelper.findTaskByDate(donStorage, startDate, true).size() > 1) {
+				response.addMessage(MSG_DEADLINE_CONFLICT);
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle)
+					.size() > 1) {
+				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
+			}
+			response.addTask(task);
+			createdTask = task.clone();
+		}
+		return response;
+	}
+
+	/**
+	 * Creates a task with a duration
+	 * 
+	 * @param donStorage
+	 *            the storage to add tasks to
+	 * @return the response
+	 */
+	private IDonResponse createEventTask(IDonStorage donStorage) {
+		assert taskTitle != null && startDate != null && endDate != null;
+		IDonResponse response = new DonResponse();
+		if (CalHelper.dateEqualOrBefore(endDate, startDate)) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+			response.addMessage(MSG_COMMAND_WRONG_DATE);
+			return response;
+		}
+		IDonTask task = new DonTask(taskTitle, startDate, endDate,
+				donStorage.getNextID());
+		task.setTimeUsed(timeUsed);
+		int addResult = donStorage.addTask(task);
+
+		
+		if (addResult == FAILURE) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+			response.addMessage(String.format(MSG_ADD_TASK_FAILURE, taskTitle));
+
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
+			response.addMessage(String.format(MSG_ADD_FLOATING_TASK_SUCCESS,
+					taskTitle));
+			if (SearchHelper.findTaskRange(donStorage, startDate, endDate,
+					SearchHelper.FIND_INCOMPLETE).size() > 1) {
+				response.addMessage(MSG_DEADLINE_CONFLICT);
+			} else if (SearchHelper.findTaskByExactName(donStorage, taskTitle)
+					.size() > 1) {
+				response.addMessage(String.format(MSG_NAME_CONFLICT, taskTitle));
+			}
+			response.addTask(task);
+			createdTask = task.clone();
+		}
+		return response;
+	}
+
+	/**
+	 * Recreates the task after it has been added and removed through
+	 * executeCommand and undoCommand
+	 * 
+	 * @param donStorage
+	 *            the storage to add tasks to
+	 * @return the response after re-adding the task
+	 */
+	private IDonResponse recreateTask(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		int taskID = donStorage.addTask(createdTask);
+		if (taskID != -1) {
+			response.setResponseType(IDonResponse.ResponseType.ADD_SUCCESS);
+			response.addTask(createdTask);
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.ADD_FAILURE);
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		assert !executed;
+		IDonResponse response = null;
+		if (createdTask != null) {
+			// The task has previously been created. Execute is being run in the
+			// context
+			// of a redo. Simply readd the createdTask
+			response = recreateTask(donStorage);
+		} else if (type == AddType.FLOATING) {
+			response = createFloatingTask(donStorage);
+		} else if (type == AddType.DEADLINE) {
+			response = createDeadlineTask(donStorage);
+		} else if (type == AddType.EVENT) {
+			response = createEventTask(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.ADD_SUCCESS) {
+			executed = true;
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		// Perform a delete
+		if (!executed) {
+			// Cannot be run until executeCommand has been called.
+			return null;
+		}
+
+		boolean deleteSuccess = donStorage.removeTask(createdTask.getID());
+		IDonResponse response = null;
+		if (deleteSuccess) {
+			response = new DonResponse();
+			response = createUndoSuccessResponse(1);
+			response.addTask(createdTask);
+			response.setResponseType(ResponseType.DEL_SUCCESS);
+			executed = false;
+		} else {
+			response = createUndoFailureResponse();
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonCreateCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonDelabelCommand.java
+	 */
+
+public class DonDelabelCommand extends DonEditCommand {
+
+	public enum DelabelType {
+		LABEL_ID, LABEL_NAME, LABEL_ALL_NAME, LABEL_ALL_ID
+	}
+
+	private DelabelType type;
+	private String searchLabel;
+
+	/**
+	 * Creates a DelabelCommand that removes the given label from a task with an
+	 * ID
+	 * 
+	 * @param id
+	 *            the ID of the task
+	 * @param label
+	 *            the label to remove
+	 */
+	public DonDelabelCommand(int id, String label) {
+		searchID = id;
+		searchLabel = label;
+		type = DelabelType.LABEL_ID;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	/**
+	 * Creates a DelabelCommand that removes the given label from a task
+	 * containing the title
+	 * 
+	 * @param title
+	 *            the title of the task to remove the label from
+	 * @param label
+	 *            the label to remove
+	 */
+	public DonDelabelCommand(String title, String label) {
+		searchTitle = title;
+		searchLabel = label;
+		type = DelabelType.LABEL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	/**
+	 * Removes all labels from a task with a title containing the search title
+	 * 
+	 * @param title
+	 *            the title of the task
+	 */
+	public DonDelabelCommand(String title) {
+		searchTitle = title;
+		type = DelabelType.LABEL_ALL_NAME;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	/**
+	 * Removes all labels from the task with the given ID
+	 * 
+	 * @param ID
+	 *            the ID of the task
+	 */
+	public DonDelabelCommand(int ID) {
+		searchID = ID;
+		type = DelabelType.LABEL_ALL_ID;
+		generalCommandType = GeneralCommandType.LABEL;
+	}
+
+	public DelabelType getDelabelType() {
+		return type;
+	}
+
+	public String getSearchLabel() {
+		return searchLabel;
+	}
+
+	/**
+	 * Removes a label from a task with the given id
+	 * 
+	 * @param id
+	 *            the task's id to search for and remove the label from
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabelByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone());
+			List<String> currentLabels = task.getLabels();
+			if (currentLabels.remove(searchLabel)) {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
+				response.addMessage(String.format(MSG_LABEL_NAME_REMOVED,
+						searchLabel));
+				response.addTask(task);
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.LABEL_NOT_FOUND);
+				response.addMessage(String.format(
+						MSG_LABEL_STRING_DOES_NOT_EXIST, searchLabel));
+			}
+
+		}
+
+		return response;
+	}
+
+	/**
+	 * Removes a label from a task with the given name
+	 * 
+	 * @param id
+	 *            the task's id to search for and remove the label from
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeLabelByTitle(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundTasks.get(0).getID();
+			response = removeLabelByID(donStorage);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Removes all labels from a task with the given id
+	 * 
+	 * @param id
+	 *            the task's id to search for remove all labels from
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeAllLabelsByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone());
+			task.getLabels().clear();
+			response.setResponseType(IDonResponse.ResponseType.LABEL_REMOVED);
+			response.addMessage(MSG_LABEL_ALL_REMOVED);
+			response.addTask(task);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Removes all labels from a task with the given name
+	 * 
+	 * @param id
+	 *            the task's id to search for and add a label to
+	 * @return the response containing the affected task
+	 */
+	private IDonResponse removeAllLabelsByTitle(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundTasks.get(0).getID();
+			response = removeAllLabelsByID(donStorage);
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == DelabelType.LABEL_ID) {
+			response = removeLabelByID(donStorage);
+		} else if (type == DelabelType.LABEL_NAME) {
+			response = removeLabelByTitle(donStorage);
+		} else if (type == DelabelType.LABEL_ALL_ID) {
+			response = removeAllLabelsByID(donStorage);
+		} else if (type == DelabelType.LABEL_ALL_NAME) {
+			response = removeAllLabelsByTitle(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.LABEL_REMOVED) {
+			response.sortTask();
+			executed = true;
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonDelabelCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonDeleteCommand.java
+	 */
+
+public class DonDeleteCommand extends AbstractDonCommand {
+
+	public enum DeleteType {
+		DELETE_ID, DELETE_TITLE, DELETE_OVERDUE, DELETE_FLOAT, DELETE_LABEL, DELETE_DONE
+	}
+
+	private DeleteType type;
+	private int searchID;
+	private String searchTitle;
+	private List<IDonTask> deletedTasks = new ArrayList<IDonTask>();
+
+	/**
+	 * Creates a DeleteCommand that removes the task with the id
+	 * 
+	 * @param id
+	 *            the id of the task to delete
+	 */
+	public DonDeleteCommand(int id) {
+		searchID = id;
+		type = DeleteType.DELETE_ID;
+		generalCommandType = GeneralCommandType.DELETE;
+	}
+
+	/**
+	 * Creates a DeleteCommand that removes the task with the search title in
+	 * its name of label
+	 * 
+	 * @param title
+	 *            the name of the title or label to search for
+	 * @param delType
+	 *            the type of deletion to perform. This should be either
+	 *            DeleteType.DELETE_TITLE or DeleteType.DELETE_LABEL
+	 */
+	public DonDeleteCommand(String title, DeleteType delType) {
+		searchTitle = title;
+		type = delType;
+		generalCommandType = GeneralCommandType.DELETE;
+	}
+
+	/**
+	 * Creates a DeleteCommand that removes multiple tasks that fit the given
+	 * DeleteType
+	 * 
+	 * @param deltype
+	 *            the type of deletion to perform.
+	 */
+	public DonDeleteCommand(DeleteType deltype) {
+		type = deltype;
+		generalCommandType = GeneralCommandType.DELETE;
+	}
+
+	public DeleteType getType() {
+		return type;
+	}
+
+	public int getSearchID() {
+		return searchID;
+	}
+
+	public String getSearchTitle() {
+		return searchTitle;
+	}
+
+	/**
+	 * Deletes the task with the given ID
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted task
+	 */
+	private IDonResponse deleteTaskByID(IDonStorage donStorage) {
+		DonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			boolean deleteStatus = donStorage.removeTask(searchID);
+			if (deleteStatus) {
+				// Deleted
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+				response.addTask(task);
+				deletedTasks.add(task.clone());
+
+			} else {
+				response.setResponseType(IDonResponse.ResponseType.DEL_FAILURE);
+				response.addMessage(MSG_DELETE_FAILED);
+			}
+		}
+		return response;
+	}
+
+	/**
+	 * Deletes the task with the given title. If more than 1 task is found, the
+	 * search results will be returned and nothing will be deleted.
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted task
+	 */
+	private IDonResponse deleteTaskByTitle(IDonStorage donStorage) {
+		assert searchTitle != null;
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundList = donStorage.getTaskByName(searchTitle);
+
+		if (foundList.size() > 1) {
+			response.setResponseType(ResponseType.DEL_FAILURE);
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundList);
+		} else if (foundList.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundList.get(0).getID();
+			response = deleteTaskByID(donStorage);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Deletes all overdue tasks
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
+	private IDonResponse deleteOverdueTasks(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.findOverdue(donStorage);
+
+		if (foundList.isEmpty()) {
+			// No overdue tasks
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_UNDONE_OVERDUE);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for (IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				response.addTask(task);
+				boolean deleted = donStorage.removeTask(task.getID());
+				if (!deleted) {
+					// Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if (success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+
+		}
+
+		return response;
+	}
+
+	/**
+	 * Deletes all floating tasks
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
+	private IDonResponse deleteFloatingTasks(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.findTaskByType(donStorage,
+				TaskType.FLOATING, true, true);
+
+		if (foundList.isEmpty()) {
+			// No floating tasks
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_FLOATING);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for (IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				response.addTask(task);
+				boolean deleted = donStorage.removeTask(task.getID());
+				if (!deleted) {
+					// Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if (success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+
+		}
+
+		return response;
+	}
+
+	/**
+	 * Deletes all tasks with the given label
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the deletion status and deleted tasks
+	 */
+	private IDonResponse deleteLabelTasks(IDonStorage donStorage) {
+		assert searchTitle != null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = donStorage.getTaskList();
+		List<IDonTask> deleteList = new ArrayList<IDonTask>();
+
+		for (IDonTask task : foundList) {
+			if (task.getLabels().contains(searchTitle)) {
+				deleteList.add(task);
+			}
+		}
+
+		if (deleteList.isEmpty()) {
+			// No tasks with the given label
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_NO_LABEL_TASKS, searchTitle));
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for (IDonTask task : deleteList) {
+				deletedTasks.add(task.clone());
+				response.addTask(task);
+				boolean deleted = donStorage.removeTask(task.getID());
+				if (!deleted) {
+					// Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if (success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(String.format(
+						MSG_DELETE_ALL_WITH_LABEL_SUCCESS, searchTitle));
+			}
+
+		}
+
+		return response;
+	}
+
+	/**
+	 * Delete all completed tasks (marked as done)
+	 * 
+	 * @param donStorage
+	 *            the storage containing the tasks
+	 * @return response containing success/failure of the operation
+	 */
+	private IDonResponse deleteCompletedTasks(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundList = SearchHelper.findDone(donStorage);
+
+		if (foundList.isEmpty()) {
+			// No done tasks
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_DONE_TASKS);
+		} else {
+			// >=1 task found
+			boolean success = true;
+			for (IDonTask task : foundList) {
+				deletedTasks.add(task.clone());
+				response.addTask(task);
+				boolean deleted = donStorage.removeTask(task.getID());
+				if (!deleted) {
+					// Was likely not found
+					response.setResponseType(ResponseType.DEL_FAILURE);
+					response.addMessage(MSG_DELETE_FAILED);
+					success = false;
+					break;
+				}
+			}
+			if (success) {
+				response.setResponseType(IDonResponse.ResponseType.DEL_SUCCESS);
+				response.addMessage(MSG_DELETE_SUCCESS);
+			}
+
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == DeleteType.DELETE_ID) {
+			response = deleteTaskByID(donStorage);
+		} else if (type == DeleteType.DELETE_TITLE) {
+			response = deleteTaskByTitle(donStorage);
+		} else if (type == DeleteType.DELETE_OVERDUE) {
+			response = deleteOverdueTasks(donStorage);
+		} else if (type == DeleteType.DELETE_FLOAT) {
+			response = deleteFloatingTasks(donStorage);
+		} else if (type == DeleteType.DELETE_LABEL) {
+			response = deleteLabelTasks(donStorage);
+		} else if (type == DeleteType.DELETE_DONE) {
+			response = deleteCompletedTasks(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.DEL_SUCCESS) {
+			response.sortTask();
+			executed = true;
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		// Perform an add
+		assert deletedTasks != null;
+		IDonResponse response = null;
+		int count = 0;
+		for (IDonTask task : deletedTasks) {
+			int id = donStorage.addTask(task);
+			if (id != -1) {
+				count++;
+			}
+		}
+
+		if (count != deletedTasks.size()) {
+			response = createUndoFailureResponse();
+		} else {
+			response = createUndoSuccessResponse(count);
+			executed = false;
+			deletedTasks.clear();
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonDeleteCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonEditCommand.java
+	 */
+
+public class DonEditCommand extends AbstractDonCommand {
+
+	public enum EditType {
+		ID_NAME, ID_DATE, ID_EVENT, NAME_NAME, NAME_DATE, NAME_EVENT,
+	}
+
+	private EditType type;
+
+	protected int searchID;
+	protected String searchTitle;
+	private String newTitle;
+	private Calendar newDeadline, newStartDate, newEndDate;
+	private boolean isTimeUsed, isStartDate = true;
+	protected List<IDonTask> unchangedTask = new ArrayList<IDonTask>();
+
+	protected DonEditCommand() {
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit title by ID
+	 * 
+	 * @param id
+	 *            the id of the task
+	 * @param newTitle
+	 *            the new title
+	 */
+	public DonEditCommand(int id, String newTitle) {
+		type = EditType.ID_NAME;
+		searchID = id;
+		this.newTitle = newTitle;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit title by searching for the title
+	 * 
+	 * @param title
+	 *            the title of the task to edit
+	 * @param newTitle
+	 *            the new title
+	 */
+	public DonEditCommand(String title, String newTitle) {
+		type = EditType.NAME_NAME;
+		searchTitle = title;
+		this.newTitle = newTitle;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit the deadline of the task by id
+	 * 
+	 * @param id
+	 *            the id of the task
+	 * @param newDeadline
+	 *            the new deadline
+	 */
+	public DonEditCommand(int id, Calendar newDeadline, boolean isTimeUsed) {
+		type = EditType.ID_DATE;
+		searchID = id;
+		this.newDeadline = newDeadline;
+		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit the deadline of the task by task name
+	 * 
+	 * @param title
+	 *            the title of the task to edit
+	 * @param newDeadline
+	 *            the new deadline
+	 */
+	public DonEditCommand(String title, Calendar newDeadline, boolean isTimeUsed) {
+		type = EditType.NAME_DATE;
+		searchTitle = title;
+		this.newDeadline = newDeadline;
+		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit the start and end date of the task by ID
+	 * 
+	 * @param id
+	 *            the id of the task
+	 * @param newStartDate
+	 *            the new start date
+	 * @param newEndDate
+	 *            the new end date
+	 */
+	public DonEditCommand(int id, Calendar newStartDate, Calendar newEndDate,
+			boolean isTimeUsed) {
+		type = EditType.ID_EVENT;
+		searchID = id;
+		this.newStartDate = newStartDate;
+		this.newEndDate = newEndDate;
+		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	/**
+	 * Edit the start and end date of the task by name
+	 * 
+	 * @param title
+	 *            the title of the task to edit
+	 * @param newStartDate
+	 *            the new start date
+	 * @param newEndDate
+	 *            the new end date
+	 */
+	public DonEditCommand(String title, Calendar newStartDate,
+			Calendar newEndDate, boolean isTimeUsed) {
+		type = EditType.NAME_EVENT;
+		searchTitle = title;
+		this.newStartDate = newStartDate;
+		this.newEndDate = newEndDate;
+		this.isTimeUsed = isTimeUsed;
+		generalCommandType = GeneralCommandType.EDIT;
+	}
+
+	public String getNewTitle() {
+		return newTitle;
+	}
+
+	public int getSearchID() {
+		return searchID;
+	}
+
+	public String getSearchTitle() {
+		return searchTitle;
+	}
+
+	public Calendar getNewDeadline() {
+		return newDeadline;
+	}
+
+	public Calendar getNewStartDate() {
+		return newStartDate;
+	}
+
+	public Calendar getNewEndDate() {
+		return newEndDate;
+	}
+
+	public EditType getType() {
+		return type;
+	}
+
+	/**
+	 * Change the title of the task with ID id to the new title
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse editTitleByID(IDonStorage donStorage) {
+		assert newTitle != null;
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone()); // For undo to use
+			String oldTitle = task.getTitle();
+			task.setTitle(newTitle);
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+			response.addMessage(String.format(MSG_EDIT_TITLE_SUCCESS, oldTitle,
+					newTitle));
+
+		}
+		return response;
+	}
+
+	/**
+	 * Change the title of the task with a given title to the new title. The
+	 * task name being searched for must belong to only one task
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse editTitleByTitle(IDonStorage donStorage) {
+		assert newTitle != null && searchTitle != null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			IDonTask task = foundTasks.get(0);
+			searchID = task.getID();
+			response = editTitleByID(donStorage);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Change the deadline of the task with ID id to the new deadline (or start
+	 * date/end date)
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * 
+	 * @return the success response
+	 */
+	private IDonResponse editDeadlineByID(IDonStorage donStorage) {
+		assert newDeadline != null;
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone());
+			Calendar oldDate = null;
+			String dateType = "";
+			if (task.getType() == IDonTask.TaskType.FLOATING) {
+				// If a user edits the (non-existent) deadline of a floating
+				// task, the deadline is added
+				// This can be undone but no command exists to remove the
+				// deadline to turn it back to a
+				// floating task
+				dateType = PHRASE_DEADLINE;
+				task.setStartDate(newDeadline);
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, dateType, newDeadline
+								.getTime().toString()));
+			} else if (task.getType() == IDonTask.TaskType.DEADLINE) {
+				dateType = PHRASE_DEADLINE;
+				oldDate = task.getStartDate();
+				task.setStartDate(newDeadline);
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						dateType, oldDate.getTime().toString(), newDeadline
+								.getTime().toString()));
+			} else if (task.getType() == IDonTask.TaskType.DURATION) {
+				if (isStartDate) {
+					dateType = PHRASE_START_DATE;
+					oldDate = task.getStartDate();
+					task.setStartDate(newDeadline);
+				} else {
+					dateType = PHRASE_END_DATE;
+					oldDate = task.getEndDate();
+					task.setEndDate(newDeadline);
+				}
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						dateType, oldDate.getTime().toString(), newDeadline
+								.getTime().toString()));
+			}
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+		}
+		return response;
+	}
+
+	/**
+	 * Change the start date/end date or deadline of the task with a given title
+	 * to the new title. The task name being searched for must belong to only
+	 * one task
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse editDeadlineByTitle(IDonStorage donStorage) {
+		assert searchTitle != null && newDeadline != null;
+		IDonResponse response = new DonResponse();
+
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			IDonTask task = foundTasks.get(0);
+			searchID = task.getID();
+			response = editDeadlineByID(donStorage);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Change the start and end date of the task with ID id to the new dates
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * 
+	 * @return the success response
+	 */
+	private IDonResponse editStartEndByID(IDonStorage donStorage) {
+		assert newStartDate != null && newEndDate != null;
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			unchangedTask.add(task.clone());
+			Calendar oldStartDate = null, oldEndDate = null;
+			if (task.getType() == IDonTask.TaskType.FLOATING
+					|| task.getType() == IDonTask.TaskType.DEADLINE) {
+				// If a user edits the (non-existent) start+end date of a
+				// floating/deadline task, they are added
+				// This can be undone but no command exists to remove the dates
+				// to turn it back to a
+				// floating task
+				task.setStartDate(newStartDate);
+				task.setEndDate(newEndDate);
+				task.setTimeUsed(isTimeUsed);
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, PHRASE_START_DATE,
+						newStartDate.getTime().toString()));
+				response.addMessage(String.format(
+						MSG_EDIT_SINGLE_DATE_ADD_SUCCESS, PHRASE_END_DATE,
+						newEndDate.getTime().toString()));
+			} else if (task.getType() == IDonTask.TaskType.DURATION) {
+				oldStartDate = task.getStartDate();
+				task.setStartDate(newStartDate);
+
+				oldEndDate = task.getEndDate();
+				task.setEndDate(newEndDate);
+
+				task.setTimeUsed(isTimeUsed);
+
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						PHRASE_START_DATE, oldStartDate.getTime().toString(),
+						newStartDate.getTime().toString()));
+				response.addMessage(String.format(MSG_EDIT_SINGLE_DATE_SUCCESS,
+						PHRASE_END_DATE, oldEndDate.getTime().toString(),
+						newEndDate.getTime().toString()));
+			}
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+
+		}
+		return response;
+	}
+
+	/**
+	 * Change the start and end date of the task with a title containing the
+	 * search string to the new dates. The title of the task must belong to only
+	 * 1 task or the search results will be returned instead and no edits will
+	 * be made.
+	 * 
+	 * @param donStorage
+	 *            where the tasks are stored
+	 * @return
+	 */
+	private IDonResponse editStartEndByTitle(IDonStorage donStorage) {
+		assert newStartDate != null && newEndDate != null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String
+					.format(MSG_MATCHING_RESULTS, searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			IDonTask task = foundTasks.get(0);
+			searchID = task.getID();
+			response = editStartEndByID(donStorage);
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == EditType.ID_NAME) {
+			response = editTitleByID(donStorage);
+		} else if (type == EditType.NAME_NAME) {
+			response = editTitleByTitle(donStorage);
+		} else if (type == EditType.ID_DATE) {
+			response = editDeadlineByID(donStorage);
+		} else if (type == EditType.NAME_DATE) {
+			response = editDeadlineByTitle(donStorage);
+		} else if (type == EditType.ID_EVENT) {
+			response = editStartEndByID(donStorage);
+		} else if (type == EditType.NAME_EVENT) {
+			response = editStartEndByTitle(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.EDIT_SUCCESS) {
+			executed = true;
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		// Replace the affected task with the old task found in unchangedTask
+		if (!executed) {
+			// Cannot be run until executeCommand has been called.
+			return null;
+		}
+		IDonResponse response = null;
+
+		int count = 0;
+		for (IDonTask task : unchangedTask) {
+			int id = task.getID();
+			IDonTask changedTask = donStorage.getTask(id);
+			if (changedTask == null) {
+
+			} else {
+				changedTask.copyTaskDetails(task);
+				count++;
+			}
+		}
+		if (count != unchangedTask.size()) {
+			// Could not find for some reason.
+			response = createUndoFailureResponse();
+		} else {
+			response = createUndoSuccessResponse(count);
+			executed = false;
+			unchangedTask.clear();
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonEditCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonFindCommand.java
+	 */
+
+public class DonFindCommand extends AbstractDonCommand {
+
+	public enum SearchType {
+		SEARCH_NAME, SEARCH_DATE, SEARCH_ID, SEARCH_LABEL, SEARCH_FREE, SEARCH_UNDONE, SEARCH_ALL, SEARCH_AFTDATE, TODAY, OVERDUE, SEVEN_DAYS, FUTURE, FLOAT, RESULTS, SEARCH_DONE, CONSOLE, SEARCH_RANGE;
+	}
+
+	private SearchType type;
+	private int searchID;
+	private String searchTitle;
+	private Calendar searchStartDate, searchEndDate;
+	private boolean isTimeUsed;
+
+	/**
+	 * Constructor for find commands without parameters
+	 * 
+	 * @param type
+	 */
+	public DonFindCommand(SearchType type) {
+		this.type = type;
+		generalCommandType = GeneralCommandType.SEARCH;
+	}
+
+	/**
+	 * Search by id of the task
+	 * 
+	 * @param id
+	 *            the task's id
+	 */
+	public DonFindCommand(int id) {
+		searchID = id;
+		type = SearchType.SEARCH_ID;
+		generalCommandType = GeneralCommandType.SEARCH;
+	}
+
+	/**
+	 * Search with a title/name
+	 * 
+	 * @param title
+	 *            the title of the task to search for
+	 * @param stringType
+	 *            the type of string given. Can be task title or label
+	 */
+	public DonFindCommand(String title, SearchType stringType) {
+		searchTitle = title;
+		type = stringType;
+		generalCommandType = GeneralCommandType.SEARCH;
+	}
+
+	/**
+	 * Search with a date. The dateType argument should be a SearchType that is
+	 * related to date
+	 * 
+	 * @param date
+	 *            the date to search for
+	 * @param dateType
+	 *            the type of the date search (before, on, after etc)
+	 */
+	public DonFindCommand(Calendar date, boolean isTimeUsed, SearchType dateType) {
+		searchStartDate = date;
+		type = dateType;
+		this.isTimeUsed = isTimeUsed;
+		if (dateType == SearchType.SEARCH_AFTDATE) {
+			if (!isTimeUsed) {
+				// If given search date has a time, will search after the given
+				// time.
+				// If given search does not include a time, will search from the
+				// day after
+				searchStartDate = CalHelper.getDayAfter(searchStartDate);
+			}
+		}
+		generalCommandType = GeneralCommandType.SEARCH;
+
+	}
+	
+	/**
+	 * Search between two dates. 
+	 * 
+	 * @param date
+	 *            the date to search for
+	 * @param dateType
+	 *            the type of the date search (before, on, after etc)
+	 */
+	public DonFindCommand(Calendar startDate, Calendar endDate, boolean isTimeUsed) {
+		searchStartDate = startDate;
+		searchEndDate = endDate;
+		type = SearchType.SEARCH_RANGE;
+		this.isTimeUsed = isTimeUsed;
+		
+		generalCommandType = GeneralCommandType.SEARCH;
+	}
+
+	public SearchType getType() {
+		return type;
+	}
+
+	public int getSearchID() {
+		return searchID;
+	}
+
+	public String getSearchTitle() {
+		return searchTitle;
+	}
+
+	public Calendar getSearchStartDate() {
+		return searchStartDate;
+	}
+
+	public Calendar getSearchEndDate() {
+		return searchEndDate;
+	}
+
+	/**
+	 * Find tasks with the given name
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTaskByName(IDonStorage donStorage) {
+		assert searchTitle != null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = SearchHelper.findTaskByName(donStorage,
+				searchTitle);// donStorage.getTaskList();
+		response.setTaskList(taskList);
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME,
+					searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_NAME_FOUND, response
+					.getTasks().size(), searchTitle));
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_TITLE_FAILED,
+					searchTitle));
+
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks starting/occurring on a given date
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTaskByDate(IDonStorage donStorage) {
+		assert searchStartDate != null;
+		IDonResponse response = new DonResponse();
+		boolean exactSearch = (isTimeUsed ? true : false);
+		List<IDonTask> taskList = SearchHelper.findTaskByDate(donStorage,
+				searchStartDate, exactSearch);
+		response.setTaskList(taskList);
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME,
+					searchStartDate.getTime().toString()));
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			String dateString = searchStartDate.get(Calendar.DATE)
+					+ " "
+					+ searchStartDate.getDisplayName(Calendar.MONTH,
+							Calendar.LONG, Locale.ENGLISH) + " "
+					+ searchStartDate.get(Calendar.YEAR);
+			response.addMessage(String.format(MSG_SEARCH_DATE_FAILED,
+					dateString));
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks that begin within the given range of time. Either parameter
+	 * can be null to search for tasks before or after a date. For example if
+	 * startDate is null and endDate is set to 09102014, the method will return
+	 * all tasks from before 9th of October 2014. If startDate is 09102014 and
+	 * endDate is null, all tasks beginning after 9th of October 2014 will be
+	 * returned.
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @param startDate
+	 *            the date to start searching from (inclusive)
+	 * @param endDate
+	 *            the latest possible start date of a task (inclusive)
+	 * @param completeType
+	 *            0 if the tasks found must be incomplete, 1 if it must be
+	 *            completed 2 if it can be complete or incomplete
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTaskRange(IDonStorage donStorage,
+			Calendar startDate, Calendar endDate, int completeType) {
+		assert !(startDate == null && endDate == null);
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = SearchHelper.findTaskRange(donStorage,
+				startDate, endDate, completeType);
+		response.setTaskList(taskList);
+
+		if (response.getTasks().size() > 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
+		} else {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_SEARCH_FAILED);
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks given the ID
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing the tasks
+	 */
+	private IDonResponse findTaskByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with given ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_ID, searchID));
+			response.addMessage(String.format(MSG_SEARCH_ID_FOUND, searchID));
+			response.addTask(task);
+		}
+		return response;
+	}
+
+	/**
+	 * Find all undone/incomplete tasks
+	 * 
+	 * @param donStorage
+	 *            the storage object containing the tasks
+	 * @return the response containing incomplete tasks
+	 */
+	private IDonResponse findUndone(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = SearchHelper.findUndone(donStorage);
+		response.setTaskList(taskList);
+		if (response.hasTasks()) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(MSG_SEARCH_RESULT_UNDONE);
+			response.addMessage(String.format(MSG_SEARCH_UNDONE_FOUND,
+					taskList.size()));
+		} else {
+			response.addMessage(MSG_NO_UNDONE_TASKS);
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+		}
+		return response;
+	}
+
+	/**
+	 * Get tasks occurring on the current day or already taking place in the
+	 * current day
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing today's tasks
+	 */
+	private IDonResponse findToday(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		/*
+		response = findTaskRange(donStorage, CalHelper.getTodayStart(),
+				CalHelper.getTodayEnd(), SearchHelper.FIND_INCOMPLETE);
+		*/
+		response.addMessage("1");
+		response.addMessage(MSG_SEARCH_RESULT_TODAY);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+
+	/**
+	 * Search for tasks with the given label name
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing tasks with the given label
+	 */
+	private IDonResponse findLabel(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> taskList = SearchHelper.findLabel(donStorage,
+				searchTitle);
+		response.setTaskList(taskList);
+		if (!response.hasTasks()) {
+			// No task with given label found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_LABEL_FAILED,
+					searchTitle));
+		} else {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_SUCCESS);
+			response.addMessage(String.format(MSG_SEARCH_RESULT_NAME, "#"
+					+ searchTitle));
+			response.addMessage(String.format(MSG_SEARCH_LABEL_FOUND,
+					taskList.size(), "#" + searchTitle));
+		}
+
+		return response;
+	}
+
+	/**
+	 * Find free time in the user's schedule based on existing task and events.
+	 * For dates with no time stated, it is assumed that the user means that the
+	 * whole day is taken up. The free time periods are stored as tasks title
+	 * "Free Time"
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing the free time
+	 */
+	private IDonResponse findFreeTime(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		// Get all tasks with deadlines or events that end after today
+		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
+				IDonTask.TaskType.DEADLINE, false, false);
+		taskList.addAll(SearchHelper.findTaskByType(donStorage,
+				IDonTask.TaskType.DURATION, false, false));
+		Collections.sort(taskList);
+
+		if (taskList.size() <= 0) {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(MSG_FREE_EVERYWHERE);
+			return response;
+		}
+
+		// Find free period between now and the start time of the earliest task
+		// if possible
+		Calendar now = Calendar.getInstance();
+		if (taskList.get(0).getStartDate().after(now)) {
+			IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
+			free.setStartDate(now);
+			free.setEndDate(taskList.get(0).getStartDate());
+			free.setTimeUsed(taskList.get(0).isTimeUsed());
+			response.addTask(free);
+		}
+
+		for (int i = 0; i < taskList.size() - 1; i++) {
+			IDonTask currentTask = taskList.get(i);
+			IDonTask nextTask = taskList.get(i + 1);
+			// Check if there is a free period between the end time
+			// and the start time of the next event
+			if (currentTask.getType() == IDonTask.TaskType.DEADLINE) {
+				// A deadline task has no end date
+				// If the user did not specify a time in the deadline
+				// 0000hr on the given day will be used as the deadline
+				if (currentTask.getStartDate().compareTo(
+						nextTask.getStartDate()) < 0) {
+					// There is a free period
+					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
+					free.setStartDate(currentTask.getStartDate());
+					free.setEndDate(nextTask.getStartDate());
+					free.setTimeUsed(currentTask.isTimeUsed()
+							|| nextTask.isTimeUsed());
+					response.addTask(free);
+				}
+			} else {
+				if (currentTask.getEndDate().compareTo(nextTask.getStartDate()) < 0) {
+					// There is a free period
+					IDonTask free = new DonTask(PHRASE_FREE_TIME, -1);
+					free.setStartDate(currentTask.getEndDate());
+					free.setEndDate(nextTask.getStartDate());
+					free.setTimeUsed(currentTask.isTimeUsed()
+							|| nextTask.isTimeUsed());
+					response.addTask(free);
+				}
+			}
+		}
+		response.addMessage(MSG_SEARCH_RESULT_FREE_TIME);
+		response.setResponseType(ResponseType.SEARCH_SUCCESS);
+		return response;
+	}
+
+	/**
+	 * Return all the tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the tasks
+	 */
+	private IDonResponse findAll(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		//response.setTaskList(donStorage.getTaskList());
+		if (donStorage.getTaskList().isEmpty()) {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+		} else {
+			response.addMessage("5");
+			response.addMessage(MSG_SEARCH_RESULT_ALL);
+			response.setResponseType(ResponseType.SWITCH_PANEL);
+		}
+
+		return response;
+	}
+
+	/**
+	 * Get tasks that occur within 7 days
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the tasks occurring within 7 days
+	 */
+	private IDonResponse findSevenDays(IDonStorage donStorage) {
+		//Calendar start = CalHelper.getTodayStart();
+		//Calendar end = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		IDonResponse response = new DonResponse();
+		response.addMessage("2");
+		response.addMessage(MSG_SEARCH_RESULT_WEEK);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+
+	/**
+	 * Get tasks that occur after 7 days
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the tasks happening after 7 days
+	 */
+	protected IDonResponse findFuture(IDonStorage donStorage) {
+		/*
+		Calendar start = CalHelper.getDayEnd(CalHelper.getDaysFromNow(7));
+		IDonResponse response = findTaskRange(donStorage, start, null,
+				SearchHelper.FIND_INCOMPLETE);
+		*/
+		IDonResponse response = new DonResponse();
+		response.addMessage("3");
+		response.addMessage(MSG_SEARCH_RESULT_FUTURE);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+
+	/**
+	 * Get overdue tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the overdue tasks
+	 */
+	protected IDonResponse findOverdue(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();/*findTaskRange(donStorage, null,
+				Calendar.getInstance(), SearchHelper.FIND_INCOMPLETE);
+		List<IDonTask> taskList = new ArrayList<IDonTask>();
+		for (IDonTask task : response.getTasks()) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
+				taskList.add(task);
+			}
+		}
+		*/
+		response.addMessage("0");
+		response.addMessage(MSG_SEARCH_RESULT_OVERDUE);
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		//response.setTaskList(taskList);
+		return response;
+	}
+
+	/**
+	 * Get all floating tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the floating tasks
+	 */
+	protected IDonResponse findFloat(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		/*
+		List<IDonTask> taskList = SearchHelper.findTaskByType(donStorage,
+				TaskType.FLOATING, true, false);
+		response.setTaskList(taskList);
+		*/
+		response.setResponseType(IDonResponse.ResponseType.SWITCH_PANEL);
+		response.addMessage("4");
+		response.addMessage(MSG_SEARCH_RESULT_FLOAT);
+
+		return response;
+	}
+
+	/**
+	 * Return all the tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing all the completed tasks
+	 */
+	private IDonResponse findDone(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		response.setTaskList(SearchHelper.findDone(donStorage));
+
+		if (!response.hasTasks()) {
+			response.setResponseType(ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_SEARCH_FAILED);
+		} else {
+			response.setResponseType(ResponseType.SEARCH_SUCCESS);
+			response.addMessage(MSG_SEARCH_RESULT_DONE);
+			response.addMessage(String.format(MSG_SEARCH_FOUND, response
+					.getTasks().size()));
+		}
+
+		return response;
+	}
+
+	private IDonResponse findResults() {
+		IDonResponse response = new DonResponse();
+		response.addMessage("6");
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+	
+	private IDonResponse findConsole() {
+		IDonResponse response = new DonResponse();
+		response.addMessage("7");
+		response.setResponseType(ResponseType.SWITCH_PANEL);
+		return response;
+	}
+	
+	/**
+	 * Returns tasks in a given time range
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the response containing the found tasks
+	 */
+	private IDonResponse findRange(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		if (CalHelper.dateEqualOrBefore(searchEndDate, searchStartDate)) {
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_COMMAND_WRONG_DATE);
+			return response;
+		}
+		if(!isTimeUsed) {
+			searchStartDate = CalHelper.getDayStart(searchStartDate);
+			searchEndDate = CalHelper.getDayEnd(searchEndDate);
+		}
+		response = findTaskRange(donStorage, searchStartDate, searchEndDate, SearchHelper.FIND_INCOMPLETE);
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == SearchType.SEARCH_ID) {
+			response = findTaskByID(donStorage);
+		} else if (type == SearchType.SEARCH_NAME) {
+			response = findTaskByName(donStorage);
+		} else if (type == SearchType.SEARCH_AFTDATE) {
+			response = findTaskRange(donStorage, searchStartDate, null,
+					SearchHelper.FIND_INCOMPLETE);
+		} else if (type == SearchType.SEARCH_DATE) {
+			response = findTaskByDate(donStorage);
+		} else if (type == SearchType.SEARCH_UNDONE) {
+			response = findUndone(donStorage);
+		} else if (type == SearchType.SEARCH_LABEL) {
+			response = findLabel(donStorage);
+		} else if (type == SearchType.SEARCH_FREE) {
+			response = findFreeTime(donStorage);
+		} else if (type == SearchType.SEARCH_ALL) {
+			response = findAll(donStorage);
+		} else if (type == SearchType.OVERDUE) {
+			response = findOverdue(donStorage);
+		} else if (type == SearchType.TODAY) {
+			response = findToday(donStorage);
+		} else if (type == SearchType.SEVEN_DAYS) {
+			response = findSevenDays(donStorage);
+		} else if (type == SearchType.FUTURE) {
+			response = findFuture(donStorage);
+		} else if (type == SearchType.FLOAT) {
+			response = findFloat(donStorage);
+		} else if (type == SearchType.SEARCH_DONE) {
+			response = findDone(donStorage);
+		} else if (type == SearchType.RESULTS) {
+			response = findResults();
+		} else if (type == SearchType.CONSOLE) {
+			response = findConsole();
+		} else if (type == SearchType.SEARCH_RANGE) {
+			response = findRange(donStorage);
+		}
+
+		if (type == SearchType.TODAY) {
+			response.sortTask(new TodayTaskComparator());
+		} else {
+			response.sortTask();
+		}
+		return response;
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		throw new UnsupportedOperationException();
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonFindCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonGeneralCommand.java
+	 */
+
+/**
+ * Empty implementation of the AbstractDonCommand For use with commands that
+ * have no execute/undo functionalities
+ * 
+ */
+public class DonGeneralCommand extends AbstractDonCommand {
+
+	public DonGeneralCommand(GeneralCommandType type) {
+		generalCommandType = type;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		throw new UnsupportedOperationException();
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonGeneralCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonHelpCommand.java
+	 */
+
+public class DonHelpCommand extends AbstractDonCommand {
+
+	public enum HelpType {
+		HELP_ADD, HELP_EDIT, HELP_SEARCH, HELP_DELETE, HELP_MARK, HELP_UNDO, HELP_REDO, HELP_LABEL, HELP_DELABEL,
+		// for help with all commands in general. I think undo goes here
+		HELP_GENERAL,
+	}
+
+	private HelpType requestedCommand;
+
+	public DonHelpCommand(HelpType command) {
+		requestedCommand = command;
+		generalCommandType = GeneralCommandType.HELP;
+	}
+
+	public HelpType getRequestedCommand() {
+		return requestedCommand;
+	}
+
+	/**
+	 * Show the user help information
+	 * 
+	 * @return response containing help messages
+	 */
+	private IDonResponse getHelp(HelpType commandType) {
+		IDonResponse response = new DonResponse();
+		response.setResponseType(IDonResponse.ResponseType.HELP);
+
+		if (commandType == HelpType.HELP_GENERAL) {
+			// Give info on all commands available
+			response.addMessage("Welcome to DoOrNot. These are the available commands:");
+			response.addMessage("add / a, edit / ed / e, search / s, del / d, mark / m, label / l, delabel, slabel / sl");
+			response.addMessage("Type help command name to learn how to use the command!");
+		} else if (commandType == HelpType.HELP_ADD) {
+			// Help for add
+			response.addMessage("add / a: Adds a task to the todo list");
+			response.addMessage("Command format: addf Task title");
+			response.addMessage("Command format: add Task title by DD/MM/YYYY HHmm");
+			response.addMessage("Command format: add Task title from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("The date can be in any logical date format");
+			response.addMessage("Examples:");
+			response.addMessage("addf Finish reading Book X <-- Adds a floating task");
+			response.addMessage("add Submit CS9842 assignment by 18/11/2014 <-- Adds a task with a deadline at 18th of November 2014");
+			response.addMessage("add Talk by person from 05/08/2015 1500 to 05/08/2015 1800 <-- Adds an event that lasts from 3pm of 5th August 2015 to 6pm of the same day");
+		} else if (commandType == HelpType.HELP_EDIT) {
+			// Help for edit
+			response.addMessage("edit / ed / e: Edits a task in the todo list");
+			response.addMessage("Command format: edit Task_id to \"New task title\"");
+			response.addMessage("Command format: edit Part of old Task title to \"New task title\"");
+			response.addMessage("Command format: edit Task_id by DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit Part of old Task title to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit Task_id to from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("Command format: edit Part of old Task title from DD/MM/YYYY HHmm to DD/MM/YYYY HHmm");
+			response.addMessage("The date can be in any logical date format");
+			response.addMessage("If multiple tasks are found with the given title, nothing will be edited.");
+			response.addMessage("Examples:");
+			response.addMessage("edit 22 to \"Do work\" <-- Changes task 22's title to Do work");
+			response.addMessage("edit Do work by 17/01/2015 <-- Changes the deadline of the task containing \"Do work\" as the title to 17th January 2015");
+			response.addMessage("edit 14 from 02/05/2015 to 03/05/2015 <-- Changes the start and end dates of task 14 to 2nd and 3rd of May 2015 respectively");
+		} else if (commandType == HelpType.HELP_DELETE) {
+			// Help for delete
+			response.addMessage("del / d: Delete a task in the todo list");
+			response.addMessage("Command format: del Task_id");
+			response.addMessage("Command format: del Part of Task title");
+			response.addMessage("If multiple tasks are found with the given title, nothing will be deleted.");
+			response.addMessage("Examples:");
+			response.addMessage("del 22 <-- Deletes task 22");
+			response.addMessage("del Do work <-- Deletes the task containing \"Do work\" in the title");
+		} else if (commandType == HelpType.HELP_SEARCH) {
+			// Help for search
+			response.addMessage("search / s / son / saf / sr: Finds a task with the given ID, title or date");
+			response.addMessage("Command format: search Task_id");
+			response.addMessage("Command format: search Part of Task title");
+			response.addMessage("Command format: son DD/MM/YYYY");
+			response.addMessage("Command format: saf DD/MM/YYYY");
+			response.addMessage("Command format: sr date to date");
+			response.addMessage("Examples:");
+			response.addMessage("search 22 <-- Searches for task 22");
+			response.addMessage("search Do work <-- Searches for tasks containing \"Do work\" in the title");
+			response.addMessage("son 22/01/2016 <-- Searches for tasks starting or occurring on the 22nd of January 2016");
+			response.addMessage("saf 22/01/2016 <-- Searches for tasks occurring after 22nd of January 2016");
+			response.addMessage("sr this monday to this friday <-- Searches for tasks happening between this Monday and Friday");
+		} else if (commandType == HelpType.HELP_MARK) {
+			// Help for mark
+			response.addMessage("mark: Marks a task as done/undone");
+			response.addMessage("Command format: mark Task_id");
+			response.addMessage("Command format: mark Part of Task title");
+			response.addMessage("Examples:");
+			response.addMessage("mark 22 <-- Marks task 22 as done/undone depending on its current status");
+			response.addMessage("mark Buy paper <-- Marks the task with \"Buy paper\" in the title as done/undone");
+		} else if (commandType == HelpType.HELP_LABEL) {
+			// Help for label
+			response.addMessage("label / l: Tags a task with a given label");
+			response.addMessage("Command format: label Task_id #Label title");
+			response.addMessage("Command format: label Part of Task title #Label title");
+			response.addMessage("Examples:");
+			response.addMessage("label 22 #work <-- Adds the \"work\" label to task 22");
+			response.addMessage("label Buy paper #personal <-- Adds the \"personal\" label to the task with \"Buy paper\" in the title");
+
+			response.addMessage("delabel / dl: Removes a given label from a task");
+			response.addMessage("Command format: delabel Task_id");
+			response.addMessage("Command format: delabel Task_id #Label title");
+			response.addMessage("Command format: delabel Part of Task title #Label title");
+			response.addMessage("Examples:");
+			response.addMessage("delabel 21 <-- Removes all labels from task 21");
+			response.addMessage("delabel 22 #work <-- Removes the \"work\" label from task 22");
+			response.addMessage("delabel Buy paper #personal <-- Removes the \"personal\" label from the task with \"Buy paper\" in the title");
+
+			response.addMessage("slabel / sl: Searches for tasks with the given label");
+			response.addMessage("Command format: slabel #Label name");
+			response.addMessage("Examples:");
+			response.addMessage("slabel #work <-- Searches for all tasks with the \"work\" label");
+		} else if (commandType == HelpType.HELP_UNDO
+				|| commandType == HelpType.HELP_REDO) {
+			// Help for undo
+			response.addMessage("undo : Undoes the previous action");
+			response.addMessage("redo : Performs the last undone action");
+			response.addMessage("Command format: undo/redo");
+			response.addMessage("Examples:");
+			response.addMessage("undo");
+			response.addMessage("redo");
+			response.addMessage("(What were you expecting?)");
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = getHelp(requestedCommand);
+		return response;
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		throw new UnsupportedOperationException();
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonHelpCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonInvalidCommand.java
+	 */
+
+public class DonInvalidCommand extends AbstractDonCommand {
+
+	public enum InvalidType {
+		INVALID_DATE, INVALID_FORMAT, INVALID_COMMAND
+	}
+
+	private String command;
+	private InvalidType type;
+
+	/**
+	 * Creates an InvalidCommand
+	 * 
+	 * @param type
+	 *            the type of invalid command
+	 */
+	public DonInvalidCommand(InvalidType type) {
+		this.type = type;
+	}
+
+	/**
+	 * Creates an InvalidCommand with the given command
+	 * 
+	 * @param type
+	 *            the type of InvalidCommand
+	 * @param str
+	 *            the command string
+	 */
+	public DonInvalidCommand(InvalidType type, String str) {
+		this.type = type;
+		command = str;
+	}
+
+	public InvalidType getType() {
+		return type;
+	}
+
+	public String getStringInput() {
+		return command;
+	}
+
+	/**
+	 * Creates a response for user entered commands with invalid formatting
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse createInvalidFormatResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(String.format(MSG_COMMAND_WRONG_FORMAT, command));
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+
+	/**
+	 * Creates a response for user entered commands with invalid dates
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse createInvalidDateResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(MSG_COMMAND_WRONG_DATE);
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+
+	/**
+	 * Creates a response for unrecognized commands
+	 * 
+	 * @return the response
+	 */
+	private IDonResponse createInvalidCommandResponse() {
+		IDonResponse response = new DonResponse();
+		response.addMessage(String.format(MSG_UNKNOWN_COMMAND, command));
+		response.setResponseType(ResponseType.UNKNOWN_COMMAND);
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+
+		IDonResponse response = null;
+		if (type == InvalidType.INVALID_COMMAND) {
+			response = createInvalidCommandResponse();
+		} else if (type == InvalidType.INVALID_DATE) {
+			response = createInvalidDateResponse();
+		} else if (type == InvalidType.INVALID_FORMAT) {
+			response = createInvalidFormatResponse();
+		}
+		return response;
+
+	}
+
+	@Override
+	public IDonResponse undoCommand(IDonStorage donStorage) {
+		throw new UnsupportedOperationException();
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonInvalidCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\DonMarkCommand.java
+	 */
+
+public class DonMarkCommand extends DonEditCommand {
+
+	public enum MarkType {
+		MARK_ID, MARK_STRING, MARK_OVERDUE, MARK_FLOAT
+	}
+
+	private MarkType type;
+
+	/**
+	 * Mark a task with the given id
+	 * 
+	 * @param id
+	 *            the id of the task
+	 */
+	public DonMarkCommand(int id) {
+		searchID = id;
+		type = MarkType.MARK_ID;
+		generalCommandType = GeneralCommandType.MARK;
+	}
+
+	/**
+	 * Mark a task with the given title
+	 * 
+	 * @param string
+	 *            the title of the task
+	 */
+	public DonMarkCommand(String string) {
+		searchTitle = string;
+		type = MarkType.MARK_STRING;
+		generalCommandType = GeneralCommandType.MARK;
+	}
+
+	public DonMarkCommand(MarkType marktype) {
+		type = marktype;
+		generalCommandType = GeneralCommandType.MARK;
+	}
+
+	public MarkType getMarkType() {
+		return type;
+	}
+
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusByID(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		IDonTask task = donStorage.getTask(searchID);
+		if (task == null) {
+			// No task with ID found
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(String.format(MSG_SEARCH_ID_FAILED, searchID));
+
+		} else {
+			unchangedTask.add(task.clone());
+			boolean taskCompleted = !task.getStatus();
+			task.setStatus(taskCompleted);
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addTask(task);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_ID_SUCCESS,
+					searchID, (taskCompleted ? PHRASE_COMPLETE
+							: PHRASE_INCOMPLETE)));
+
+		}
+		return response;
+	}
+
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusOverdue(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> tasks = SearchHelper.findOverdue(donStorage);
+		if (tasks.isEmpty()) {
+			// No overdue task
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_UNDONE_OVERDUE);
+
+		} else {
+			for (IDonTask task : tasks) {
+				unchangedTask.add(task.clone());
+				boolean taskCompleted = !task.getStatus();
+				task.setStatus(taskCompleted);
+				response.addTask(task);
+			}
+
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS,
+					tasks.size()));
+		}
+		return response;
+	}
+
+	/**
+	 * Toggles the "done" status of the task with the given ID
+	 * 
+	 * @param id
+	 *            the id of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusFloating(IDonStorage donStorage) {
+		IDonResponse response = new DonResponse();
+		List<IDonTask> tasks = SearchHelper.findTaskByType(donStorage,
+				TaskType.FLOATING, true, true);
+		if (tasks.isEmpty()) {
+			// No overdue task
+			response.setResponseType(IDonResponse.ResponseType.SEARCH_EMPTY);
+			response.addMessage(MSG_NO_FLOATING);
+
+		} else {
+			for (IDonTask task : tasks) {
+				unchangedTask.add(task.clone());
+				boolean taskCompleted = !task.getStatus();
+				task.setStatus(taskCompleted);
+				response.addTask(task);
+			}
+			response.setResponseType(IDonResponse.ResponseType.EDIT_SUCCESS);
+			response.addMessage(String.format(MSG_TOGGLE_STATUS_MULTI_SUCCESS,
+					tasks.size()));
+		}
+		return response;
+	}
+
+	/**
+	 * Toggles the "done" status of the task containing the given title
+	 * 
+	 * @param title
+	 *            the title of the task to change
+	 * @return the response
+	 */
+	private IDonResponse toggleStatusByTitle(IDonStorage donStorage) {
+		assert searchTitle != null;
+		IDonResponse response = new DonResponse();
+		List<IDonTask> foundTasks = donStorage.getTaskByName(searchTitle);
+
+		if (foundTasks.size() > 1) {
+			response.setResponseType(ResponseType.EDIT_FAILURE);
+			response.addMessage(String.format(MSG_SEARCH_MORE_THAN_ONE_TASK,
+					searchTitle));
+			response.setTaskList(foundTasks);
+		} else if (foundTasks.isEmpty()) {
+			// No task with the name found, return the response of the search
+			response = createSearchFailedResponse(searchTitle);
+		} else {
+			// 1 task was found
+			searchID = foundTasks.get(0).getID();
+			response = toggleStatusByID(donStorage);
+		}
+
+		return response;
+	}
+
+	@Override
+	public IDonResponse executeCommand(IDonStorage donStorage) {
+		IDonResponse response = null;
+		if (type == MarkType.MARK_ID) {
+			response = toggleStatusByID(donStorage);
+		} else if (type == MarkType.MARK_STRING) {
+			response = toggleStatusByTitle(donStorage);
+		} else if (type == MarkType.MARK_OVERDUE) {
+			response = toggleStatusOverdue(donStorage);
+		} else if (type == MarkType.MARK_FLOAT) {
+			response = toggleStatusFloating(donStorage);
+		}
+
+		if (response.getResponseType() == ResponseType.EDIT_SUCCESS) {
+			response.sortTask();
+			executed = true;
+		}
+
+		return response;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\DonMarkCommand.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\SearchHelper.java
+	 */
+
+public class SearchHelper {
+
+	public static final int FIND_INCOMPLETE = 0;
+	public static final int FIND_COMPLETE = 1;
+	public static final int FIND_ALL = 2;
+
+	/**
+	 * Find tasks with the given name
+	 * 
+	 * @param name
+	 *            the name to search for
+	 * @return the response containing the tasks
+	 */
+	public static List<IDonTask> findTaskByName(IDonStorage donStorage,
+			String searchTitle) {
+		assert searchTitle != null;
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			if (task.getTitle().toLowerCase()
+					.contains(searchTitle.toLowerCase())) {
+				response.add(task);
+			}
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks with the exact given name
+	 * 
+	 * @param donStorage
+	 *            the storage containing the tasks
+	 * @param searchTitle
+	 *            the name to search for
+	 * @return the response containing the tasks
+	 */
+	public static List<IDonTask> findTaskByExactName(IDonStorage donStorage,
+			String searchTitle) {
+		assert searchTitle != null;
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			if (task.getTitle().equals(searchTitle)) {
+				response.add(task);
+			}
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks starting/occurring on a given date
+	 * 
+	 * @param donStorage
+	 *            the storage containing the tasks
+	 * @param searchStartDate
+	 *            the date to search for
+	 * @param exact
+	 *            whether the task must happen at the same date and time as
+	 *            searchStartDate
+	 * @return the response containing the tasks
+	 */
+	public static List<IDonTask> findTaskByDate(IDonStorage donStorage,
+			Calendar searchStartDate, boolean exact) {
+		assert searchStartDate != null;
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			// Search for the given name/title without case sensitivity
+			TaskType taskType = task.getType();
+			if (taskType == TaskType.FLOATING) {
+				// Floating tasks have no date.
+				continue;
+			}
+			Calendar taskDate = task.getStartDate();
+			Calendar taskEndDate = task.getEndDate();
+			// If the date falls within the start and end date of an event, the
+			// event is returned as well
+			if (exact) {
+				if ((taskType == TaskType.DEADLINE && CalHelper.relevantEquals(
+						taskDate, searchStartDate))
+						|| (taskType == TaskType.DURATION && CalHelper
+								.isBetweenDates(searchStartDate, taskDate,
+										taskEndDate))) {
+					response.add(task);
+				}
+			} else {
+				if (CalHelper.isSameDay(taskDate, searchStartDate)
+						|| (taskType == TaskType.DURATION && CalHelper
+								.isBetweenDates(searchStartDate, taskDate,
+										taskEndDate))) {
+					response.add(task);
+				}
+			}
+
+		}
+		return response;
+	}
+
+	/**
+	 * Find tasks that begin within the given range of time. Either parameter
+	 * can be null to search for tasks before or after a date. For example if
+	 * startDate is null and endDate is set to 09102014, the method will return
+	 * all tasks from before 9th of October 2014. If startDate is 09102014 and
+	 * endDate is null, all tasks beginning after 9th of October 2014 will be
+	 * returned.
+	 * 
+	 * @param startDate
+	 *            the date to start searching from (inclusive)
+	 * @param endDate
+	 *            the latest possible start date of a task (inclusive)
+	 * @param completeType
+	 *            0 if the tasks found must be incomplete, 1 if it must be
+	 *            completed 2 if it can be complete or incomplete
+	 * @return the response containing the tasks
+	 */
+	public static List<IDonTask> findTaskRange(IDonStorage donStorage,
+			Calendar startDate, Calendar endDate, int completeType) {
+		assert !(startDate == null && endDate == null);
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+
+		for (IDonTask task : taskList) {
+			if (task.getType() == TaskType.FLOATING) {
+				// Floating tasks have no date.
+				continue;
+			}
+			// Ignore tasks that do not match the completion status to search
+			// for
+			if ((task.getStatus() && completeType == FIND_INCOMPLETE)
+					|| (!task.getStatus() && completeType == FIND_COMPLETE)) {
+				continue;
+			}
+			Calendar taskStart = task.getStartDate();
+			Calendar taskEnd = task.getEndDate();
+			if (startDate == null) {
+				if (CalHelper.dateEqualOrBefore(taskStart, endDate)) {
+					response.add(task);
+				}
+			} else if (endDate == null) {
+				if (CalHelper.dateEqualOrAfter(taskStart, startDate)) {
+					response.add(task);
+				}
+			} else {
+				// If task is between date or is ongoing between the dates
+				if ((CalHelper.dateEqualOrAfter(taskStart, startDate) && CalHelper
+						.dateEqualOrBefore(taskStart, endDate))
+						|| (CalHelper.dateEqualOrAfter(startDate, taskStart) && CalHelper
+								.dateEqualOrBefore(startDate, taskEnd))
+						|| (CalHelper.dateEqualOrAfter(endDate, taskStart) && CalHelper
+								.dateEqualOrBefore(endDate, taskEnd))) {
+					response.add(task);
+				}
+			}
+
+		}
+		return response;
+	}
+
+	/**
+	 * Find all undone/incomplete tasks
+	 * 
+	 * @return the response containing incomplete tasks
+	 */
+	public static List<IDonTask> findUndone(IDonStorage donStorage) {
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+		for (IDonTask task : taskList) {
+			if (!task.getStatus()) {
+				response.add(task.clone());
+			}
+		}
+
+		return response;
+	}
+
+	/**
+	 * Search for tasks with the given label name
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @param labelName
+	 *            the label to search for
+	 * @return the response containing tasks with the given label
+	 */
+	public static List<IDonTask> findLabel(IDonStorage donStorage,
+			String searchTitle) {
+		List<IDonTask> response = new ArrayList<IDonTask>();
+		List<IDonTask> taskList = donStorage.getTaskList();
+
+		for (IDonTask task : taskList) {
+			List<String> labels = task.getLabels();
+			for (String label : labels) {
+				if (label.equalsIgnoreCase(searchTitle)) {
+					response.add(task);
+					break;
+				}
+			}
+		}
+
+		return response;
+	}
+
+	/**
+	 * Returns a list of tasks by the given task type
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @param type
+	 *            the type of the task
+	 * @param allowOverdue
+	 *            true if overdue tasks are allowed.
+	 * @param allowFinished
+	 *            true if completed tasks are allowed
+	 * @return the list of tasks
+	 */
+	public static List<IDonTask> findTaskByType(IDonStorage donStorage,
+			IDonTask.TaskType type, boolean allowOverdue, boolean allowFinished) {
+		List<IDonTask> taskList = donStorage.getTaskList();
+		List<IDonTask> resultList = new ArrayList<IDonTask>();
+		Calendar now = Calendar.getInstance();
+		for (IDonTask task : taskList) {
+			if (task.getType() == type) {
+				if (type == IDonTask.TaskType.DEADLINE) {
+					if ((!allowOverdue && task.getStartDate().before(now))
+							|| (!allowFinished && task.getStatus())) {
+						// is overdue or finished
+						continue;
+					}
+				} else if (type == IDonTask.TaskType.DURATION) {
+					if ((!allowOverdue && task.getEndDate().before(now))
+							|| (!allowFinished && task.getStatus())) {
+						// is overdue or finished
+						continue;
+					}
+				}
+				// Clone the task to prevent the original from being edited.
+				resultList.add(task);
+			}
+		}
+		return resultList;
+	}
+
+	/**
+	 * Get all overdue tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the list of overdue tasks
+	 */
+	public static List<IDonTask> findOverdue(IDonStorage donStorage) {
+		List<IDonTask> response = findTaskRange(donStorage, null,
+				Calendar.getInstance(), FIND_ALL);
+		List<IDonTask> taskList = new ArrayList<IDonTask>();
+		for (IDonTask task : response) {
+			if ((task.getEndDate() != null && CalHelper.dateEqualOrBefore(
+					task.getEndDate(), Calendar.getInstance()))
+					|| task.getEndDate() == null) {
+				taskList.add(task);
+			}
+		}
+
+		return taskList;
+	}
+
+	/**
+	 * Get the list of all completed tasks
+	 * 
+	 * @param donStorage
+	 *            the storage in which the tasks are located
+	 * @return the list of completed tasks
+	 */
+	public static List<IDonTask> findDone(IDonStorage donStorage) {
+		List<IDonTask> taskList = donStorage.getTaskList();
+		List<IDonTask> outputList = new ArrayList<IDonTask>();
+		for (IDonTask task : taskList) {
+			if (task.getStatus()) {
+				outputList.add(task);
+			}
+		}
+
+		return outputList;
+	}
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\SearchHelper.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\src\doornot\util\TodayTaskComparator.java
+	 */
+
+public class TodayTaskComparator implements Comparator<IDonTask> {
+
+	@Override
+	public int compare(IDonTask task1, IDonTask task2) {
+		assert task1.getType() != TaskType.FLOATING
+				&& task2.getType() != TaskType.FLOATING;
+		// if end date is today, compare with start date of deadline
+		if (task1.getType() == TaskType.DEADLINE) {
+			if (task2.getType() == TaskType.DURATION) {
+				if (CalHelper.isSameDay(task2.getEndDate(),
+						CalHelper.getTodayStart())) {
+					return task1.getStartDate().compareTo(task2.getEndDate());
+				}
+				return -1;
+			}
+
+			int startDateComp = task1.getStartDate().compareTo(
+					task2.getStartDate());
+			if (startDateComp == 0) {
+				return task1.getTitle().compareToIgnoreCase(task2.getTitle());
+			}
+
+			return startDateComp;
+
+		} else if (task1.getType() == TaskType.DURATION) {
+			if (task2.getType() == TaskType.DEADLINE) {
+				if (CalHelper.isSameDay(task1.getEndDate(),
+						CalHelper.getTodayStart())) {
+					return task1.getEndDate().compareTo(task2.getStartDate());
+				}
+				return 1;
+			}
+
+			int startDateComp = task1.getStartDate().compareTo(
+					task2.getStartDate());
+			int endDateComp = task1.getEndDate().compareTo(task2.getEndDate());
+			if (startDateComp != 0 && endDateComp == 0) {
+				return startDateComp;
+			} else if (startDateComp == 0 && endDateComp == 0) {
+				return task1.getTitle().compareToIgnoreCase(task2.getTitle());
+			}
+
+			return endDateComp;
+		}
+		return 0;
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\src\doornot\util\TodayTaskComparator.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\test\doornot\DonStorageTestStub.java
+	 */
+
+
+public class DonStorageTestStub implements IDonStorage {
+	
+	private List<IDonTask> taskList;
+
+	@Override
+	public int addTask(IDonTask task) {
+		return 0;
+	}
+
+	@Override
+	public boolean removeTask(int taskID) {
+		return false;
+	}
+
+	@Override
+	public int getNextID() {
+		return 0;
+	}
+
+	@Override
+	public IDonTask getTask(int ID) {
+		return null;
+	}
+
+	@Override
+	public List<IDonTask> getTaskByName(String name) {
+		return null;
+	}
+
+	@Override
+	public boolean saveToDisk() {
+		return false;
+	}
+
+	@Override
+	public boolean loadFromDisk() {
+		return false;
+	}
+
+	@Override
+	public List<IDonTask> getTaskList() {
+		return taskList;
+	}
+
+	public void setTaskList(List<IDonTask> taskList) {
+		this.taskList = taskList;
+	}
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\test\doornot\DonStorageTestStub.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\test\doornot\logic\DonLogicTester.java
+	 */
+
+public class DonLogicTester {
+	
+	private static final String FILE_LOGIC_TEST = "logic_test";
+	private static DonLogic logic;
+	private static DonStorage storage;
+	@BeforeClass
+	public static void initLogic() {
+		storage = new DonStorage();
+		storage.changeFileName(FILE_LOGIC_TEST);
+		logic = new DonLogic(storage, new DonParser(), false);
+	}
+	
+	@Before
+	public void removeTestFile() {
+		File f = new File(FILE_LOGIC_TEST);
+		f.delete();
+		storage.getTaskList().clear();
+	}
+
+	@Test
+	public void testAddFloatingTask() {
+		
+		IDonResponse response = logic.runCommand("addf Finish homework");
+		IDonTask task = response.getTasks().get(0);
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				response.getResponseType());
+		assertEquals("Finish homework", task.getTitle());
+		assertEquals(null, task.getStartDate());
+		assertEquals(null, task.getEndDate());
+		assertEquals(IDonTask.TaskType.FLOATING, task.getType());
+	}
+
+	@Test
+	public void testAddDeadlineTask() {
+		
+		IDonResponse response = logic
+				.runCommand("add Finish homework by 21/12/2014 2030");
+		IDonTask task = response.getTasks().get(0);
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				response.getResponseType());
+		assertEquals("Finish homework", task.getTitle());
+		Calendar deadline = task.getStartDate();
+		assertEquals(2014, deadline.get(Calendar.YEAR));
+		assertEquals(Calendar.DECEMBER, deadline.get(Calendar.MONTH));
+		assertEquals(21, deadline.get(Calendar.DAY_OF_MONTH));
+		assertEquals(20, deadline.get(Calendar.HOUR_OF_DAY));
+		assertEquals(30, deadline.get(Calendar.MINUTE));
+		assertEquals(null, task.getEndDate());
+		assertEquals(IDonTask.TaskType.DEADLINE, task.getType());
+	}
+
+	@Test
+	public void testAddDurationTask() {
+		
+		IDonResponse response = logic
+				.runCommand("add Finish homework from 21/12/2014 2030 to 21/12/2014 2356");
+		IDonTask task = response.getTasks().get(0);
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				response.getResponseType());
+		assertEquals("Finish homework", task.getTitle());
+		System.out.println(task.getStartDate().getTime().toString());
+		Calendar startDate = task.getStartDate();
+		Calendar endDate = task.getEndDate();
+		assertEquals(2014, startDate.get(Calendar.YEAR));
+		assertEquals(Calendar.DECEMBER, startDate.get(Calendar.MONTH));
+		assertEquals(21, startDate.get(Calendar.DAY_OF_MONTH));
+		assertEquals(20, startDate.get(Calendar.HOUR_OF_DAY));
+		assertEquals(30, startDate.get(Calendar.MINUTE));
+
+		assertEquals(2014, endDate.get(Calendar.YEAR));
+		assertEquals(Calendar.DECEMBER, endDate.get(Calendar.MONTH));
+		assertEquals(21, endDate.get(Calendar.DAY_OF_MONTH));
+		assertEquals(23, endDate.get(Calendar.HOUR_OF_DAY));
+		assertEquals(56, endDate.get(Calendar.MINUTE));
+		assertEquals(IDonTask.TaskType.DURATION, task.getType());
+	}
+
+	/*
+	 * Deletion tests
+	 */
+
+	@Test
+	public void testDeleteTaskWithID() {	
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse delResponse = logic.runCommand("del " + taskID);
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		IDonTask deletedTask = delResponse.getTasks().get(0);
+		assertEquals(taskID, deletedTask.getID());
+		assertEquals("Finish homework", deletedTask.getTitle());
+
+	}
+	
+	@Test
+	public void testDeleteTaskWithName() {
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse delResponse = logic.runCommand("del Finish");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		IDonTask deletedTask = delResponse.getTasks().get(0);
+		assertEquals(taskID, deletedTask.getID());
+		assertEquals("Finish homework", deletedTask.getTitle());
+
+	}
+	
+	@Test
+	public void testDeleteOverdueTasks() {
+		List<IDonTask> addedTasks = new ArrayList<IDonTask>();
+		IDonResponse addResponse1 = logic.runCommand("add Finish homework by 5 days ago");
+		addedTasks.add(addResponse1.getTasks().get(0));
+		IDonResponse addResponse2 = logic.runCommand("add Do work by 2 days ago");
+		addedTasks.add(addResponse2.getTasks().get(0));
+		Collections.sort(addedTasks);
+		
+		IDonResponse delResponse = logic.runCommand("del overdue");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		Collections.sort(delResponse.getTasks());
+		for(int i=0; i<delResponse.getTasks().size(); i++) {
+			assertEquals(delResponse.getTasks().get(i), addedTasks.get(i));
+		}
+	}
+	
+	@Test
+	public void testDeleteCompletedTasks() {
+		List<IDonTask> addedTasks = new ArrayList<IDonTask>();
+		IDonResponse addResponse1 = logic.runCommand("add Finish homework by 5 days ago");
+		addedTasks.add(addResponse1.getTasks().get(0));
+		logic.runCommand("mark Finish");
+		IDonResponse addResponse2 = logic.runCommand("add Do work by 2 days ago");
+		addedTasks.add(addResponse2.getTasks().get(0));
+		logic.runCommand("mark Do work");
+		Collections.sort(addedTasks);
+		logic.runCommand("add Do not complete this task");
+		
+		IDonResponse delResponse = logic.runCommand("del done");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		Collections.sort(delResponse.getTasks());
+		for(int i=0; i<delResponse.getTasks().size(); i++) {
+			assertEquals(delResponse.getTasks().get(i), addedTasks.get(i));
+		}
+	}
+	
+	/*
+	 * Search tests
+	 */
+	@Test
+	public void testSearchWithName() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Do homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("s homework");
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask foundTask = searchResponse.getTasks().get(0);
+		
+		assertEquals(addedTask, foundTask);
+	}
+	
+	@Test
+	public void testSearchWithNameFail() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Do homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+
+		IDonResponse searchResponse = logic.runCommand("s do work");
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse.getResponseType());
+	}
+	
+	@Test
+	public void testSearchWithDate() {
+		
+		IDonResponse addResponse = logic.runCommand("add Do homework by 26/01/2015");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask addedTask = addResponse.getTasks().get(0);
+		
+		IDonResponse addResponse2 = logic.runCommand("add Complete walk by 26/01/2015");
+		IDonTask addedTask2 = addResponse2.getTasks().get(0);
+		
+		IDonResponse addResponse3 = logic.runCommand("add Complete walk by 27/01/2015");
+		IDonTask addedTask3 = addResponse3.getTasks().get(0);
+		
+		IDonResponse searchResponse = logic.runCommand("son 26/01/2015");
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		
+		assertEquals(true, searchResponse.getTasks().contains(addedTask));
+		assertEquals(true, searchResponse.getTasks().contains(addedTask2));
+		assertEquals(false, searchResponse.getTasks().contains(addedTask3));
+	}
+	
+
+	/*
+	 * Editing tests
+	 */
+	@Test
+	public void testEditTitleWithID() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("edit "
+				+ changedTask.getID() + " to \"Ignore homework\"");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals("Ignore homework", changedTask.getTitle());
+	}
+
+	@Test
+	public void testEditDeadlineWithID() {
+		
+		IDonResponse addResponse = logic
+				.runCommand("add Finish homework by 10/05/2014 0810");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("edit "
+				+ changedTask.getID() + " by 21/05/2014 1020");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		Calendar date = changedTask.getStartDate();
+		assertEquals(21, date.get(Calendar.DAY_OF_MONTH));
+		assertEquals(Calendar.MAY, date.get(Calendar.MONTH));
+		assertEquals(2014, date.get(Calendar.YEAR));
+		assertEquals(10, date.get(Calendar.HOUR_OF_DAY));
+		assertEquals(20, date.get(Calendar.MINUTE));
+	}
+
+	@Test
+	public void testEditDatesWithID() {
+		
+		IDonResponse addResponse = logic
+				.runCommand("add Finish homework from 10/05/2014 0810 to 10/05/2014 0850");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("edit "
+				+ changedTask.getID() + " from 21/05/2014 1020 to 21/05/2014 1140");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		Calendar startDate = changedTask.getStartDate();
+		Calendar endDate = changedTask.getEndDate();
+		assertEquals(21, startDate.get(Calendar.DAY_OF_MONTH));
+		assertEquals(Calendar.MAY, startDate.get(Calendar.MONTH));
+		assertEquals(2014, startDate.get(Calendar.YEAR));
+		assertEquals(10, startDate.get(Calendar.HOUR_OF_DAY));
+		assertEquals(20, startDate.get(Calendar.MINUTE));
+
+		assertEquals(21, endDate.get(Calendar.DAY_OF_MONTH));
+		assertEquals(Calendar.MAY, endDate.get(Calendar.MONTH));
+		assertEquals(2014, endDate.get(Calendar.YEAR));
+		assertEquals(11, endDate.get(Calendar.HOUR_OF_DAY));
+		assertEquals(40, endDate.get(Calendar.MINUTE));
+	}
+	
+	@Test
+	public void testMarkTaskWithID() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark "+changedTask.getID());
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithIDFail() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark "+(changedTask.getID()+1));
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				editResponse.getResponseType());
+		assertEquals(false, changedTask.getStatus());
+	}
+	
+	@Test
+	public void testMarkTaskWithTitle() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask changedTask = addResponse.getTasks().get(0);
+		IDonResponse editResponse = logic.runCommand("mark homework");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		assertEquals(true, changedTask.getStatus());
+	}
+
+	/*
+	 * Undo tests
+	 */
+
+	@Test
+	public void testUndoAfterAdd() {
+		
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse addResponse2 = logic.runCommand("addf Eat food");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse2.getResponseType());
+		int taskID2 = addResponse2.getTasks().get(0).getID();
+
+		IDonResponse undoResponse = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				undoResponse.getResponseType());
+		
+		IDonResponse searchResponse = logic.runCommand("s " + taskID2);
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse.getResponseType());
+		
+		IDonResponse undoResponse2 = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				undoResponse2.getResponseType());
+
+		IDonResponse searchResponse2 = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse2.getResponseType());
+
+	}
+
+	@Test
+	public void testUndoAfterDelete() {
+		
+		// Add
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		// Delete
+		IDonResponse delResponse = logic.runCommand("del " + taskID);
+		assertEquals(IDonResponse.ResponseType.DEL_SUCCESS,
+				delResponse.getResponseType());
+		IDonTask deletedTask = delResponse.getTasks().get(0);
+		// Run a search which should return empty
+		IDonResponse searchResponse = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				searchResponse.getResponseType());
+		// Undo the deletion
+		IDonResponse undoResponse = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+				undoResponse.getResponseType());
+
+		IDonResponse searchResponse2 = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse2.getResponseType());
+		IDonTask readdedTask = searchResponse2.getTasks().get(0);
+		assertEquals(readdedTask, deletedTask);
+	}
+
+	@Test
+	public void testUndoAfterEdit() {
+		
+		// Add
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		IDonTask beforeEditTask = addResponse.getTasks().get(0).clone();
+		int taskID = addResponse.getTasks().get(0).getID();
+		// Edit
+		IDonResponse editResponse = logic.runCommand("edit " + taskID
+				+ " to \"Do work\"");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+
+		// Undo the edit
+		IDonResponse undoResponse = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+				undoResponse.getResponseType());
+
+		IDonResponse searchResponse = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask uneditedTask = searchResponse.getTasks().get(0);
+		assertEquals(uneditedTask, beforeEditTask);
+
+	}
+	
+	/*
+	 * Redo 
+	 */
+	
+	@Test
+	public void testRedoAfterAdd() {
+		// Add
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		IDonTask task1 = addResponse.getTasks().get(0).clone();
+		int taskID1 = addResponse.getTasks().get(0).getID();
+		
+		IDonResponse addResponse2 = logic.runCommand("add Eat by 21/10/2014");
+		IDonTask task2 = addResponse2.getTasks().get(0).clone();
+		int taskID2 = addResponse2.getTasks().get(0).getID();
+
+		// Undo the edits
+		logic.runCommand("undo");
+		logic.runCommand("undo");
+
+		//Redo the edit
+		IDonResponse redoResponse1 = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				redoResponse1.getResponseType());
+
+		IDonResponse searchResponse1 = logic.runCommand("s " + taskID1);
+		IDonTask redoneTask1 = searchResponse1.getTasks().get(0);
+		assertEquals(redoneTask1, task1);
+		
+		IDonResponse redoResponse2 = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				redoResponse2.getResponseType());
+
+		IDonResponse searchResponse2 = logic.runCommand("s " + taskID2);
+		IDonTask redoneTask2 = searchResponse2.getTasks().get(0);
+		assertEquals(redoneTask2, task2);
+
+	}
+	
+	@Test
+	public void testRedoAfterEdit() {
+		// Add
+		IDonResponse addResponse = logic.runCommand("addf Finish homework");
+		assertEquals(IDonResponse.ResponseType.ADD_SUCCESS,
+				addResponse.getResponseType());
+		int taskID = addResponse.getTasks().get(0).getID();
+		// Edit
+		IDonResponse editResponse = logic.runCommand("edit " + taskID
+				+ " to \"Do work\"");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				editResponse.getResponseType());
+		IDonTask afterEditTask = editResponse.getTasks().get(0);
+
+		// Undo the edit
+		IDonResponse undoResponse = logic.runCommand("undo");
+		assertEquals(IDonResponse.ResponseType.UNDO_SUCCESS,
+				undoResponse.getResponseType());
+		
+		//Redo the edit
+		IDonResponse redoResponse = logic.runCommand("redo");
+		assertEquals(IDonResponse.ResponseType.EDIT_SUCCESS,
+				redoResponse.getResponseType());
+
+		IDonResponse searchResponse = logic.runCommand("s " + taskID);
+		assertEquals(IDonResponse.ResponseType.SEARCH_SUCCESS,
+				searchResponse.getResponseType());
+		IDonTask editedTask = searchResponse.getTasks().get(0);
+		assertEquals(editedTask, afterEditTask);
+
+	}
+	
+	/*
+	 * Label 
+	 */
+	
+	@Test
+	public void testLabelAdd() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add Eat by 21/10/2014");
+		IDonTask task1 = addResponse1.getTasks().get(0);
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		IDonResponse labelResponse1 = logic.runCommand("label "+taskID1+" #food");
+		assertEquals(IDonResponse.ResponseType.LABEL_ADDED,
+				labelResponse1.getResponseType());
+		assertEquals(1, task1.getLabels().size());
+		assertEquals("food", task1.getLabels().get(0));
+		
+		IDonResponse labelResponse2 = logic.runCommand("label Ea #good");
+		assertEquals(IDonResponse.ResponseType.LABEL_ADDED,
+				labelResponse2.getResponseType());
+		assertEquals(2, task1.getLabels().size());
+		assertEquals(true, task1.getLabels().contains("good"));
+
+	}
+	
+	@Test
+	public void testLabelRemove() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add Eat by 21/10/2014");
+		IDonTask task1 = addResponse1.getTasks().get(0);
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		logic.runCommand("label Ea #food");
+		logic.runCommand("label Ea #good");
+		
+		IDonResponse delabelResponse1 = logic.runCommand("delabel "+taskID1+" #food");
+		assertEquals(IDonResponse.ResponseType.LABEL_REMOVED,
+				delabelResponse1.getResponseType());
+		assertEquals(false, task1.getLabels().contains("food"));
+		
+		IDonResponse delabelResponse2 = logic.runCommand("delabel Ea #good");
+		assertEquals(IDonResponse.ResponseType.LABEL_REMOVED,
+				delabelResponse2.getResponseType());
+		assertEquals(false, task1.getLabels().contains("good"));
+
+	}
+	
+	@Test
+	public void testLabelNotFound() {
+		// Add		
+		IDonResponse addResponse1 = logic.runCommand("add Eat by 21/10/2014");
+		int taskID1 = addResponse1.getTasks().get(0).getID();
+
+		logic.runCommand("label Ea #food");
+		logic.runCommand("label Ea #good");
+		
+		IDonResponse delabelResponse1 = logic.runCommand("delabel "+taskID1+" #mood");
+		assertEquals(IDonResponse.ResponseType.LABEL_NOT_FOUND,
+				delabelResponse1.getResponseType());
+		
+		IDonResponse delabelResponse2 = logic.runCommand("delabel Eatup #good");
+		assertEquals(IDonResponse.ResponseType.SEARCH_EMPTY,
+				delabelResponse2.getResponseType());
+
+	}
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\test\doornot\logic\DonLogicTester.java
+
+
+
+
+
+	/**
+	 * origin: F:\My Documents\DoorNot\main\test\doornot\util\UtilityUnitTest.java
+	 */
+
+public class UtilityUnitTest {
+
+	// SearchHelper tests
+	@Test
+	public void testFindDone() {
+		DonStorageTestStub testStorage = new DonStorageTestStub();
+		List<IDonTask> taskList = new ArrayList<IDonTask>();
+		IDonTask t1 = new DonTaskTestStub(0, TaskType.FLOATING);
+		taskList.add(t1);
+		IDonTask t2 = new DonDoneTask(1, TaskType.FLOATING);
+		taskList.add(t2);
+
+		testStorage.setTaskList(taskList);
+		List<IDonTask> results = SearchHelper.findDone(testStorage);
+		assertEquals(1, results.size());
+		assertEquals(1, results.get(0).getID());
+	}
+
+	@Test
+	public void testFindOverdue() {
+		DonStorageTestStub testStorage = new DonStorageTestStub();
+		List<IDonTask> taskList = new ArrayList<IDonTask>();
+		IDonTask t1 = new DonTaskTestStub(0, TaskType.FLOATING);
+		taskList.add(t1);
+		IDonTask t2 = new DonOverdueTask(1, TaskType.DEADLINE);
+		taskList.add(t2);
+		IDonTask t3 = new DonOverdueTask(2, TaskType.DURATION);
+		taskList.add(t3);
+		// The task below is still occurring
+		IDonTask presentBetweenTask = new DonDateTask(3, TaskType.DURATION,
+				new GregorianCalendar(1990, 1, 1), new GregorianCalendar(2222,
+						1, 2));
+		taskList.add(presentBetweenTask);
+
+		testStorage.setTaskList(taskList);
+		List<IDonTask> results = SearchHelper.findOverdue(testStorage);
+		assertEquals(2, results.size());
+		assertEquals(1, results.get(0).getID());
+	}
+
+	/**
+	 * CalHelper test
+	 */
+	@Test
+	public void testCalendarGetDayStart() {
+		Calendar result = CalHelper.getDayStart(new GregorianCalendar(2014, 2,
+				1, 10, 20));
+		assertEquals(new GregorianCalendar(2014, 2, 1, 0, 0), result);
+	}
+
+	@Test
+	public void testCalendarGetDayEnd() {
+		Calendar result = CalHelper.getDayEnd(new GregorianCalendar(2014, 2, 1,
+				10, 20));
+		Calendar expected = new GregorianCalendar(2014, 2, 1, 23, 59, 59);
+		expected.set(Calendar.MILLISECOND, 999);
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testCalendarDateEqualAfter() {
+		boolean result = CalHelper.dateEqualOrAfter(new GregorianCalendar(2014,
+				2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertTrue(result);
+
+		boolean result2 = CalHelper.dateEqualOrAfter(new GregorianCalendar(
+				2001, 2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertFalse(result2);
+
+		boolean result3 = CalHelper.dateEqualOrAfter(new GregorianCalendar(
+				2012, 2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertTrue(result3);
+	}
+
+	@Test
+	public void testCalendarDateEqualBefore() {
+		boolean result = CalHelper.dateEqualOrBefore(new GregorianCalendar(
+				2014, 2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertFalse(result);
+
+		boolean result2 = CalHelper.dateEqualOrBefore(new GregorianCalendar(
+				2001, 2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertTrue(result2);
+
+		boolean result3 = CalHelper.dateEqualOrBefore(new GregorianCalendar(
+				2012, 2, 1, 10, 20), new GregorianCalendar(2012, 2, 1, 10, 20));
+		assertTrue(result3);
+	}
+
+	@Test
+	public void testCalendarSameDay() {
+		boolean result = CalHelper.isSameDay(new GregorianCalendar(2012, 2, 1,
+				10, 20), new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertTrue(result);
+
+		boolean result2 = CalHelper.isSameDay(new GregorianCalendar(2012, 2, 2,
+				0, 0), new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertFalse(result2);
+	}
+
+	@Test
+	public void testCalendarBetweenDates() {
+		boolean result = CalHelper.isBetweenDates(new GregorianCalendar(2011,
+				3, 1), new GregorianCalendar(2011, 2, 1, 10, 20),
+				new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertTrue(result);
+
+		boolean result2 = CalHelper.isBetweenDates(new GregorianCalendar(2011,
+				3, 1), new GregorianCalendar(2012, 2, 2, 0, 0),
+				new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertFalse(result2);
+	}
+	
+	@Test
+	public void testCalendarRelevantEquals() {
+		boolean result = CalHelper.relevantEquals(new GregorianCalendar(2012, 2, 1, 9, 1),
+				new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertTrue(result);
+
+		
+		Calendar a = new GregorianCalendar(2011,2,1,9,1);
+		Calendar b = new GregorianCalendar(2011,2,1,9,1);
+		b.set(Calendar.SECOND, 20);
+		boolean result2 = CalHelper.relevantEquals(a, b);
+		assertTrue(result2);
+		
+		boolean result3 = CalHelper.relevantEquals(new GregorianCalendar(2012, 2, 2, 9, 1),
+				new GregorianCalendar(2012, 2, 1, 9, 1));
+		assertFalse(result3);
+	}
+
+	private class DonTaskTestStub implements IDonTask {
+		private int id;
+		TaskType type;
+
+		public DonTaskTestStub(int id, IDonTask.TaskType type) {
+			this.id = id;
+			this.type = type;
+		}
+
+		@Override
+		public int compareTo(IDonTask o) {
+			return 0;
+		}
+
+		@Override
+		public int getID() {
+			return id;
+		}
+
+		@Override
+		public String getTitle() {
+			return null;
+		}
+
+		@Override
+		public Calendar getStartDate() {
+			return null;
+		}
+
+		@Override
+		public Calendar getEndDate() {
+			return null;
+		}
+
+		@Override
+		public boolean getStatus() {
+			return false;
+		}
+
+		@Override
+		public TaskType getType() {
+			return type;
+		}
+
+		@Override
+		public List<String> getLabels() {
+			return null;
+		}
+
+		@Override
+		public void setTitle(String newTitle) {
+
+		}
+
+		@Override
+		public void setStartDate(Calendar newDate) {
+
+		}
+
+		@Override
+		public void setEndDate(Calendar newDate) {
+
+		}
+
+		@Override
+		public void setStatus(boolean newStatus) {
+
+		}
+
+		@Override
+		public void setLabels(List<String> newLabels) {
+
+		}
+
+		@Override
+		public void copyTaskDetails(IDonTask sourceTask) {
+
+		}
+
+		@Override
+		public boolean addLabel(String newLabel) {
+			return false;
+		}
+
+		@Override
+		public boolean deleteLabel(String labelToDelete) {
+			return false;
+		}
+
+		@Override
+		public void setTimeUsed(boolean timeUsed) {
+
+		}
+
+		@Override
+		public boolean isTimeUsed() {
+			return false;
+		}
+
+		@Override
+		public IDonTask clone() {
+			return null;
+		}
+	}
+
+	private class DonDoneTask extends DonTaskTestStub {
+
+		public DonDoneTask(int id, TaskType type) {
+			super(id, type);
+		}
+
+		@Override
+		public boolean getStatus() {
+			return true;
+		}
+	}
+
+	private class DonOverdueTask extends DonTaskTestStub {
+
+		public DonOverdueTask(int id, TaskType type) {
+			super(id, type);
+		}
+
+		@Override
+		public Calendar getStartDate() {
+			return new GregorianCalendar(1990, 1, 1);
+		}
+	}
+
+	private class DonDateTask extends DonTaskTestStub {
+		private Calendar start, end;
+
+		public DonDateTask(int id, TaskType type, Calendar start, Calendar end) {
+			super(id, type);
+			this.start = start;
+			this.end = end;
+		}
+
+		@Override
+		public Calendar getStartDate() {
+			return start;
+		}
+
+		@Override
+		public Calendar getEndDate() {
+			return end;
+		}
+	}
+
+}
+
+	// End of segment: F:\My Documents\DoorNot\main\test\doornot\util\UtilityUnitTest.java
+
+
+
+
+
