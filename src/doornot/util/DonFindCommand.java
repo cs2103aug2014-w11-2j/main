@@ -2,6 +2,7 @@ package doornot.util;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -11,6 +12,7 @@ import doornot.logic.IDonResponse.ResponseType;
 import doornot.storage.DonTask;
 import doornot.storage.IDonStorage;
 import doornot.storage.IDonTask;
+import doornot.storage.IDonTask.TaskType;
 import doornot.util.SearchHelper;
 
 //@author A0111995Y
@@ -385,6 +387,17 @@ public class DonFindCommand extends AbstractDonCommand {
 				}
 			}
 		}
+		IDonTask lastTask = taskList.get(taskList.size()-1);
+		IDonTask lastFree = new DonTask(PHRASE_FREE_TIME, -1);
+		if(lastTask.getType()==TaskType.DEADLINE) {
+			lastFree.setStartDate(lastTask.getStartDate());
+		} else {
+			lastFree.setStartDate(lastTask.getEndDate());
+		}
+		lastFree.setEndDate(new GregorianCalendar(4242, 0, 1));
+		lastFree.setTimeUsed(lastTask.isTimeUsed());
+		response.addTask(lastFree);
+		
 		response.addMessage(MSG_SEARCH_RESULT_FREE_TIME);
 		response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		return response;
