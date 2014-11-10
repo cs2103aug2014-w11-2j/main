@@ -37,8 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Stack;
@@ -49,8 +47,6 @@ import javax.swing.JLabel;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -692,6 +688,7 @@ public class DonGUI {
 		});
 		
 		panel = new JPanel() {
+			private static final long serialVersionUID = 915417842700765597L;
 
 			protected void paintComponent(Graphics g) {
 				Image resizedLogo = logo.getScaledInstance(panel.getWidth(),
@@ -812,6 +809,8 @@ public class DonGUI {
 		
 		
 		noTaskPanel = new JPanel() {
+			private static final long serialVersionUID = -3363251359656315249L;
+
 			protected void paintComponent(Graphics g) {
 				Image resizedLogo = noTaskImage.getScaledInstance(noTaskPanel.getWidth(),
 						noTaskPanel.getHeight(), Image.SCALE_SMOOTH);
@@ -998,7 +997,7 @@ public class DonGUI {
 	}
 
 	class TypeCellRenderer extends JLabel implements ListCellRenderer {
-
+		private static final long serialVersionUID = -3810533432611364330L;
 		JPanel p = new JPanel();
 		JLabel amount = new JLabel();
 		JLabel typename = new JLabel();
@@ -1107,6 +1106,7 @@ public class DonGUI {
 
 	class TaskCellRenderer extends JLabel implements ListCellRenderer {
 
+		private static final long serialVersionUID = -4303156563210956770L;
 		JPanel p = new JPanel();
 		JTextPane id = new JTextPane();
 		JTextPane content = new JTextPane();
@@ -1371,7 +1371,9 @@ public class DonGUI {
 	}
 	
 	class AboutDialog extends JDialog {
-		  public AboutDialog(JFrame parent) {
+		private static final long serialVersionUID = 8837750547646505870L;
+
+		public AboutDialog(JFrame parent) {
 		    super(parent, "About", true);
 		    Container cp = getContentPane();
 		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
