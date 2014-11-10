@@ -3069,6 +3069,17 @@ public class DonFindCommand extends AbstractDonCommand {
 				}
 			}
 		}
+		IDonTask lastTask = taskList.get(taskList.size()-1);
+		IDonTask lastFree = new DonTask(PHRASE_FREE_TIME, -1);
+		if(lastTask.getType()==TaskType.DEADLINE) {
+			lastFree.setStartDate(lastTask.getStartDate());
+		} else {
+			lastFree.setStartDate(lastTask.getEndDate());
+		}
+		lastFree.setEndDate(new GregorianCalendar(4242, 0, 1));
+		lastFree.setTimeUsed(lastTask.isTimeUsed());
+		response.addTask(lastFree);
+		
 		response.addMessage(MSG_SEARCH_RESULT_FREE_TIME);
 		response.setResponseType(ResponseType.SEARCH_SUCCESS);
 		return response;
