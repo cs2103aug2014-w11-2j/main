@@ -116,7 +116,7 @@ public class DonGUI {
 	private JLabel lblTaskList;
 	private Image logo;
 	private Image noTaskImage;
-	private Integer[] placeholder = { TODAY_INDEX, WEEK_INDEX, WEEK_INDEX, FLOAT_INDEX, ALL_INDEX };
+	private Integer[] placeholder = { TODAY_INDEX, WEEK_INDEX, FUTURE_INDEX, FLOAT_INDEX, ALL_INDEX };
 	private List<IDonTask> guiTaskList;
 	private List<IDonTask> overdueList;
 	private List<IDonTask> todayList;
